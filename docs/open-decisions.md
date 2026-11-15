@@ -11,8 +11,6 @@ decision is still open when that phase starts.
 | # | Decision | Recommendation | Default |
 |---|---|---|---|
 | 1 | **Offline behavior** when the clinic's internet drops | Hosted only for the first release, with a printed downtime procedure. Revisit after the pilot shows how often it happens | Hosted only. Counters are per branch, so a local install with sync stays possible later |
-| 2 | **Tenancy implementation**: a package or in-house | Decide in Phase 1 by testing against the pinned Laravel and Filament versions and checking the license | In-house, kept small |
-| 3 | **Permissions implementation**: a package or in-house | Same test as above | A well-known package if it fits the design in permissions.md |
 
 ## Needed before Phase 2
 
@@ -68,7 +66,9 @@ decision is still open when that phase starts.
 |---|---|
 | Business model | Fully paid. No free tier, ads, or watermark |
 | License | Proprietary |
-| Stack | PHP 8.3, Laravel, Filament, MySQL 8 |
+| Stack | PHP 8.3, Laravel 13, Filament 5, MySQL 8 |
+| Tenancy implementation | In-house (`app/Core/Tenancy`) |
+| Permissions implementation | In-house (`app/Core/Auth`), because roles are branch-scoped and gated by module |
 | Language | English only |
 | Tenancy | Control database plus one database per clinic |
 | Structure | Small core plus switchable modules |

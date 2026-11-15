@@ -2,8 +2,8 @@
 
 | Phase | Delivers | Owner reviews or decides |
 |---|---|---|
-| **0. Design documents** | Architecture, module standard, schema, permission model, feature checklist, open decisions | Approve the schema and module rules |
-| **1. Skeleton** | Laravel on PHP 8.3, Filament admin, MySQL setup, control database and per-clinic databases, login, users, roles and permissions, audit log, settings, branches, number counters, module manager with dependency checks, one demo module, test pipeline with MySQL, setup README | Confirm the module manager behaves as wanted |
+| **0. Design documents** (done) | Architecture, module standard, schema, permission model, feature checklist, open decisions | Approve the schema and module rules |
+| **1. Skeleton** (built, awaiting review) | Laravel on PHP 8.3, Filament admin, MySQL setup, control database and per-clinic databases, login, users, roles and permissions, audit log, settings, branches, number counters, module manager with dependency checks, one demo module, test pipeline with MySQL, setup README | Confirm the module manager behaves as wanted |
 | **2. Front desk and billing** | Patients, referral doctors, service catalog, orders, invoices, payments, partial payments, dues, refunds, discounts, receipts, daily cash closing | Check billing rules against a real clinic |
 | **3. Laboratory and reports** | Lab catalog with reference ranges and packages, samples with barcode labels, result entry, flags, verification, amendments, PDF and printed reports, templates, sign-off | Check reports against real report formats |
 | **4. Owner basics** | Owner dashboard, basic reports, expenses, accounts, referral commission, profit reports, data export | Decide whether the accounting is enough |

@@ -73,7 +73,7 @@ code runs.
 |---|---|
 | `key` | Unique, lowercase, never changes after release |
 | `version` | Semantic version of the module |
-| `core` | Core versions the module works with |
+| `core` | Lowest core version the module works with, written as `>=1.0.0`. Other constraint forms are not supported yet |
 | `requires` | Modules that must be enabled first. Hard dependency |
 | `suggests` | Modules it can work with if they are enabled. Soft dependency |
 | `table_prefix` | Prefix for every table the module owns |
@@ -147,7 +147,7 @@ current clinic:
 
 | Entry point | How it is gated |
 |---|---|
-| Screens and menu items | Registered only for enabled modules when the panel is built for the request |
+| Screens and menu items | Always registered, because all clinics share the code. Each screen uses the `GatesModuleAccess` trait, which hides it from the menu and refuses access when the module is disabled or the permission is missing |
 | Routes | Middleware returns "not found" for a disabled module |
 | Event listeners | A shared base class skips the listener when its module is disabled |
 | Scheduled tasks and jobs | Check enabled state after resolving the clinic, before doing work |

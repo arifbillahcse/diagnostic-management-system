@@ -21,13 +21,13 @@ IPD), prescriptions and OPD, pharmacy, native mobile apps, free tier, ads.
 | Layer | Choice | Notes |
 |---|---|---|
 | Language | PHP 8.3 (minimum) | Code must not use features newer than 8.3 |
-| Framework | Laravel | Newest release that supports PHP 8.3, pinned in Phase 1 |
-| Admin UI | Filament | Newest release compatible with the pinned Laravel, pinned in Phase 1 |
+| Framework | Laravel 13 | Pinned in `composer.lock` |
+| Admin UI | Filament 5 (with Livewire 4) | Pinned in `composer.lock` |
 | Database | MySQL 8 | `utf8mb4`, InnoDB, strict SQL mode |
 | Cache and queue | Database driver first, Redis when Phase 7 adds SMS and heavy jobs | Queue jobs must not assume a driver |
 | Web server | Nginx with PHP-FPM | |
 | PDF | Chosen in Phase 3 by comparing output on real report layouts | English only, so any mainstream engine is a candidate |
-| Tests | Pest or PHPUnit | Chosen in Phase 1 |
+| Tests | PHPUnit | Runs on SQLite (fast) and on MySQL |
 | Analyzer bridge | Python agent on the clinic's lab PC (Phase 11) | Talks to the server over an authenticated HTTPS API |
 
 Every third-party package added later is recorded in section 11 with its
@@ -69,9 +69,19 @@ Rules:
 - Uploaded files (logos, signatures, generated PDFs) live under a per-clinic
   path and are served only through authorized routes.
 
-Phase 1 decides between a tenancy package and a small in-house
-implementation. The test is compatibility with the pinned Laravel and
-Filament versions, and whether the package's license allows proprietary use.
+Tenancy is implemented in-house in `app/Core/Tenancy` (decided in Phase 1).
+It is about ten small classes, has no third-party dependency to keep
+compatible, and does exactly what this section describes.
+
+**Sessions are tied to a clinic.** User IDs repeat between clinic databases,
+so a session cookie copied to another clinic's address could otherwise sign
+in as a different person. The clinic is written into the session at login
+and checked on every request; a mismatch signs the user out.
+
+**Long-running PHP servers.** The code assumes one PHP process per request
+(PHP-FPM). Filament and some core services keep per-request state in memory.
+Do not run the application under Laravel Octane, Swoole, or FrankenPHP worker
+mode without first reviewing that state.
 
 **Why one database per clinic:** a clinic's data can be exported, backed up,
 restored, or deleted without touching another clinic; a query bug cannot leak
@@ -203,8 +213,18 @@ any real patient data is entered. That review is not part of this document.
 
 ## 11. Third-party packages
 
-None yet. Phase 1 fills this table.
+Direct dependencies only. `composer licenses` lists everything installed.
 
 | Package | Purpose | License | Added in |
 |---|---|---|---|
-| | | | |
+| `laravel/framework` | Application framework | MIT | Phase 1 |
+| `filament/filament` | Admin screens (brings Livewire) | MIT | Phase 1 |
+| `laravel/tinker` | Command-line console for support work | MIT | Phase 1 |
+
+Roles and permissions, tenancy, the audit log, and the module system are
+written in-house, so they add no packages. The roles design needs
+branch-scoped assignments and module gating, which did not fit the common
+permissions package cleanly.
+
+Three transitive packages (`nette/*`) are offered under BSD-3-Clause or GPL
+at the user's choice. They are used under BSD-3-Clause.

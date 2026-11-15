@@ -1,0 +1,12 @@
+{
+  "key": "demo",
+  "name": "Demo notes",
+  "description": "A tiny example module that proves the module system works. Safe to switch off or delete.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": [],
+  "suggests": [],
+  "table_prefix": "demo_",
+  "default_enabled": false,
+  "entry": "Modules\\Demo\\DemoModule"
+}

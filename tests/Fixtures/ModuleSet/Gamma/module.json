@@ -1,0 +1,14 @@
+{
+  "key": "gamma",
+  "name": "Gamma",
+  "description": "Test fixture module Gamma.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": [
+    "beta"
+  ],
+  "suggests": [],
+  "table_prefix": "gamma_",
+  "default_enabled": false,
+  "entry": "Tests\\Fixtures\\ModuleSet\\Gamma\\GammaModule"
+}

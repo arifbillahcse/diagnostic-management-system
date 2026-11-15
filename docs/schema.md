@@ -46,6 +46,12 @@ Holds no patient data.
 Subscription billing tables (subscriptions, platform invoices, payments) are
 designed in Phase 8.
 
+**Built so far (Phase 1):** `clinics`, `clinic_domains`, `plans`,
+`plan_modules`, `clinic_modules`, `provisioning_log`, plus the framework's
+`sessions`, `cache`, and `jobs` tables. `platform_users` and
+`support_sessions` arrive with the platform admin screens. In `plan_modules`,
+the module key `*` means every module.
+
 ## 3. Clinic database: core
 
 ### Users and access
@@ -72,7 +78,14 @@ written in-house. The design above is what either must provide.
 | `counters` | See section 6 | |
 | `files` | `public_id`, `disk`, `path`, `mime`, `size`, `owner_type`, `owner_id` | Logos, signatures, generated documents |
 
+**Built so far (Phase 1):** every table above except `files`, which arrives
+with document rendering in Phase 3. `counters.branch_id` uses `0` for a
+clinic-wide counter, not null, so the unique index can guarantee one row per
+counter.
+
 ### Patients
+
+Built in Phase 2.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -114,9 +127,13 @@ action.
 
 Rules:
 
-- Append-only. The application has no update or delete path for this table.
-  In production, the clinic's MySQL user is granted only `INSERT` and
-  `SELECT` on it.
+- Append-only. The application has no update or delete path for this table,
+  and the model refuses both.
+- Granting the clinic's MySQL user only `INSERT` and `SELECT` on this table
+  is planned for the Phase 5 security pass. Today that user has full rights
+  on its own database, which migrations need.
+- `actor_name` is stored with each entry, so the trail stays readable if a
+  user is renamed or removed.
 - Written in the same transaction as the change it records.
 - When it grows large, partition by month. At the expected volume this is
   not needed in the first years.
@@ -241,8 +258,11 @@ Unique on (`counter_key`, `branch_id`, `period`).
 
 How a number is issued, inside the transaction that creates the record:
 
-1. Select the counter row `FOR UPDATE`. Create it if it is missing.
-2. Read `next_value`, then increase it by one.
+1. One statement creates the counter row or advances it
+   (`INSERT ... ON DUPLICATE KEY UPDATE next_value = next_value + 1`). It
+   takes an exclusive row lock at once, so simultaneous callers queue and
+   cannot deadlock, including on the very first number of a period.
+2. Read `next_value` back; the issued number is that value minus one.
 3. Build the number from the clinic's format, for example
    `INV-{branch}-{yymm}-{00001}`.
 4. Insert the record. The unique index on the number is the final guard.

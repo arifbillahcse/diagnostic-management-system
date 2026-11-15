@@ -1,0 +1,10 @@
+{
+  "key": "broken",
+  "name": "Broken",
+  "description": "Test fixture: a default-on module whose migration fails.",
+  "version": "1.0.0",
+  "requires": [],
+  "table_prefix": "broken_",
+  "default_enabled": true,
+  "entry": "Tests\\Fixtures\\BrokenSet\\Broken\\BrokenModule"
+}
