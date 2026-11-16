@@ -87,6 +87,7 @@ final class ClinicHardening
         foreach (['control', 'clinic'] as $connection) {
             try {
                 $this->protect(DB::connection($connection), $database, $tables);
+                $this->skipped = null;
 
                 return $tables;
             } catch (QueryException $e) {
