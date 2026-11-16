@@ -51,7 +51,8 @@ abstract class FrontDeskTestCase extends TestCase
     protected function service(string $name, string $price, ServiceType $type = ServiceType::LabTest): Service
     {
         return Service::create([
-            'code' => strtoupper(substr(preg_replace('/[^a-z]/i', '', $name), 0, 6)).random_int(100, 999),
+            // A running number, not a random one: random codes collided now and then.
+            'code' => strtoupper(substr(preg_replace('/[^a-z]/i', '', $name), 0, 6)).(Service::withTrashed()->count() + 1),
             'name' => $name,
             'type' => $type,
             'price' => $price,

@@ -185,6 +185,7 @@ A "not found" page on every address means no clinic has that domain: run
 | `php artisan queue:work` | Runs queued jobs. Each job reconnects to the clinic it was created for |
 | `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
+| `php artisan laboratory:sample-data <clinic id>` | Loads a new clinic with sample tests, doctors, three staff accounts, patients, and ten days of orders, for trying the software. Never run it on a clinic with real data |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |
 | `php artisan clinic:backup` | Backs up the control database and every clinic database. Add `--verify` to restore each into a scratch database and check it. Scheduled nightly once `BACKUP_PATH` is set |

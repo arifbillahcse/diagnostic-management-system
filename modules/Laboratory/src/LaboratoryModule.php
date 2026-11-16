@@ -15,6 +15,7 @@ use Modules\FrontDesk\Events\OrderItemAdded;
 use Modules\FrontDesk\Events\OrderItemCancelled;
 use Modules\FrontDesk\Events\OrderItemCancelling;
 use Modules\FrontDesk\Events\OrderPlaced;
+use Modules\Laboratory\Console\SampleDataCommand;
 use Modules\Laboratory\Console\SyncWorkCommand;
 use Modules\Laboratory\Listeners\CancelWork;
 use Modules\Laboratory\Listeners\GuardItemCancellation;
@@ -93,7 +94,7 @@ final class LaboratoryModule extends Module
         Event::listen(OrderItemCancelled::class, [CancelWork::class, 'handle']);
         Event::listen(OrderCancelled::class, [CancelWork::class, 'handle']);
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncWorkCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncWorkCommand::class, SampleDataCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('laboratory:sync-work')->hourly();
