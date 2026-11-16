@@ -152,16 +152,17 @@ Rules:
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `fd_service_categories` | `name`, `sort_order` | Haematology, Biochemistry, Ultrasound, and so on |
+| `fd_service_categories` | `name`, `sort_order`, `room` | Haematology, Biochemistry, Ultrasound, and so on |
 | `fd_services` | `public_id`, `code` (unique), `name`, `type` (lab_test, imaging, package, other), `category_id`, `price`, `is_active`, `deleted_at` | Everything a clinic can bill for |
 | `fd_package_items` | `package_service_id`, `service_id` | Tests inside a package |
-| `fd_referral_doctors` | `public_id`, `name`, `degree`, `phone`, `is_active`, `deleted_at` | Commission rules belong to finance |
+| `fd_referral_doctors` | `public_id`, `code` (unique, nullable), `name`, `degree`, `phone`, `is_active`, `deleted_at` | Commission rules belong to finance |
 
 ### Orders and billing
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `fd_orders` | `public_id`, `order_no` (unique), `patient_id`, `referral_doctor_id`, `branch_id`, `status`, `ordered_at`, `notes` | One visit |
+| `fd_orders` | `public_id`, `order_no` (unique), `patient_id`, `referral_doctor_id`, `branch_id`, `status`, `ordered_at`, `delivery_at`, `notes` | One visit. `delivery_at` is when the report is promised |
+| `fd_service_addons` | `service_id`, `addon_service_id` (unique pair) | Supplies charged with a service (tube, needle). Added to an order once each, however many tests need them |
 | `fd_order_items` | `order_id`, `service_id`, `service_name`, `unit_price`, `discount_amount`, `net_amount`, `package_item_of` (nullable), `status` | Name and price are snapshots |
 | `fd_invoices` | `public_id`, `invoice_no` (unique), `order_id`, `patient_id`, `branch_id`, `subtotal`, `discount_total`, `adjustment_total`, `total`, `paid_total`, `refunded_total`, `due_amount`, `status`, `discount_reason`, `discount_by`, `issued_at`, `voided_at`, `void_reason` | One invoice per order in version 1 |
 | `fd_invoice_lines` | `invoice_id`, `order_item_id` (nullable), `kind` (charge, discount, adjustment), `description`, `amount` | Never edited after the invoice is issued |

@@ -46,6 +46,11 @@ final class Permissions
     /** Setting: must a refund be approved by someone other than the requester? */
     public const SETTING_REFUND_APPROVAL = 'frontdesk.refund_requires_approval';
 
+    /** Settings: when a report is promised unless staff choose another time. */
+    public const SETTING_DELIVERY_DAYS = 'frontdesk.delivery_days';
+
+    public const SETTING_DELIVERY_TIME = 'frontdesk.delivery_time';
+
     /** @return array<string, string> */
     public static function all(): array
     {

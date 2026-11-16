@@ -16,8 +16,11 @@ use Modules\FrontDesk\Enums\ItemStatus;
 use Modules\FrontDesk\Enums\OrderStatus;
 use Modules\FrontDesk\Enums\PaymentMethod;
 use Modules\FrontDesk\Enums\RefundStatus;
+use Modules\FrontDesk\Enums\ServiceType;
 use Modules\FrontDesk\Filament\Cash\ListCashSessions;
 use Modules\FrontDesk\Filament\Catalog\CreateService;
+use Modules\FrontDesk\Filament\Catalog\ManageReferralDoctors;
+use Modules\FrontDesk\Filament\Catalog\ManageServiceCategories;
 use Modules\FrontDesk\Filament\FrontDeskSettings;
 use Modules\FrontDesk\Filament\Orders\CreateOrder;
 use Modules\FrontDesk\Filament\Orders\ListOrders;
@@ -27,7 +30,9 @@ use Modules\FrontDesk\Filament\TodayWidget;
 use Modules\FrontDesk\Models\CashSession;
 use Modules\FrontDesk\Models\Order;
 use Modules\FrontDesk\Models\Payment;
+use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Models\Service;
+use Modules\FrontDesk\Models\ServiceCategory;
 use Modules\FrontDesk\Permissions;
 
 final class ScreensTest extends FrontDeskTestCase
@@ -151,8 +156,8 @@ final class ScreensTest extends FrontDeskTestCase
             ->assertSee('KDA Avenue, Khulna')
             ->assertSee($invoice->invoice_no)
             ->assertSee('Rahim Uddin')
-            ->assertSee('Discount: Regular')
-            ->assertSeeInOrder(['Total', '1,400.00', 'Paid', '900.00', 'Due', '500.00']);
+            ->assertDontSee('Discount: Regular') // the reason stays in the system; the paper shows the amount
+            ->assertSeeInOrder(['Total Tk.', '1,500.00', 'Discount Tk.', '100.00', 'Net payable', '1,400.00', 'Paid Tk.', '900.00', 'Due Tk.', '500.00']);
 
         $this->signIn($this->ownerUser)->get(self::BASE."/print/receipt/{$payment->public_id}")
             ->assertSee($payment->receipt_no)
@@ -218,6 +223,56 @@ final class ScreensTest extends FrontDeskTestCase
 
         $package = Service::where('code', 'FEVER')->sole();
         $this->assertSame([$cbc->id], $package->packageItems()->pluck('fd_services.id')->all());
+    }
+
+    public function test_invoice_details_are_set_up_from_the_catalog_screens(): void
+    {
+        Livewire::test(ManageReferralDoctors::class)
+            ->callAction('create', ['code' => '003', 'name' => 'Dr. Yeasmin Jahan', 'degree' => 'MBBS'])
+            ->assertHasNoFormErrors();
+        $this->assertSame('003', ReferralDoctor::sole()->code);
+
+        Livewire::test(ManageReferralDoctors::class)
+            ->callAction('create', ['code' => '003', 'name' => 'Dr. Someone Else'])
+            ->assertHasFormErrors(['code']);
+
+        Livewire::test(ManageServiceCategories::class)
+            ->callAction('create', ['name' => 'Imaging', 'sort_order' => 1, 'room' => 'USG (Room 210)'])
+            ->assertHasNoFormErrors();
+        $this->assertSame('USG (Room 210)', ServiceCategory::sole()->room);
+
+        $needle = $this->service('Needle', '5', ServiceType::Other);
+
+        Livewire::test(CreateService::class)
+            ->fillForm(['code' => 'cbc', 'name' => 'CBC', 'type' => 'lab_test', 'price' => '400', 'addons' => [$needle->id]])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame([$needle->id], Service::where('code', 'CBC')->sole()->addons()->pluck('fd_services.id')->all());
+    }
+
+    public function test_the_delivery_time_is_set_from_settings_and_chosen_on_the_order_screen(): void
+    {
+        Livewire::test(FrontDeskSettings::class)
+            ->assertFormSet(['delivery_days' => 1, 'delivery_time' => '19:00'])
+            ->fillForm(['delivery_days' => 2, 'delivery_time' => '16:30'])
+            ->call('save')
+            ->assertNotified('Settings saved');
+
+        $this->assertSame(2, app(Settings::class)->get(Permissions::SETTING_DELIVERY_DAYS));
+        $this->assertSame('16:30', app(Settings::class)->get(Permissions::SETTING_DELIVERY_TIME));
+
+        $patient = $this->patient();
+        $cbc = $this->service('CBC', '400');
+
+        Livewire::test(CreateOrder::class)
+            ->fillForm(['patient_id' => $patient->id, 'service_ids' => [$cbc->id], 'delivery_at' => '2031-03-05 18:00', 'notes' => 'C/O Akbor Sir'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $order = Order::sole();
+        $this->assertSame('2031-03-05 18:00', $order->delivery_at->timezone('Asia/Dhaka')->format('Y-m-d H:i'));
+        $this->assertSame('C/O Akbor Sir', $order->notes);
     }
 
     public function test_an_order_with_discount_and_part_payment_is_created_from_the_screen(): void

@@ -42,6 +42,9 @@ class ReferralDoctorResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
+            TextInput::make('code')->maxLength(20)->unique(ignoreRecord: true)->placeholder('003')
+                ->helperText('Printed beside the doctor\'s name on invoices.')
+                ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? strtoupper(trim($state)) : null),
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('degree')->maxLength(255)->placeholder('MBBS, FCPS'),
             TextInput::make('phone')->tel()->maxLength(30),
@@ -53,6 +56,7 @@ class ReferralDoctorResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('code')->searchable()->placeholder('-'),
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('degree')->placeholder('-'),
                 TextColumn::make('phone')->placeholder('-'),

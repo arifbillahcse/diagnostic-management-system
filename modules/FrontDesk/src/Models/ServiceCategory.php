@@ -13,5 +13,5 @@ class ServiceCategory extends ClinicModel
 
     protected $table = 'fd_service_categories';
 
-    protected $fillable = ['name', 'sort_order'];
+    protected $fillable = ['name', 'sort_order', 'room'];
 }

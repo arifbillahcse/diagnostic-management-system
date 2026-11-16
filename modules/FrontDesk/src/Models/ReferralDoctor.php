@@ -17,7 +17,7 @@ class ReferralDoctor extends ClinicModel
 
     protected $table = 'fd_referral_doctors';
 
-    protected $fillable = ['name', 'degree', 'phone', 'is_active'];
+    protected $fillable = ['code', 'name', 'degree', 'phone', 'is_active'];
 
     /** Defaults for a record made in code, matching the database defaults. */
     protected $attributes = ['is_active' => true];

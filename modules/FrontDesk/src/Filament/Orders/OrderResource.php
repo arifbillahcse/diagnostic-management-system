@@ -12,6 +12,7 @@ use App\Core\Patients\Patient;
 use App\Filament\Resources\Patients\PatientResource;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -137,7 +138,11 @@ class OrderResource extends Resource
                     Select::make('pay_method')->label('Method')->options(PaymentMethod::options())->default(PaymentMethod::Cash->value)->native(false),
                     TextInput::make('pay_reference')->label('Reference')->maxLength(255)->placeholder('Transaction ID, if any'),
                 ]),
-            Textarea::make('notes')->rows(2)->maxLength(1000)->columnSpanFull(),
+            DateTimePicker::make('delivery_at')
+                ->label('Report ready at')
+                ->seconds(false)
+                ->helperText('Leave empty to use the clinic\'s usual time (Front desk settings).'),
+            Textarea::make('notes')->label('Remarks')->rows(2)->maxLength(1000)->columnSpanFull(),
         ]);
     }
 

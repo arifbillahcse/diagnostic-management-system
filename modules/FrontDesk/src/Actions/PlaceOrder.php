@@ -10,6 +10,9 @@ use App\Core\Branches\Branch;
 use App\Core\Money\Money;
 use App\Core\Numbering\NumberGenerator;
 use App\Core\Patients\Patient;
+use App\Core\Tenancy\ClinicContext;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -26,6 +29,7 @@ use Modules\FrontDesk\Models\OrderItem;
 use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Permissions;
+use Modules\FrontDesk\Support\DeliveryTime;
 use Modules\FrontDesk\Support\DiscountRules;
 use Modules\FrontDesk\Support\FrontDeskException;
 use Modules\FrontDesk\Support\InvoiceCalculator;
@@ -34,7 +38,11 @@ use Modules\FrontDesk\Support\InvoiceCalculator;
  * Creates an order and its invoice in one step.
  *
  * Options: referral_doctor_id, notes, discount_type ("percent" or
- * "amount"), discount_value, discount_reason.
+ * "amount"), discount_value, discount_reason, delivery_at (when the report
+ * is promised; the clinic's usual time when omitted).
+ *
+ * Supplies set up as add-ons of a chosen service (a tube, a needle) are
+ * added to the order and the invoice, once each.
  */
 final class PlaceOrder
 {
@@ -43,6 +51,7 @@ final class PlaceOrder
         private readonly DiscountRules $discounts,
         private readonly InvoiceCalculator $calculator,
         private readonly AuditLogger $audit,
+        private readonly DeliveryTime $delivery,
     ) {}
 
     /**
@@ -60,7 +69,7 @@ final class PlaceOrder
             throw new FrontDeskException('This branch is not active.');
         }
 
-        $services = $this->services($serviceIds);
+        $services = $this->withAddons($this->services($serviceIds));
         $subtotal = Money::sum(...array_map(fn (Service $s): Money => $s->price, $services));
 
         $discount = $this->discounts->amount($subtotal, $options['discount_type'] ?? null, $options['discount_value'] ?? null);
@@ -84,6 +93,7 @@ final class PlaceOrder
                 'branch_id' => $branch->id,
                 'status' => OrderStatus::Confirmed,
                 'ordered_at' => $now,
+                'delivery_at' => $this->deliveryAt($options['delivery_at'] ?? null, $now),
                 'notes' => filled($options['notes'] ?? null) ? trim((string) $options['notes']) : null,
                 'created_by' => $user->id,
             ]);
@@ -212,6 +222,51 @@ final class PlaceOrder
         }
 
         return $services;
+    }
+
+    /**
+     * Add the supplies (tube, needle) that go with the chosen services.
+     * Each supply is charged once per order, however many tests need it,
+     * and not at all if staff already chose it.
+     *
+     * @param  list<Service>  $services
+     * @return list<Service>
+     */
+    private function withAddons(array $services): array
+    {
+        $chosen = array_flip(array_map(fn (Service $s): int => $s->id, $services));
+        $needed = [];
+
+        foreach ($services as $service) {
+            foreach ($service->isPackage() ? $service->packageItems : [$service] as $part) {
+                foreach ($part->addons()->where('is_active', true)->orderBy('fd_services.id')->get() as $addon) {
+                    if (! isset($chosen[$addon->id]) && ! isset($needed[$addon->id])) {
+                        $needed[$addon->id] = $addon;
+                    }
+                }
+            }
+        }
+
+        return [...$services, ...array_values($needed)];
+    }
+
+    private function deliveryAt(mixed $chosen, CarbonInterface $orderedAt): CarbonInterface
+    {
+        if (blank($chosen)) {
+            return $this->delivery->after($orderedAt);
+        }
+
+        try {
+            $at = CarbonImmutable::parse((string) $chosen, app(ClinicContext::class)->require()->timezone)->utc();
+        } catch (\Throwable) {
+            throw new FrontDeskException('The delivery time is not valid.');
+        }
+
+        if ($at->lessThan($orderedAt->copy()->subMinute())) {
+            throw new FrontDeskException('The delivery time cannot be before the order.');
+        }
+
+        return $at;
     }
 
     private function doctorId(mixed $id): ?int

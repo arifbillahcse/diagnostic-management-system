@@ -58,6 +58,12 @@ class Service extends ClinicModel
         return $this->belongsToMany(self::class, 'fd_package_items', 'package_service_id', 'service_id');
     }
 
+    /** Supplies charged together with this service, such as a tube or a needle. */
+    public function addons(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'fd_service_addons', 'service_id', 'addon_service_id');
+    }
+
     public function isPackage(): bool
     {
         return $this->type === ServiceType::Package;

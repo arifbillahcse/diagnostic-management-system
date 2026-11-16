@@ -44,7 +44,9 @@ class ServiceCategoryResource extends Resource
     {
         return $schema->components([
             TextInput::make('name')->required()->maxLength(255)->unique(ignoreRecord: true),
-            TextInput::make('sort_order')->numeric()->default(0)->minValue(0)->helperText('Lower numbers appear first.'),
+            TextInput::make('sort_order')->numeric()->default(0)->minValue(0)->helperText('Lower numbers appear first, also on the invoice.'),
+            TextInput::make('room')->label('Where the patient goes')->maxLength(80)->placeholder('USG (Room 210)')
+                ->helperText('Printed on the invoice. Categories with the same text, for example every blood test, are printed once.'),
         ]);
     }
 
@@ -54,6 +56,7 @@ class ServiceCategoryResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('sort_order')->label('Order'),
+                TextColumn::make('room')->label('Where the patient goes')->placeholder('-'),
             ])
             ->defaultSort('sort_order')
             ->recordActions([EditAction::make()]);

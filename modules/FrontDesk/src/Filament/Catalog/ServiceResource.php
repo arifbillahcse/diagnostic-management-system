@@ -74,6 +74,20 @@ class ServiceResource extends Resource
                     ->formatStateUsing(fn ($state): ?string => $state instanceof Money ? $state->toDecimal() : $state)
                     ->helperText('A new price applies to new orders only. Existing invoices keep the price they were issued at.'),
                 Toggle::make('is_active')->label('Active')->default(true)->inline(false),
+                Select::make('addons')
+                    ->label('Supplies charged with this service')
+                    ->relationship(
+                        'addons',
+                        'name',
+                        fn (Builder $query, ?Service $record) => $query
+                            ->where('type', ServiceType::Other->value)->where('is_active', true)
+                            ->when($record, fn (Builder $q) => $q->whereKeyNot($record->id))->orderBy('name'),
+                    )
+                    ->multiple()
+                    ->preload()
+                    ->columnSpanFull()
+                    ->helperText('For example the tube and the needle. Each is added to the invoice once per order, however many tests need it. Create supplies as services of type "other".')
+                    ->visible(fn (Get $get): bool => $get('type') !== ServiceType::Package->value),
                 Select::make('packageItems')
                     ->label('Tests in this package')
                     ->relationship(

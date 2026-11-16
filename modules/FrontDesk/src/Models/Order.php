@@ -37,6 +37,7 @@ class Order extends ClinicModel
         return [
             'status' => OrderStatus::class,
             'ordered_at' => 'datetime',
+            'delivery_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
     }

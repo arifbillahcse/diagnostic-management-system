@@ -8,6 +8,7 @@ use App\Core\Audit\AuditLogger;
 use App\Core\Modules\GatesModuleAccess;
 use App\Core\Settings\Settings;
 use BackedEnum;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -59,6 +60,8 @@ class FrontDeskSettings extends Page
     {
         $this->form->fill([
             'refund_requires_approval' => (bool) $settings->get(Permissions::SETTING_REFUND_APPROVAL, true),
+            'delivery_days' => (int) $settings->get(Permissions::SETTING_DELIVERY_DAYS, 1),
+            'delivery_time' => (string) $settings->get(Permissions::SETTING_DELIVERY_TIME, '19:00'),
         ]);
     }
 
@@ -70,6 +73,19 @@ class FrontDeskSettings extends Page
                     ->label('A refund must be approved by a second person')
                     ->helperText('Recommended. Switch off only if one person handles all the money, for example in a very small center.'),
             ]),
+            Section::make('Report delivery')
+                ->description('Printed on the invoice as the day the report is ready. Staff can choose another time on any single order.')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('delivery_days')
+                        ->label('Days after the order')
+                        ->numeric()->integer()->minValue(0)->maxValue(30)->required()
+                        ->helperText('0 means the same day, 1 the next day.'),
+                    TextInput::make('delivery_time')
+                        ->label('Time of day')
+                        ->type('time')->required()
+                        ->rule('regex:/^([01]\\d|2[0-3]):[0-5]\\d$/'),
+                ]),
         ]);
     }
 
@@ -77,15 +93,28 @@ class FrontDeskSettings extends Page
     {
         Gate::authorize(Permissions::SETTINGS_MANAGE);
 
-        $new = (bool) $this->form->getState()['refund_requires_approval'];
-        $old = (bool) $settings->get(Permissions::SETTING_REFUND_APPROVAL, true);
+        $state = $this->form->getState();
+        $new = [
+            Permissions::SETTING_REFUND_APPROVAL => (bool) $state['refund_requires_approval'],
+            Permissions::SETTING_DELIVERY_DAYS => (int) $state['delivery_days'],
+            Permissions::SETTING_DELIVERY_TIME => (string) $state['delivery_time'],
+        ];
+        $defaults = [
+            Permissions::SETTING_REFUND_APPROVAL => true,
+            Permissions::SETTING_DELIVERY_DAYS => 1,
+            Permissions::SETTING_DELIVERY_TIME => '19:00',
+        ];
 
-        if ($new !== $old) {
-            DB::connection('clinic')->transaction(function () use ($settings, $audit, $old, $new): void {
-                $settings->set(Permissions::SETTING_REFUND_APPROVAL, $new);
-                $audit->record('settings.updated', null, [Permissions::SETTING_REFUND_APPROVAL => $old], [Permissions::SETTING_REFUND_APPROVAL => $new]);
-            });
-        }
+        DB::connection('clinic')->transaction(function () use ($settings, $audit, $new, $defaults): void {
+            foreach ($new as $key => $value) {
+                $old = $settings->get($key, $defaults[$key]);
+
+                if ($old !== $value) {
+                    $settings->set($key, $value);
+                    $audit->record('settings.updated', null, [$key => $old], [$key => $value]);
+                }
+            }
+        });
 
         Notification::make()->success()->title('Settings saved')->send();
     }

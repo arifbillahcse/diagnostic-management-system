@@ -37,7 +37,9 @@ final class SampleDataTest extends TestCase
 
         $this->useExistingClinic($clinic);
 
-        $this->assertSame(13, Service::count());
+        $this->assertSame(18, Service::count());
+        $this->assertTrue(Service::where('code', 'CBC')->sole()->addons()->where('name', 'Needle')->exists());
+        $this->assertTrue(Order::all()->contains(fn (Order $o) => $o->invoice->lines()->where('description', 'Needle')->count() === 1));
         $this->assertSame(30, Order::count());
         $this->assertSame(16, Patient::count());
         $this->assertSame(30, Order::distinct()->count('order_no'));

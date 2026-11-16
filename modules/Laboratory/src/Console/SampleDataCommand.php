@@ -45,7 +45,7 @@ use Throwable;
 
 /**
  * Fills a new clinic with a small, realistic set of sample data for trying
- * the software: a test catalog with reference ranges, referral doctors,
+ * the software: a test catalog with reference ranges, supplies charged with tests, rooms, referral doctors,
  * three staff accounts, patients, and ten days of orders at every stage.
  *
  * Everything except the catalog goes through the same actions the screens
@@ -234,8 +234,17 @@ final class SampleDataCommand extends Command
 
         $categories = [];
 
-        foreach (['Haematology', 'Biochemistry', 'Hormone', 'Clinical pathology', 'Imaging', 'Packages', 'Other'] as $i => $name) {
-            $categories[$name] = ServiceCategory::create(['name' => $name, 'sort_order' => $i]);
+        // The room is printed on the invoice; blood and urine tests share one.
+        foreach ([
+            'Imaging' => 'USG (Room 210)',
+            'Haematology' => 'Sample collection (Room 106)',
+            'Biochemistry' => 'Sample collection (Room 106)',
+            'Hormone' => 'Sample collection (Room 106)',
+            'Clinical pathology' => 'Sample collection (Room 106)',
+            'Packages' => null,
+            'Other' => null,
+        ] as $name => $room) {
+            $categories[$name] = ServiceCategory::create(['name' => $name, 'sort_order' => count($categories), 'room' => $room]);
         }
 
         $services = [];
@@ -266,6 +275,22 @@ final class SampleDataCommand extends Command
         $services['USG-ABD'] = Service::create(['code' => 'USG-ABD', 'name' => 'Ultrasonogram of whole abdomen', 'type' => ServiceType::Imaging, 'category_id' => $categories['Imaging']->id, 'price' => '1500']);
         $services['ECG'] = Service::create(['code' => 'ECG', 'name' => 'ECG', 'type' => ServiceType::Other, 'category_id' => $categories['Other']->id, 'price' => '400']);
 
+        // Supplies charged with a test, once per order.
+        foreach ([
+            'NEEDLE' => ['Needle', '5'], 'TUBE-EDTA' => ['EDTA tube', '10'], 'TUBE-ESR' => ['ESR long tube', '10'],
+            'TUBE-GLU' => ['Glucose tube', '10'], 'TUBE-URINE' => ['Urine conical tube', '5'],
+        ] as $code => [$name, $price]) {
+            $services[$code] = Service::create(['code' => $code, 'name' => $name, 'type' => ServiceType::Other, 'category_id' => $categories['Other']->id, 'price' => $price]);
+        }
+
+        foreach ([
+            'CBC' => ['NEEDLE', 'TUBE-EDTA', 'TUBE-ESR'], 'RBS' => ['NEEDLE', 'TUBE-GLU'], 'FBS' => ['NEEDLE', 'TUBE-GLU'],
+            'HBA1C' => ['NEEDLE', 'TUBE-EDTA'], 'LIPID' => ['NEEDLE'], 'CREA' => ['NEEDLE'], 'SGPT' => ['NEEDLE'],
+            'TSH' => ['NEEDLE'], 'URINE' => ['TUBE-URINE'],
+        ] as $code => $supplies) {
+            $services[$code]->addons()->sync(array_map(fn (string $s): int => $services[$s]->id, $supplies));
+        }
+
         $services['PKG-BASIC'] = Service::create(['code' => 'PKG-BASIC', 'name' => 'Basic health check', 'type' => ServiceType::Package, 'category_id' => $categories['Packages']->id, 'price' => '1000']);
         $services['PKG-BASIC']->packageItems()->sync([$services['CBC']->id, $services['FBS']->id, $services['CREA']->id, $services['URINE']->id]);
 
@@ -276,13 +301,13 @@ final class SampleDataCommand extends Command
     private function doctors(): array
     {
         return array_map(
-            fn (array $d): ReferralDoctor => ReferralDoctor::create(['name' => $d[0], 'degree' => $d[1], 'phone' => $d[2]]),
+            fn (array $d): ReferralDoctor => ReferralDoctor::create(['code' => $d[3], 'name' => $d[0], 'degree' => $d[1], 'phone' => $d[2]]),
             [
-                ['Dr. Mahmudul Hasan', 'MBBS, FCPS (Medicine)', '01711000101'],
-                ['Dr. Farzana Rahman', 'MBBS, DGO', '01711000102'],
-                ['Dr. Anisur Rahman', 'MBBS, MD (Cardiology)', '01711000103'],
-                ['Dr. Shahana Parvin', 'MBBS, DCH', '01711000104'],
-                ['Dr. Kamrul Islam', 'MBBS, MS (Orthopaedics)', '01711000105'],
+                ['Dr. Mahmudul Hasan', 'MBBS, FCPS (Medicine)', '01711000101', '001'],
+                ['Dr. Farzana Rahman', 'MBBS, DGO', '01711000102', '002'],
+                ['Dr. Anisur Rahman', 'MBBS, MD (Cardiology)', '01711000103', '003'],
+                ['Dr. Shahana Parvin', 'MBBS, DCH', '01711000104', '004'],
+                ['Dr. Kamrul Islam', 'MBBS, MS (Orthopaedics)', '01711000105', '005'],
             ],
         );
     }
