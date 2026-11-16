@@ -22,6 +22,12 @@ final class CorePermissions
 
     public const AUDIT_VIEW = 'core.audit.view';
 
+    public const PATIENTS_VIEW = 'core.patients.view';
+
+    public const PATIENTS_CREATE = 'core.patients.create';
+
+    public const PATIENTS_UPDATE = 'core.patients.update';
+
     /** @return array<string, string> key => description */
     public static function all(): array
     {
@@ -32,6 +38,9 @@ final class CorePermissions
             self::SETTINGS_MANAGE => 'Change clinic settings',
             self::MODULES_MANAGE => 'Switch modules on and off',
             self::AUDIT_VIEW => 'View the audit log',
+            self::PATIENTS_VIEW => 'View patients',
+            self::PATIENTS_CREATE => 'Register patients',
+            self::PATIENTS_UPDATE => 'Edit patient details',
         ];
     }
 
@@ -58,7 +67,10 @@ final class CorePermissions
     {
         return [
             'admin' => array_keys(self::all()),
-            'accountant' => [self::AUDIT_VIEW],
+            'accountant' => [self::AUDIT_VIEW, self::PATIENTS_VIEW],
+            'receptionist' => [self::PATIENTS_VIEW, self::PATIENTS_CREATE, self::PATIENTS_UPDATE],
+            'lab_technician' => [self::PATIENTS_VIEW],
+            'verifier' => [self::PATIENTS_VIEW],
         ];
     }
 }

@@ -12,7 +12,10 @@ decision is still open when that phase starts.
 |---|---|---|---|
 | 1 | **Offline behavior** when the clinic's internet drops | Hosted only for the first release, with a printed downtime procedure. Revisit after the pilot shows how often it happens | Hosted only. Counters are per branch, so a local install with sync stays possible later |
 
-## Needed before Phase 2
+## Built in Phase 2 with these defaults
+
+The defaults below are now what the system does. Each still needs checking
+against a real clinic, and each can be changed.
 
 | # | Decision | Recommendation | Default |
 |---|---|---|---|

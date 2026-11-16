@@ -42,6 +42,25 @@ final class ClinicManager
     }
 
     /**
+     * Run a callback once for every clinic that is in use, one after
+     * another. Used by scheduled tasks and maintenance commands.
+     *
+     * @param  Closure(Clinic): mixed  $callback
+     */
+    public function eachClinic(Closure $callback, ?int $onlyClinicId = null): void
+    {
+        $clinics = Clinic::query()
+            ->whereIn('status', [ClinicStatus::Trial->value, ClinicStatus::Active->value])
+            ->when($onlyClinicId, fn ($query, $id) => $query->whereKey($id))
+            ->orderBy('id')
+            ->get();
+
+        foreach ($clinics as $clinic) {
+            $this->run($clinic, $callback);
+        }
+    }
+
+    /**
      * Run a callback for one clinic, then restore whatever was active before.
      *
      * @template T

@@ -88,6 +88,42 @@ final readonly class Money implements JsonSerializable, Stringable
         return new self(self::roundHalfUp($this->minor * $scaled, 1_000_000));
     }
 
+    /**
+     * Split this amount in proportion to the given weights, to the poisha,
+     * so that the parts always add up to exactly this amount. Leftover
+     * poisha go to the parts with the largest remainders (earlier parts
+     * first on a tie).
+     *
+     * @param  list<int>  $weights  non-negative whole numbers, not all zero
+     * @return list<self>
+     */
+    public function allocate(array $weights): array
+    {
+        $weights = array_values($weights);
+        $total = array_sum($weights);
+
+        if ($this->minor < 0 || $weights === [] || $total <= 0 || min($weights) < 0) {
+            throw new InvalidArgumentException('Allocation needs a non-negative amount and non-negative weights that are not all zero.');
+        }
+
+        $shares = $remainders = [];
+
+        foreach ($weights as $i => $weight) {
+            $shares[$i] = intdiv($this->minor * $weight, $total);
+            $remainders[$i] = ($this->minor * $weight) % $total;
+        }
+
+        $left = $this->minor - array_sum($shares);
+        $order = array_keys($weights);
+        usort($order, fn (int $a, int $b): int => [$remainders[$b], $a] <=> [$remainders[$a], $b]);
+
+        foreach (array_slice($order, 0, $left) as $i) {
+            $shares[$i]++;
+        }
+
+        return array_map(fn (int $minor): self => new self($minor), $shares);
+    }
+
     public function isZero(): bool
     {
         return $this->minor === 0;
@@ -124,6 +160,14 @@ final readonly class Money implements JsonSerializable, Stringable
         $abs = abs($this->minor);
 
         return ($this->minor < 0 ? '-' : '').intdiv($abs, 100).'.'.str_pad((string) ($abs % 100), 2, '0', STR_PAD_LEFT);
+    }
+
+    /** For screens and print: thousands separators, for example "12,500.50". */
+    public function formatted(): string
+    {
+        $abs = abs($this->minor);
+
+        return ($this->minor < 0 ? '-' : '').number_format(intdiv($abs, 100)).'.'.str_pad((string) ($abs % 100), 2, '0', STR_PAD_LEFT);
     }
 
     public function __toString(): string

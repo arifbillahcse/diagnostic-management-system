@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Tenancy\Http;
 
+use App\Core\Auth\User;
 use App\Core\Tenancy\ClinicContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -27,7 +28,12 @@ final class EnsureSessionBelongsToClinic
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && $request->session()->get(self::SESSION_KEY) !== $this->clinics->id()) {
+        $wrongClinic = Auth::check() && $request->session()->get(self::SESSION_KEY) !== $this->clinics->id();
+
+        // A user deactivated while signed in loses access on the next request.
+        $deactivated = Auth::check() && Auth::user() instanceof User && ! Auth::user()->is_active;
+
+        if ($wrongClinic || $deactivated) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

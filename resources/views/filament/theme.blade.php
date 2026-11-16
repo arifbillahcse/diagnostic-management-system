@@ -25,3 +25,19 @@
     .dms-module-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
     .dms-module-name { font-size: 1.0625rem; font-weight: 600; margin: 0; }
 </style>
+<style>
+    .dms-grid-2 { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+    .dms-facts { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1.25rem; margin: 0; font-size: .875rem; }
+    .dms-facts dt { color: #4A5F59; }
+    .dms-facts dd { margin: 0; }
+    .dms-strong { font-weight: 700; font-size: 1rem; }
+    .dms-alert { color: #A12626; }
+    .dms-scroll { overflow-x: auto; }
+    .dms-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .dms-table th { text-align: left; font-weight: 600; color: #4A5F59; padding: .5rem .75rem; border-bottom: 1px solid #DCE7E2; white-space: nowrap; }
+    .dms-table td { padding: .625rem .75rem; border-bottom: 1px solid #E6EEEA; vertical-align: top; }
+    .dms-table .dms-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .dms-table .dms-total td { font-weight: 700; border-bottom: 0; }
+    .dms-struck td { color: #6B7F79; text-decoration: line-through; }
+    .dms-link { color: #17735D; font-weight: 600; text-decoration: underline; }
+</style>

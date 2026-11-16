@@ -39,7 +39,12 @@ final class PermissionTest extends TestCase
         $this->assertTrue($accountant->can(CorePermissions::AUDIT_VIEW));
         $this->assertFalse($accountant->can(CorePermissions::USERS_MANAGE));
 
-        foreach (array_keys(CorePermissions::all()) as $permission) {
+        $this->assertTrue($receptionist->can(CorePermissions::PATIENTS_CREATE));
+
+        foreach ([
+            CorePermissions::USERS_MANAGE, CorePermissions::ROLES_MANAGE, CorePermissions::BRANCHES_MANAGE,
+            CorePermissions::SETTINGS_MANAGE, CorePermissions::MODULES_MANAGE, CorePermissions::AUDIT_VIEW,
+        ] as $permission) {
             $this->assertFalse($receptionist->can($permission), $permission);
         }
     }

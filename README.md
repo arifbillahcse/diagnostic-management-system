@@ -7,13 +7,20 @@ title **DMS**.
 
 ## Status
 
-**Phase 1 (skeleton) is built.** It contains the foundation every later
-feature sits on: one database per clinic, sign-in, users, roles and
-permissions, the audit log, clinic settings, branches, number counters, exact
-money handling, and the module system with one demo module. Patients,
-billing, and laboratory features start in Phase 2.
+**Phases 1 and 2 are built.**
 
-![Roles screen](docs/screenshots/roles.png)
+- **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
+  permissions, the audit log, clinic settings, branches, number counters,
+  exact money handling, and the module system.
+- **Phase 2, front desk and billing:** patients, the service catalog with
+  packages, referral doctors, orders, invoices, discounts with role limits,
+  part payments and dues, refunds with approval, cancelling and adding tests
+  after issue, daily cash closing, printable invoices and receipts, and
+  today's figures on the dashboard.
+
+Laboratory work (samples, results, reports) starts in Phase 3.
+
+![Order screen](docs/screenshots/order.png)
 
 ## Requirements
 
@@ -84,6 +91,9 @@ includes `127.0.0.1` unless you create a clinic with that domain.
 | `php artisan modules:list` | Lists modules in load order |
 | `php artisan modules:validate` | Checks every module manifest and dependency. Fails on any problem |
 | `php artisan queue:work` | Runs queued jobs. Each job reconnects to the clinic it was created for |
+| `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
+| `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
+| `php artisan frontdesk:check-invoices` | Recalculates every invoice and reports any stored total that differs. Scheduled nightly, changes nothing |
 
 ## Tests
 
@@ -116,8 +126,11 @@ app/Core/            The fixed core
   Money/             Exact money arithmetic
   Settings/          Clinic settings
   Branches/          Branches
+  Patients/          Patients, shared by every module
 app/Filament/        Admin screens for the core
-modules/             One folder per module. modules/Demo is a working example
+modules/             One folder per module
+  FrontDesk/         Catalog, orders, invoices, payments, refunds, cash sessions
+  Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database
   clinic/            Core tables of every clinic database

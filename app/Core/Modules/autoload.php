@@ -20,7 +20,12 @@ spl_autoload_register(static function (string $class): void {
         return;
     }
 
-    $file = dirname(__DIR__, 3).'/modules/'.$parts[1].'/src/'.str_replace('\\', '/', $parts[2]).'.php';
+    // Modules\<Name>\Tests\<Rest> lives in modules/<Name>/tests/<Rest>.php.
+    [$folder, $rest] = str_starts_with($parts[2], 'Tests\\')
+        ? ['tests', substr($parts[2], 6)]
+        : ['src', $parts[2]];
+
+    $file = dirname(__DIR__, 3).'/modules/'.$parts[1].'/'.$folder.'/'.str_replace('\\', '/', $rest).'.php';
 
     if (is_file($file)) {
         require $file;

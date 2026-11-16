@@ -85,7 +85,8 @@ counter.
 
 ### Patients
 
-Built in Phase 2.
+Built in Phase 2. Patients are never deleted, and merging two records is
+not built yet.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -155,10 +156,10 @@ Rules:
 |---|---|---|
 | `fd_orders` | `public_id`, `order_no` (unique), `patient_id`, `referral_doctor_id`, `branch_id`, `status`, `ordered_at`, `notes` | One visit |
 | `fd_order_items` | `order_id`, `service_id`, `service_name`, `unit_price`, `discount_amount`, `net_amount`, `package_item_of` (nullable), `status` | Name and price are snapshots |
-| `fd_invoices` | `public_id`, `invoice_no` (unique), `order_id`, `patient_id`, `branch_id`, `subtotal`, `discount_total`, `total`, `paid_total`, `refunded_total`, `due_amount`, `status`, `issued_at` | One invoice per order in version 1 |
+| `fd_invoices` | `public_id`, `invoice_no` (unique), `order_id`, `patient_id`, `branch_id`, `subtotal`, `discount_total`, `adjustment_total`, `total`, `paid_total`, `refunded_total`, `due_amount`, `status`, `discount_reason`, `discount_by`, `issued_at`, `voided_at`, `void_reason` | One invoice per order in version 1 |
 | `fd_invoice_lines` | `invoice_id`, `order_item_id` (nullable), `kind` (charge, discount, adjustment), `description`, `amount` | Never edited after the invoice is issued |
 | `fd_payments` | `public_id`, `receipt_no` (unique), `invoice_id`, `amount`, `method` (cash, bkash, nagad, card, bank), `reference`, `received_by`, `cash_session_id`, `received_at`, `idempotency_key` (unique, nullable) | Append-only |
-| `fd_refunds` | `public_id`, `refund_no` (unique), `invoice_id`, `payment_id` (nullable), `amount`, `method`, `reason`, `approved_by`, `refunded_by`, `cash_session_id`, `refunded_at` | Append-only |
+| `fd_refunds` | `public_id`, `refund_no` (unique, issued on approval), `invoice_id`, `amount`, `method`, `reason`, `status` (pending, approved, rejected), `requested_by`, `requested_at`, `decided_by`, `decided_at`, `decision_note`, `cash_session_id` | Affects the invoice only once approved |
 | `fd_cash_sessions` | `public_id`, `branch_id`, `opened_by`, `opened_at`, `opening_float`, `closed_by`, `closed_at`, `expected_cash`, `counted_cash`, `difference`, `status`, `notes` | Daily cash closing |
 | `fd_daily_summaries` | `summary_date`, `branch_id`, `orders_count`, `patients_count`, `billed_total`, `collected_total`, `refunded_total`, `due_total` | Unique on (`summary_date`, `branch_id`). Feeds the dashboard |
 
@@ -168,9 +169,20 @@ truth is the lines, payments, and refunds:
 ```
 total         = sum of invoice lines
 paid_total    = sum of payments
-refunded_total= sum of refunds
+refunded_total= sum of approved refunds
 due_amount    = total - paid_total + refunded_total
 ```
+
+A negative due is a credit: the patient paid, a test was then cancelled, and
+the clinic owes a refund. Approving that refund brings the due back to zero.
+
+**Discounts** are given on the whole order and then shared across the items
+in proportion to their price, to the poisha. Each item stores its share, so
+cancelling an item takes back exactly what it contributed.
+
+**Packages** are one billable item. The tests inside are stored as extra
+order items with no price that point at the package item, so the laboratory
+can see them. A test inside a package cannot be cancelled on its own.
 
 Every action that adds a line, payment, or refund locks the invoice row,
 inserts the new row, recalculates the totals, and writes the audit entry in
@@ -178,13 +190,15 @@ one transaction. A scheduled check recomputes the totals from the rows and
 reports any invoice where the stored and computed values differ.
 
 **Changes after an invoice is issued.** Lines are not edited. Adding or
-cancelling a test adds an adjustment line, positive or negative. This rule
-must be confirmed against how real clinics handle changes (see
-open-decisions.md).
+cancelling a test adds an adjustment line, positive or negative. A test
+added later is charged at full price. An order with no money against it can
+be cancelled outright, which voids its invoice. These rules must be
+confirmed against how real clinics handle changes (see open-decisions.md).
 
-**Constraints.** Amounts are never negative except adjustment and discount
-lines. `paid_total - refunded_total` can never exceed `total`. MySQL check
-constraints enforce what they can, and the actions enforce the rest.
+**Constraints.** The actions enforce the rules: a payment cannot exceed the
+due, and a refund cannot exceed what was paid. Under them, MySQL check
+constraints refuse a zero or negative payment or refund, a negative price,
+an item discount above its price, and refunds above payments.
 
 ## 5. Module: laboratory (`lab_`)
 
@@ -282,21 +296,28 @@ allowed, checks the permission, and writes the audit entry.
 ### Order (`fd_orders.status`)
 
 ```
-draft -> confirmed -> in_progress -> completed
-draft -> cancelled
-confirmed -> cancelled        (only if nothing is collected or paid, or after refund)
+confirmed -> in_progress -> completed
+confirmed or in_progress -> cancelled
 ```
+
+The front desk creates orders as confirmed; there is no draft state. The
+laboratory module moves them to in progress and completed. An order is
+cancelled either outright (no money held, invoice voided) or when its last
+test is cancelled.
 
 ### Invoice (`fd_invoices.status`)
 
 ```
 issued -> partially_paid -> paid
 issued -> paid
-paid or partially_paid -> refunded   (fully refunded)
-issued -> void                       (no payments, with reason)
+paid -> refunded                     (nothing charged any more, all money returned)
+issued -> void                       (no money held, with reason)
 ```
 
-The status is derived from the totals. It is stored for filtering.
+The status is derived from the totals by one class
+(`InvoiceCalculator`) and stored for filtering. `frontdesk:check-invoices`
+recalculates every invoice nightly and reports any stored value that
+differs.
 
 ### Cash session
 
@@ -304,7 +325,20 @@ The status is derived from the totals. It is stored for filtering.
 open -> closed
 ```
 
-One open session per user per branch. Payments in cash need an open session.
+One open session per user. Cash payments and cash refunds need the acting
+user's open session. Closing records the expected amount (float, plus cash
+in, minus cash out), the counted amount, and the difference; a difference
+needs a note.
+
+### Refund (`fd_refunds.status`)
+
+```
+pending -> approved
+pending -> rejected
+```
+
+By default the approver must be a different person from the requester. A
+clinic can switch that off in the front desk settings.
 
 ### Sample (`lab_samples.status`)
 

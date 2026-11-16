@@ -1,0 +1,12 @@
+{
+  "key": "frontdesk",
+  "name": "Front desk and billing",
+  "description": "Service catalog, referral doctors, orders, invoices, payments, dues, refunds, and daily cash closing.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": [],
+  "suggests": [],
+  "table_prefix": "fd_",
+  "default_enabled": true,
+  "entry": "Modules\\FrontDesk\\FrontDeskModule"
+}

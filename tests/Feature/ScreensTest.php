@@ -111,7 +111,7 @@ final class ScreensTest extends TestCase
         $adminRole = Role::where('key', 'admin')->first();
 
         foreach ([
-            '/', '/users', '/users/create', "/users/{$owner->id}/edit",
+            '/', '/users', '/users/create', "/users/{$owner->public_id}/edit",
             '/roles', '/roles/create', "/roles/{$adminRole->id}/edit",
             '/branches', '/audit-log', '/settings', '/modules',
         ] as $path) {
@@ -128,7 +128,7 @@ final class ScreensTest extends TestCase
         $this->signIn($receptionist)->get('http://alpha.test/')
             ->assertOk()
             ->assertDontSee('Audit log')
-            ->assertDontSee('Modules');
+            ->assertDontSee('href="http://alpha.test/modules"', false);
 
         foreach (['/users', '/users/create', '/roles', '/branches', '/audit-log', '/settings', '/modules'] as $path) {
             $this->signIn($receptionist)->get("http://alpha.test{$path}")->assertForbidden();
@@ -183,7 +183,7 @@ final class ScreensTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['email']);
 
-        Livewire::test(EditUser::class, ['record' => $salma->id])
+        Livewire::test(EditUser::class, ['record' => $salma->public_id])
             ->assertFormSet(['name' => 'Salma Begum', 'role_ids' => [$receptionist]])
             ->fillForm(['name' => 'Salma B.', 'is_active' => false])
             ->call('save')
@@ -200,7 +200,7 @@ final class ScreensTest extends TestCase
         $owner = $this->owner();
         $this->actingAs($owner);
 
-        Livewire::test(EditUser::class, ['record' => $owner->id])
+        Livewire::test(EditUser::class, ['record' => $owner->public_id])
             ->fillForm(['is_active' => false])
             ->call('save')
             ->assertNotified('Not saved');

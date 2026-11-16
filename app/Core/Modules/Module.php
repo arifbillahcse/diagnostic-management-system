@@ -33,6 +33,18 @@ abstract class Module
         return [];
     }
 
+    /**
+     * Numeric limits given to the default roles when the module is first
+     * installed, for example a maximum discount percent. Existing values
+     * are never overwritten.
+     *
+     * @return array<string, array<string, string>> role key => [limit key => value]
+     */
+    public function defaultLimits(): array
+    {
+        return [];
+    }
+
     /** @return list<class-string> Filament resources */
     public function resources(): array
     {

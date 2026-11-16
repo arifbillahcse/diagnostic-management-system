@@ -51,7 +51,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
-            ->navigationGroups(['Administration'])
+            ->navigationGroups(['Front desk', 'Catalog', 'Administration'])
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

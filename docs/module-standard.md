@@ -164,7 +164,7 @@ files or another module's files.
 | Screens | Filament resources, pages, and relation tabs |
 | Dashboard | Widgets, each with its own permission |
 | Record tabs | Extra tabs or panels on shared records such as the patient page |
-| Permissions | Its own permission keys and default role grants |
+| Permissions | Its own permission keys, default role grants, and default role limits (for example a maximum discount percent) |
 | Settings | Its own settings page and setting keys |
 | Events | Listeners for events from core and from the modules it requires or suggests |
 | Documents | Printable document types that use the shared renderer |

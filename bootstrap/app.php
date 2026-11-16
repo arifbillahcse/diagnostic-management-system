@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Every web request belongs to a clinic. The clinic is resolved
         // before anything else, and the session is tied to it afterwards.
+        $middleware->redirectGuestsTo('/login');
+
         $middleware->web(
             prepend: [ResolveClinic::class],
             append: [EnsureSessionBelongsToClinic::class],

@@ -34,18 +34,19 @@ core.patients.update
 core.patients.merge
 core.export.run
 
+frontdesk.orders.view
 frontdesk.orders.create
-frontdesk.orders.cancel
-frontdesk.invoices.view
-frontdesk.invoices.void
+frontdesk.orders.cancel       (cancel an order with no money against it)
+frontdesk.orders.adjust       (add or cancel tests on an issued invoice)
 frontdesk.discounts.apply
 frontdesk.discounts.override
 frontdesk.payments.record
 frontdesk.refunds.request
 frontdesk.refunds.approve
-frontdesk.cash.close
+frontdesk.cash.manage         (open and close own cash session)
 frontdesk.cash.view_all
 frontdesk.catalog.manage
+frontdesk.settings.manage
 
 laboratory.samples.collect
 laboratory.samples.receive
@@ -120,7 +121,7 @@ Two grants need the owner's attention:
 | Rule | Default | Can the clinic change it? |
 |---|---|---|
 | The verifier must be a different user from the one who entered the result | On | Yes, by the owner. The change is audited |
-| Maximum discount percent per role | Receptionist 0 to 10 percent as a starting value | Yes. The right figures come from clinic interviews |
+| Maximum discount percent per role | Receptionist and accountant 10 percent. Admin and owner have no limit | The values are stored per role. A screen to edit them is not built yet |
 | A refund needs approval by a second user with the approve permission | On | Yes, by the owner |
 | A user records cash only into their own open cash session | On | No |
 | A user sees only the branches they are assigned to | On | No |

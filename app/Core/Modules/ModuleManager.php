@@ -6,6 +6,7 @@ namespace App\Core\Modules;
 
 use App\Core\Audit\AuditLogger;
 use App\Core\Auth\PermissionRegistry;
+use App\Core\Auth\RoleLimits;
 use App\Core\Tenancy\ClinicMigrator;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,7 @@ final class ModuleManager
         private readonly ClinicMigrator $migrator,
         private readonly PermissionRegistry $permissions,
         private readonly AuditLogger $audit,
+        private readonly RoleLimits $limits,
     ) {}
 
     public function enable(string $key): void
@@ -72,6 +74,7 @@ final class ModuleManager
 
             if ($firstInstall) {
                 $this->permissions->applyDefaultGrants($this->registry->module($key)->defaultGrants());
+                $this->limits->applyDefaults($this->registry->module($key)->defaultLimits());
             }
 
             $this->audit->record('module.enabled', null, [], [], [

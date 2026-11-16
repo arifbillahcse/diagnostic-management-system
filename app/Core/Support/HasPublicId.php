@@ -20,4 +20,10 @@ trait HasPublicId
             }
         });
     }
+
+    /** Links and route parameters carry the public ID, never the row number. */
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
 }

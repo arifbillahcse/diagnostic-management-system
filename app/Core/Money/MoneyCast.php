@@ -17,17 +17,26 @@ final class MoneyCast implements CastsAttributes
 {
     public function get(Model $model, string $key, mixed $value, array $attributes): ?Money
     {
+        return $value === null ? null : self::fromDatabase($value);
+    }
+
+    /**
+     * Turn a value read from a DECIMAL column or a SUM() into Money.
+     * Null (an empty SUM) is zero.
+     */
+    public static function fromDatabase(mixed $value): Money
+    {
         if ($value === null) {
-            return null;
+            return Money::zero();
         }
 
-        if (is_string($value) || is_int($value)) {
+        if (is_int($value) || (is_string($value) && preg_match('/^-?\d+(\.\d{1,2})?$/', $value))) {
             return Money::fromDecimal($value);
         }
 
-        // MySQL returns DECIMAL as a string and never reaches this line.
-        // SQLite (fast tests only) returns a number, which is formatted
-        // back to two places before parsing.
+        // MySQL returns DECIMAL as a two-place string and never reaches this
+        // line. SQLite (fast tests only) returns a number, which is
+        // formatted back to two places before parsing.
         return Money::fromDecimal(number_format((float) $value, 2, '.', ''));
     }
 

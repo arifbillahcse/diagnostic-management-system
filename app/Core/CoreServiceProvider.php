@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Core\Audit\AuditLogger;
 use App\Core\Auth\PermissionChecker;
 use App\Core\Auth\PermissionRegistry;
+use App\Core\Auth\RoleLimits;
 use App\Core\Auth\User;
 use App\Core\Branches\Branch;
 use App\Core\Modules\EnsureModuleEnabled;
@@ -44,6 +45,7 @@ final class CoreServiceProvider extends ServiceProvider
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(PermissionChecker::class);
         $this->app->singleton(Settings::class);
+        $this->app->singleton(RoleLimits::class);
 
         $this->app->singleton(ModuleRegistry::class, fn (): ModuleRegistry => new ModuleRegistry(
             (string) config('dms.modules_path'),
@@ -76,6 +78,7 @@ final class CoreServiceProvider extends ServiceProvider
             $this->app->make(Entitlements::class)->flush();
             $this->app->make(PermissionChecker::class)->flush();
             $this->app->make(Settings::class)->flush();
+            $this->app->make(RoleLimits::class)->flush();
         });
     }
 
