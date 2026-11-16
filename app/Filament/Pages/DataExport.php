@@ -42,8 +42,10 @@ class DataExport extends Page
         $exporter = app(DataExporter::class);
         $list = [];
 
+        $counts = $exporter->approximateCounts();
+
         foreach ($exporter->datasets() as $table => $label) {
-            $list[] = ['table' => $table, 'label' => $label, 'rows' => $exporter->count($table)];
+            $list[] = ['table' => $table, 'label' => $label, 'rows' => $counts[$table]];
         }
 
         return $list;

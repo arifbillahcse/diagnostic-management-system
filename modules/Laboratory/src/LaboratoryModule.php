@@ -48,6 +48,11 @@ final class LaboratoryModule extends Module
         ];
     }
 
+    public function appendOnlyTables(): array
+    {
+        return ['lab_result_versions'];
+    }
+
     public function exports(): array
     {
         return [

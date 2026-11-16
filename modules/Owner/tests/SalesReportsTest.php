@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Modules\Owner\Tests;
 
 use App\Core\Modules\ModuleManager;
+use App\Core\Money\Money;
 use DomainException;
+use Illuminate\Support\Facades\DB;
 use Modules\FrontDesk\Actions\AdjustOrder;
+use Modules\FrontDesk\Actions\DecideRefund;
+use Modules\FrontDesk\Actions\RequestRefund;
 use Modules\FrontDesk\Enums\PaymentMethod;
 use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Tests\FrontDeskTestCase;
@@ -94,6 +98,44 @@ final class SalesReportsTest extends FrontDeskTestCase
         $this->assertCount(3, $rows);
         $this->assertSame([0, '0.00'], [$rows[0]['orders'], $rows[0]['collected']->toDecimal()]);
         $this->assertSame([1, 1, '1000.00', '400.00'], [$rows[2]['orders'], $rows[2]['patients'], $rows[2]['billed']->toDecimal(), $rows[2]['collected']->toDecimal()]);
+    }
+
+    public function test_finished_days_are_read_from_stored_figures_and_refreshed_when_they_change(): void
+    {
+        $this->travelTo(now('Asia/Dhaka')->subDays(3)->setTime(11, 0));
+        $old = $this->order(['1000']);
+        $this->pay($old, '1000');
+        $this->travelBack();
+        $this->order(['300']);
+
+        $from = now('Asia/Dhaka')->subDays(5)->toDateString();
+        $first = $this->reports()->byDay($from, $this->today);
+
+        $this->assertSame([1, '1000.00', '1000.00'], [$first[2]['orders'], $first[2]['billed']->toDecimal(), $first[2]['collected']->toDecimal()]);
+        $this->assertSame(5, DB::connection('clinic')->table('fd_daily_summaries')->count(), 'the five finished days are stored; today is not');
+
+        // The second read makes far fewer queries: one for the stored days, six for today.
+        DB::connection('clinic')->enableQueryLog();
+        $second = $this->reports()->byDay($from, $this->today);
+        $queries = count(DB::connection('clinic')->getQueryLog());
+        DB::connection('clinic')->disableQueryLog();
+
+        $this->assertLessThanOrEqual(10, $queries);
+        $this->assertEquals(array_column($first, 'orders'), array_column($second, 'orders'));
+        $this->assertSame(1, $second[5]['orders'], 'today is counted live');
+
+        // Cancelling the old order changes a finished day; its stored figures are dropped.
+        $this->actingAs($this->ownerUser);
+        $refund = app(RequestRefund::class)->handle($this->invoice($old), Money::fromDecimal('1000'), PaymentMethod::Bkash, 'Not done');
+        $this->actingAs($this->staff('accountant'));
+        app(DecideRefund::class)->approve($refund);
+        $this->actingAs($this->ownerUser);
+        app(AdjustOrder::class)->cancelOrder($old, 'Entered by mistake');
+
+        $third = $this->reports()->byDay($from, $this->today);
+        $this->assertSame(0, $third[2]['orders']);
+        $this->assertSame('1000.00', $third[2]['collected']->toDecimal(), 'the money was still received that day');
+        $this->assertSame('1000.00', $third[5]['refunded']->toDecimal(), 'and given back today');
     }
 
     public function test_the_period_is_checked(): void

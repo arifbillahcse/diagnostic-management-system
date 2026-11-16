@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Core\Http\SecurityHeaders;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Settings\Settings;
 use App\Core\Tenancy\ClinicContext;
 use App\Core\Tenancy\Http\EnsureSessionBelongsToClinic;
 use App\Core\Tenancy\Http\ResolveClinic;
+use App\Filament\Pages\MyAccount;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,6 +42,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->profile(MyAccount::class, isSimple: false)
+            // Optional two-step sign-in with an authenticator app, set up by
+            // each user on their own account page.
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()])
             ->brandName(fn (): string => $this->clinicName())
             ->colors([
                 // Brand green. Filament fills buttons with shade 400, so that
@@ -60,6 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([Dashboard::class, ...$pages])
             ->widgets([AccountWidget::class, ...$widgets])
             ->middleware([
+                SecurityHeaders::class,
                 ResolveClinic::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

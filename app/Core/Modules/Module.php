@@ -55,6 +55,17 @@ abstract class Module
         return [];
     }
 
+    /**
+     * Tables whose rows are written once and never changed. On MySQL the
+     * database itself then refuses UPDATE and DELETE on them.
+     *
+     * @return list<string>
+     */
+    public function appendOnlyTables(): array
+    {
+        return [];
+    }
+
     /** @return list<class-string> Filament resources */
     public function resources(): array
     {

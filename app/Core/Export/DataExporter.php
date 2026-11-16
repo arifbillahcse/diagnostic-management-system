@@ -20,7 +20,7 @@ use InvalidArgumentException;
 final class DataExporter
 {
     /** Columns that are never exported. */
-    private const HIDDEN = ['password', 'remember_token'];
+    private const HIDDEN = ['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'];
 
     /** Core tables, in the order they are listed. */
     private const CORE = [
@@ -30,6 +30,9 @@ final class DataExporter
         'patients' => 'Patients',
         'audit_logs' => 'Audit log',
     ];
+
+    /** @var array<string, string>|null worked out once per request */
+    private ?array $datasets = null;
 
     public function __construct(
         private readonly ModuleRegistry $modules,
@@ -45,6 +48,10 @@ final class DataExporter
      */
     public function datasets(): array
     {
+        if ($this->datasets !== null) {
+            return $this->datasets;
+        }
+
         $datasets = self::CORE;
 
         foreach (array_keys($this->modules->all()) as $key) {
@@ -55,7 +62,7 @@ final class DataExporter
             }
         }
 
-        return array_filter($datasets, fn (string $label, string $table): bool => Schema::connection('clinic')->hasTable($table), ARRAY_FILTER_USE_BOTH);
+        return $this->datasets = array_filter($datasets, fn (string $label, string $table): bool => Schema::connection('clinic')->hasTable($table), ARRAY_FILTER_USE_BOTH);
     }
 
     public function count(string $table): int
@@ -63,6 +70,28 @@ final class DataExporter
         $this->assertKnown($table);
 
         return DB::connection('clinic')->table($table)->count();
+    }
+
+    /**
+     * Row counts for the export screen. On MySQL these are the database's
+     * own estimates, read in one query; counting millions of rows exactly
+     * just to draw a list would take seconds.
+     *
+     * @return array<string, int> table => rows (approximate on MySQL)
+     */
+    public function approximateCounts(): array
+    {
+        $tables = array_keys($this->datasets());
+        $db = DB::connection('clinic');
+
+        if ($db->getDriverName() !== 'mysql') {
+            return array_combine($tables, array_map(fn (string $t): int => $db->table($t)->count(), $tables));
+        }
+
+        $estimates = collect($db->select('SELECT table_name AS name, table_rows AS total FROM information_schema.tables WHERE table_schema = DATABASE()'))
+            ->pluck('total', 'name');
+
+        return array_combine($tables, array_map(fn (string $t): int => (int) ($estimates[$t] ?? 0), $tables));
     }
 
     /**

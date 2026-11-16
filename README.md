@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 4 are built.**
+**Phases 1 to 5 are built.**
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
   permissions, the audit log, clinic settings, branches, number counters,
@@ -29,7 +29,12 @@ title **DMS**.
   collections chart; sales reports by day, test, doctor, and cashier; and a
   full export of the clinic's data.
 
-Next is Phase 5: a performance and safety pass with years of simulated data.
+- **Phase 5, performance and safety:** every screen timed against two years
+  of simulated data and the slow ones fixed; backups with a trial restore;
+  two-step sign-in; database-level protection of the audit trail; and a
+  security review.
+
+Next is Phase 6: a pilot at one real clinic.
 
 ![Owner dashboard](docs/screenshots/owner-dashboard.png)
 
@@ -109,6 +114,9 @@ includes `127.0.0.1` unless you create a clinic with that domain.
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |
+| `php artisan clinic:backup` | Backs up the control database and every clinic database. Add `--verify` to restore each into a scratch database and check it. Scheduled nightly once `BACKUP_PATH` is set |
+| `php artisan clinic:verify-backup <file>` | Checks one backup file by restoring it |
+| `php artisan platform:doctor` | Checks the installation's settings are safe for real patient data |
 | `php artisan frontdesk:check-invoices` | Recalculates every invoice and reports any stored total that differs. Scheduled nightly, changes nothing |
 
 ## Tests
@@ -172,4 +180,6 @@ To add a module, copy `modules/Demo`, change its `module.json`, and follow
 | [docs/permissions.md](docs/permissions.md) | Roles, permission keys, and the rules that protect money and results |
 | [docs/feature-checklist.md](docs/feature-checklist.md) | Features compared with competitors, to fill in during clinic interviews |
 | [docs/open-decisions.md](docs/open-decisions.md) | Decisions still open, with a recommendation and a deadline for each |
+| [docs/performance.md](docs/performance.md) | Screen and action timings against two years of data, and what was changed |
+| [docs/security-review.md](docs/security-review.md) | What was checked, what was fixed, what is still open, and a checklist before real patient data |
 | [docs/phases.md](docs/phases.md) | The build phases and how each one ends |

@@ -55,6 +55,11 @@ final class FrontDeskModule extends Module
         ];
     }
 
+    public function appendOnlyTables(): array
+    {
+        return ['fd_invoice_lines', 'fd_payments'];
+    }
+
     public function exports(): array
     {
         return [

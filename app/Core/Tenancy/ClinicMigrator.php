@@ -31,6 +31,8 @@ final class ClinicMigrator
                     $this->runPath($this->registry->get($key)->migrationsPath());
                 }
             }
+
+            app(ClinicHardening::class)->apply();
         });
     }
 

@@ -8,6 +8,7 @@ use App\Core\Audit\AuditLog;
 use App\Core\Modules\ModuleManager;
 use App\Core\Money\Money;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 use Modules\Finance\Actions\ManageAccounts;
 use Modules\Finance\Actions\ManageCommission;
@@ -18,6 +19,7 @@ use Modules\Finance\Models\CommissionEntry;
 use Modules\Finance\Models\Expense;
 use Modules\Finance\Support\Commission;
 use Modules\Finance\Support\FinanceException;
+use Modules\Finance\Support\Ledger;
 use Modules\Finance\Support\Posting;
 use Modules\Finance\Support\ProfitReport;
 use Modules\FrontDesk\Actions\AdjustOrder;
@@ -108,6 +110,23 @@ final class FinanceTest extends FinanceTestCase
 
         $this->artisan('finance:sync')->expectsOutputToContain('0 missing account entries posted.')->assertSuccessful();
         $this->assertSame(1, AccountEntry::count());
+    }
+
+    public function test_a_stored_balance_that_drifts_from_its_entries_is_found_and_corrected(): void
+    {
+        $this->pay($this->order(['1000']), '1000');
+        $this->assertSame('1000.00', $this->balance('bKash'));
+
+        // Tampered with directly in the database.
+        DB::connection('clinic')->table('fin_accounts')->update(['balance' => '5.00']);
+        $this->assertSame('5.00', $this->balance('bKash'));
+
+        $this->artisan('finance:sync')
+            ->expectsOutputToContain('Balance of bKash corrected from 5.00 to 1000.00')
+            ->assertSuccessful();
+
+        $this->assertSame('1000.00', $this->balance('bKash'));
+        $this->assertSame([], app(Ledger::class)->reconcile(), 'nothing left to correct');
     }
 
     public function test_an_account_can_start_with_money_and_only_one_is_the_default_per_method(): void

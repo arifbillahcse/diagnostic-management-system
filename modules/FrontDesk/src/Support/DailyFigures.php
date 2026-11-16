@@ -8,6 +8,7 @@ use App\Core\Money\Money;
 use App\Core\Money\MoneyCast;
 use App\Core\Tenancy\ClinicContext;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Modules\FrontDesk\Enums\InvoiceStatus;
 use Modules\FrontDesk\Enums\OrderStatus;
@@ -68,10 +69,77 @@ final class DailyFigures
         ];
     }
 
-    /** Store the day's figures. Safe to run again; the row is replaced. */
-    public function store(CarbonImmutable $localDate, int $branchId): void
+    /**
+     * Figures for every day of a period, one row per day and branch.
+     *
+     * A finished day is read from the summary table (one query for the
+     * whole period) and worked out only if it has no row yet, after which
+     * it is stored. Today is always worked out live, because it is still
+     * changing.
+     *
+     * @param  list<int>  $branchIds
+     * @return array<string, array<int, array{orders_count: int, patients_count: int, billed_total: Money, collected_total: Money, refunded_total: Money, due_total: Money}>> date => branch id => figures
+     */
+    public function forPeriod(CarbonImmutable $from, CarbonImmutable $to, array $branchIds): array
     {
-        $figures = $this->for($localDate, $branchId);
+        $today = $this->today();
+
+        $stored = DB::connection('clinic')->table('fd_daily_summaries')
+            ->where('summary_date', '>=', $from->toDateString())
+            ->where('summary_date', '<', $to->addDay()->toDateString())
+            ->whereIn('branch_id', $branchIds)
+            ->get()
+            ->keyBy(fn ($row): string => substr((string) $row->summary_date, 0, 10).'|'.$row->branch_id);
+
+        $result = [];
+
+        for ($day = $from; $day->lessThanOrEqualTo($to); $day = $day->addDay()) {
+            $date = $day->toDateString();
+            $finished = $date < $today->toDateString();
+
+            foreach ($branchIds as $branchId) {
+                $row = $finished ? $stored->get("{$date}|{$branchId}") : null;
+
+                if ($row !== null) {
+                    $result[$date][$branchId] = [
+                        'orders_count' => (int) $row->orders_count,
+                        'patients_count' => (int) $row->patients_count,
+                        'billed_total' => MoneyCast::fromDatabase($row->billed_total),
+                        'collected_total' => MoneyCast::fromDatabase($row->collected_total),
+                        'refunded_total' => MoneyCast::fromDatabase($row->refunded_total),
+                        'due_total' => MoneyCast::fromDatabase($row->due_total),
+                    ];
+
+                    continue;
+                }
+
+                $result[$date][$branchId] = $this->for($day, $branchId);
+
+                if ($finished) {
+                    $this->store($day, $branchId, $result[$date][$branchId]);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Drop a stored day so it is worked out again when next needed. Called
+     * when something changes a finished day, such as cancelling an old order.
+     */
+    public function forget(CarbonInterface $moment, int $branchId): void
+    {
+        DB::connection('clinic')->table('fd_daily_summaries')
+            ->where('summary_date', CarbonImmutable::instance($moment)->setTimezone($this->clinics->require()->timezone)->toDateString())
+            ->where('branch_id', $branchId)
+            ->delete();
+    }
+
+    /** Store the day's figures. Safe to run again; the row is replaced. */
+    public function store(CarbonImmutable $localDate, int $branchId, ?array $figures = null): void
+    {
+        $figures ??= $this->for($localDate, $branchId);
 
         DB::connection('clinic')->table('fd_daily_summaries')->upsert(
             [[

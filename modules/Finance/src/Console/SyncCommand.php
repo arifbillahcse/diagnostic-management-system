@@ -8,6 +8,7 @@ use App\Core\Modules\ModuleState;
 use App\Core\Tenancy\ClinicManager;
 use Illuminate\Console\Command;
 use Modules\Finance\Support\Commission;
+use Modules\Finance\Support\Ledger;
 use Modules\Finance\Support\Posting;
 use Modules\FrontDesk\Enums\RefundStatus;
 use Modules\FrontDesk\Models\Invoice;
@@ -20,6 +21,9 @@ final class SyncCommand extends Command
 
     protected $description = 'Post any payments and refunds missing from the accounts, and bring referral commission up to date. Safe to run again';
 
+    /** @var list<string> */
+    private array $corrected = [];
+
     public function handle(ClinicManager $manager): int
     {
         $posted = 0;
@@ -27,10 +31,19 @@ final class SyncCommand extends Command
         $manager->eachClinic(function () use (&$posted): void {
             if (app(ModuleState::class)->isEnabled('finance')) {
                 $posted += self::catchUp();
+
+                // Each account's stored balance must equal the sum of its entries.
+                foreach (app(Ledger::class)->reconcile() as $name => $figures) {
+                    $this->corrected[] = "Balance of {$name} corrected from {$figures['stored']} to {$figures['entries']} (the sum of its entries).";
+                }
             }
         }, $this->option('clinic') ? (int) $this->option('clinic') : null);
 
         $this->info("{$posted} missing account entr".($posted === 1 ? 'y' : 'ies').' posted.');
+
+        foreach ($this->corrected as $line) {
+            $this->warn($line);
+        }
 
         return self::SUCCESS;
     }

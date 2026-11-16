@@ -7,6 +7,7 @@ namespace App\Core\Modules;
 use App\Core\Audit\AuditLogger;
 use App\Core\Auth\PermissionRegistry;
 use App\Core\Auth\RoleLimits;
+use App\Core\Tenancy\ClinicHardening;
 use App\Core\Tenancy\ClinicMigrator;
 use Illuminate\Support\Facades\DB;
 
@@ -51,6 +52,7 @@ final class ModuleManager
         // Table changes cannot be part of a MySQL transaction, so they run
         // first. Migrations are safe to repeat if a later step fails.
         $this->migrator->runPath($manifest->migrationsPath());
+        app(ClinicHardening::class)->apply();
 
         DB::connection('clinic')->transaction(function () use ($manifest, $key, $firstInstall): void {
             $now = now();

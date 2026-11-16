@@ -9,6 +9,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Modules\Finance\Models\Account;
@@ -78,6 +79,7 @@ class AccountEntryResource extends Resource
             ->filters([
                 SelectFilter::make('account_id')->label('Account')->options(fn (): array => Account::orderBy('name')->pluck('name', 'id')->all()),
             ])
+            ->paginationMode(PaginationMode::Simple)
             ->defaultSort('id', 'desc');
     }
 

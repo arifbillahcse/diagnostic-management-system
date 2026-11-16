@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Modules\Finance\Support;
 
+use App\Core\Branches\Branch;
 use App\Core\Money\Money;
 use App\Core\Money\MoneyCast;
 use App\Core\Tenancy\ClinicContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Modules\FrontDesk\Enums\InvoiceStatus;
-use Modules\FrontDesk\Enums\RefundStatus;
+use Modules\FrontDesk\Support\DailyFigures;
 
 /**
  * Money in and money out over a period, on a cash basis: what was actually
@@ -18,7 +19,10 @@ use Modules\FrontDesk\Enums\RefundStatus;
  */
 final class ProfitReport
 {
-    public function __construct(private readonly ClinicContext $clinics) {}
+    public function __construct(
+        private readonly ClinicContext $clinics,
+        private readonly DailyFigures $daily,
+    ) {}
 
     /**
      * @return array{
@@ -48,8 +52,19 @@ final class ProfitReport
         $between = fn ($query, string $column) => $query->where($column, '>=', $range[0])->where($column, '<', $range[1]);
         $money = fn ($value): Money => MoneyCast::fromDatabase($value);
 
-        $collected = $money($between($db->table('fd_payments'), 'received_at')->sum('amount'));
-        $refunded = $money($between($db->table('fd_refunds'), 'decided_at')->where('status', RefundStatus::Approved->value)->sum('amount'));
+        // Collected, refunded, and billed come from the front desk's daily
+        // figures: stored for finished days, live for today. Adding up a
+        // year of payments and invoice lines row by row took seconds.
+        $collected = $refunded = $billed = Money::zero();
+
+        foreach ($this->daily->forPeriod($start, $end, Branch::pluck('id')->map(fn ($id): int => (int) $id)->all()) as $branches) {
+            foreach ($branches as $figures) {
+                $collected = $collected->plus($figures['collected_total']);
+                $refunded = $refunded->plus($figures['refunded_total']);
+                $billed = $billed->plus($figures['billed_total']);
+            }
+        }
+
         $commissionPaid = $money($between($db->table('fin_commission_payouts'), 'paid_at')->sum('amount'));
 
         $expenseQuery = fn () => $db->table('fin_expenses')->whereNull('voided_at')
@@ -76,11 +91,6 @@ final class ProfitReport
             ->get()
             ->map(fn ($row): array => ['method' => $row->method, 'amount' => $money($row->total)])
             ->all();
-
-        $billed = $money($between($db->table('fd_invoice_lines'), 'fd_invoice_lines.created_at')
-            ->join('fd_invoices', 'fd_invoices.id', '=', 'fd_invoice_lines.invoice_id')
-            ->where('fd_invoices.status', '!=', InvoiceStatus::Void->value)
-            ->sum('fd_invoice_lines.amount'));
 
         $commissionEarned = $money($between($db->table('fin_commission_entries'), 'created_at')->sum('amount'));
         $commissionOwed = $money($db->table('fin_commission_entries')->sum('amount'))->minus($money($db->table('fin_commission_payouts')->sum('amount')));

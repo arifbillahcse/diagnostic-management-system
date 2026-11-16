@@ -15,7 +15,8 @@ use Modules\FrontDesk\Support\DailyFigures;
 final class SummarizeCommand extends Command
 {
     protected $signature = 'frontdesk:summarize
-        {--date= : Local date to rebuild (YYYY-MM-DD). Default: yesterday and today}
+        {--date= : Local date to rebuild (YYYY-MM-DD)}
+        {--days=8 : Without --date: how many days back from today to rebuild}
         {--clinic= : Only this clinic (numeric ID)}';
 
     protected $description = 'Rebuild the daily front desk summaries used by dashboards and reports';
@@ -33,7 +34,7 @@ final class SummarizeCommand extends Command
             $today = $figures->today();
             $dates = $this->option('date')
                 ? [CarbonImmutable::parse($this->option('date'), $clinic->timezone)->startOfDay()]
-                : [$today->subDay(), $today];
+                : array_map(fn (int $ago) => $today->subDays($ago), range(0, max(1, (int) $this->option('days')) - 1));
 
             foreach (Branch::pluck('id') as $branchId) {
                 foreach ($dates as $date) {

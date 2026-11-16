@@ -28,6 +28,8 @@ final class ExportController
         Gate::authorize(CorePermissions::EXPORT_RUN);
         abort_unless(array_key_exists($table, $this->exporter->datasets()), 404);
 
+        // Recorded before sending, so a download is logged even if the
+        // connection drops part-way.
         $this->audit->record('export.downloaded', null, [], [], ['table' => $table, 'rows' => $this->exporter->count($table)]);
 
         return response()->streamDownload(function () use ($table): void {

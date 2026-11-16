@@ -34,6 +34,11 @@ final class FinanceModule extends Module
         ];
     }
 
+    public function appendOnlyTables(): array
+    {
+        return ['fin_account_entries', 'fin_commission_entries'];
+    }
+
     public function exports(): array
     {
         return [

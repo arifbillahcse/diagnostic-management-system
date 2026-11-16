@@ -23,6 +23,7 @@ use Modules\FrontDesk\Models\Order;
 use Modules\FrontDesk\Models\OrderItem;
 use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Permissions;
+use Modules\FrontDesk\Support\DailyFigures;
 use Modules\FrontDesk\Support\FrontDeskException;
 use Modules\FrontDesk\Support\InvoiceCalculator;
 
@@ -37,6 +38,7 @@ final class AdjustOrder
     public function __construct(
         private readonly InvoiceCalculator $calculator,
         private readonly AuditLogger $audit,
+        private readonly DailyFigures $daily,
     ) {}
 
     public function addItem(Order $order, int $serviceId): OrderItem
@@ -155,6 +157,10 @@ final class AdjustOrder
             return [$item, $nothingLeft];
         });
 
+        // The order's own day may be a finished one whose stored figures
+        // (order and patient counts) have just changed.
+        $this->daily->forget($order->ordered_at, $order->branch_id);
+
         event(new OrderItemCancelled($item));
 
         if ($orderCancelled) {
@@ -211,6 +217,13 @@ final class AdjustOrder
 
             return $order;
         });
+
+        // A void invoice no longer counts as billed, on any day it had a line.
+        $this->daily->forget($order->ordered_at, $order->branch_id);
+
+        foreach (InvoiceLine::whereIn('invoice_id', Invoice::where('order_id', $order->id)->select('id'))->pluck('created_at') as $lineWrittenAt) {
+            $this->daily->forget($lineWrittenAt, $order->branch_id);
+        }
 
         event(new OrderCancelled($order));
 

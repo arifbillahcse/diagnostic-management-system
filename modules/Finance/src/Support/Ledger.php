@@ -33,16 +33,25 @@ final class Ledger
         try {
             // A savepoint, so losing the race to another request does not
             // disturb the caller's own transaction.
-            return DB::connection('clinic')->transaction(fn (): AccountEntry => AccountEntry::create([
-                'account_id' => $account->id,
-                'amount' => $amount,
-                'occurred_at' => $occurredAt ?? now(),
-                'source_type' => $sourceType,
-                'source_id' => $sourceId,
-                'description' => mb_substr($description, 0, 255),
-                'created_by' => Auth::id(),
-                'created_at' => now(),
-            ]));
+            return DB::connection('clinic')->transaction(function () use ($account, $amount, $sourceType, $sourceId, $description, $occurredAt): AccountEntry {
+                $entry = AccountEntry::create([
+                    'account_id' => $account->id,
+                    'amount' => $amount,
+                    'occurred_at' => $occurredAt ?? now(),
+                    'source_type' => $sourceType,
+                    'source_id' => $sourceId,
+                    'description' => mb_substr($description, 0, 255),
+                    'created_by' => Auth::id(),
+                    'created_at' => now(),
+                ]);
+
+                // Entry and running balance change together or not at all.
+                // The database does the addition, so two entries posted at
+                // the same moment cannot lose one another's amount.
+                DB::connection('clinic')->update('UPDATE fin_accounts SET balance = balance + ? WHERE id = ?', [$amount->toDecimal(), $account->id]);
+
+                return $entry;
+            });
         } catch (UniqueConstraintViolationException) {
             return AccountEntry::where('source_type', $sourceType)->where('source_id', $sourceId)->firstOrFail();
         }
@@ -59,20 +68,44 @@ final class Ledger
             ?? Account::create(['name' => $this->freeName($method->label()), 'type' => $method, 'is_default' => true, 'is_active' => true]);
     }
 
+    /** What the account holds now, read fresh from the database. */
     public function balance(Account $account): Money
     {
-        return MoneyCast::fromDatabase(DB::connection('clinic')->table('fin_account_entries')->where('account_id', $account->id)->sum('amount'));
+        return MoneyCast::fromDatabase(DB::connection('clinic')->table('fin_accounts')->where('id', $account->id)->value('balance'));
     }
 
     /** @return array<int, Money> account id => balance */
     public function balances(): array
     {
-        return DB::connection('clinic')->table('fin_account_entries')
-            ->selectRaw('account_id, SUM(amount) as total')
-            ->groupBy('account_id')
-            ->pluck('total', 'account_id')
+        return DB::connection('clinic')->table('fin_accounts')
+            ->pluck('balance', 'id')
             ->map(fn ($total): Money => MoneyCast::fromDatabase($total))
             ->all();
+    }
+
+    /**
+     * Add up every account's entries and compare with its stored balance.
+     * A difference is corrected and returned, so it can be reported.
+     *
+     * @return array<string, array{stored: string, entries: string}> account name => the two figures
+     */
+    public function reconcile(): array
+    {
+        $db = DB::connection('clinic');
+        $sums = $db->table('fin_account_entries')->selectRaw('account_id, SUM(amount) as total')->groupBy('account_id')->pluck('total', 'account_id');
+        $differences = [];
+
+        foreach ($db->table('fin_accounts')->get(['id', 'name', 'balance']) as $account) {
+            $stored = MoneyCast::fromDatabase($account->balance);
+            $entries = MoneyCast::fromDatabase($sums[$account->id] ?? 0);
+
+            if (! $stored->equals($entries)) {
+                $differences[$account->name] = ['stored' => $stored->toDecimal(), 'entries' => $entries->toDecimal()];
+                $db->table('fin_accounts')->where('id', $account->id)->update(['balance' => $entries->toDecimal()]);
+            }
+        }
+
+        return $differences;
     }
 
     private function freeName(string $name): string

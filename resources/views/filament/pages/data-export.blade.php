@@ -14,7 +14,7 @@
     <x-filament::section heading="One table at a time">
         <div class="dms-scroll">
             <table class="dms-table">
-                <thead><tr><th>Data</th><th class="dms-num">Rows</th><th></th></tr></thead>
+                <thead><tr><th>Data</th><th class="dms-num">Rows (about)</th><th></th></tr></thead>
                 <tbody>
                     @foreach ($this->datasets as $dataset)
                         <tr>

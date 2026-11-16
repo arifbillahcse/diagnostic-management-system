@@ -36,14 +36,15 @@ final class SalesReports
     public function byDay(string $from, string $to): array
     {
         [$start, $end] = $this->period($from, $to);
-        $branches = Branch::pluck('id')->all();
+        $branches = Branch::pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $period = $this->daily->forPeriod($start, $end, $branches);
         $rows = [];
 
         for ($day = $start; $day->lessThanOrEqualTo($end); $day = $day->addDay()) {
             $row = ['date' => $day, 'orders' => 0, 'patients' => 0, 'billed' => Money::zero(), 'collected' => Money::zero(), 'refunded' => Money::zero()];
 
             foreach ($branches as $branchId) {
-                $figures = $this->daily->for($day, (int) $branchId);
+                $figures = $period[$day->toDateString()][$branchId];
                 $row['orders'] += $figures['orders_count'];
                 $row['patients'] += $figures['patients_count'];
                 $row['billed'] = $row['billed']->plus($figures['billed_total']);
@@ -152,8 +153,19 @@ final class SalesReports
     {
         [$start, $end] = $this->period($from, $to);
 
+        // The lowest and highest order number in the period. Every order in
+        // the period lies between them, so limiting the order items to that
+        // range lets the database skip the items of all other orders. The
+        // date conditions below still decide exactly what is counted.
+        $bounds = DB::connection('clinic')->table('fd_orders')
+            ->where('ordered_at', '>=', $start->utc())
+            ->where('ordered_at', '<', $end->addDay()->utc())
+            ->selectRaw('MIN(id) as first, MAX(id) as last')
+            ->first();
+
         return DB::connection('clinic')->table('fd_order_items')
             ->join('fd_orders', 'fd_orders.id', '=', 'fd_order_items.order_id')
+            ->whereBetween('fd_order_items.order_id', [(int) ($bounds->first ?? 0), (int) ($bounds->last ?? 0)])
             ->where('fd_orders.ordered_at', '>=', $start->utc())
             ->where('fd_orders.ordered_at', '<', $end->addDay()->utc())
             ->where('fd_orders.status', '!=', OrderStatus::Cancelled->value)

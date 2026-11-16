@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -90,6 +91,9 @@ class AuditLogResource extends Resource
                     ->state(fn (AuditLog $record): string => $record->entity_type ? class_basename($record->entity_type).' #'.$record->entity_id : '-'),
             ])
             ->defaultSort('id', 'desc')
+            // This list grows without limit. Counting it on every page load is slow,
+            // so it shows "next" and "previous" without a total.
+            ->paginationMode(PaginationMode::Simple)
             ->recordActions([
                 ViewAction::make(),
             ]);

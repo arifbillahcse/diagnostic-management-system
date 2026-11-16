@@ -12,6 +12,7 @@ use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -56,7 +57,10 @@ class ReportResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereIn('id', WorkItem::query()->select('order_id')->where('status', WorkStatus::Released->value))
+            // Written as a per-order lookup on purpose. As "WHERE EXISTS" or
+            // "IN", MySQL first builds the set of every order that has a
+            // released result (hundreds of thousands) before taking ten.
+            ->whereRaw('(select 1 from lab_work_items where lab_work_items.order_id = fd_orders.id and lab_work_items.status = ? limit 1) = 1', [WorkStatus::Released->value])
             ->with(['patient', 'invoice']);
     }
 
@@ -89,6 +93,9 @@ class ReportResource extends Resource
             ])
             ->searchPlaceholder('Order number or patient')
             ->defaultSort('id', 'desc')
+            // This list grows without limit. Counting it on every page load is slow,
+            // so it shows "next" and "previous" without a total.
+            ->paginationMode(PaginationMode::Simple)
             ->recordActions([
                 Action::make('print')
                     ->label('Print report')

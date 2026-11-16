@@ -135,9 +135,11 @@ Rules:
 
 - Append-only. The application has no update or delete path for this table,
   and the model refuses both.
-- Granting the clinic's MySQL user only `INSERT` and `SELECT` on this table
-  is planned for the Phase 5 security pass. Today that user has full rights
-  on its own database, which migrations need.
+- On MySQL, database triggers refuse UPDATE and DELETE on this table and on
+  the other append-only tables (invoice lines, payments, account entries,
+  commission entries, verified result versions). The clinic's MySQL user
+  could remove the triggers, so this stops bugs and injected queries, not
+  someone who holds the database password.
 - `actor_name` is stored with each entry, so the trail stays readable if a
   user is renamed or removed.
 - Written in the same transaction as the change it records.
@@ -406,7 +408,7 @@ Simple accounts, not a double-entry ledger.
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `fin_accounts` | `public_id`, `name` (unique), `type` (cash, bkash, nagad, card, bank), `is_default`, `is_active` | Where money is held. The type is a payment method; the default account of a type receives payments made by that method |
+| `fin_accounts` | `public_id`, `name` (unique), `type` (cash, bkash, nagad, card, bank), `is_default`, `is_active`, `balance` (kept in step with the entries, checked nightly) | Where money is held. The type is a payment method; the default account of a type receives payments made by that method |
 | `fin_account_entries` | `account_id`, `amount` (positive in, negative out), `occurred_at`, `source_type`, `source_id`, `description` | Every movement of money. Append-only. Unique on (`source_type`, `source_id`), so the same cause cannot be posted twice. A balance is the sum of an account's entries |
 | `fin_transfers` | `from_account_id`, `to_account_id`, `amount`, `note` | Money moved between accounts; two entries each |
 | `fin_expense_categories`, `fin_expenses` | `expense_no` (unique), `category_id`, `account_id`, `branch_id`, `amount`, `expense_date`, `payee`, `description`, `voided_at`, `void_reason` | An expense is never edited. A wrong one is voided, which posts the money back |

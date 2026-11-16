@@ -17,7 +17,7 @@ final class AuditLogger
     private const REDACTED = '[hidden]';
 
     /** Attribute names whose values must never be stored in the trail. */
-    private const SECRET_KEYS = ['password', 'remember_token', 'db_password', 'secret', 'token', 'api_key'];
+    private const SECRET_KEYS = ['password', 'remember_token', 'db_password', 'secret', 'token', 'api_key', 'app_authentication_secret', 'app_authentication_recovery_codes'];
 
     /**
      * @param  array<string, mixed>  $before  Values before the change (changed fields only)

@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Http\SecurityHeaders;
 use App\Core\Tenancy\Http\EnsureSessionBelongsToClinic;
 use App\Core\Tenancy\Http\ResolveClinic;
 use Illuminate\Foundation\Application;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/login');
 
         $middleware->web(
-            prepend: [ResolveClinic::class],
+            prepend: [SecurityHeaders::class, ResolveClinic::class],
             append: [EnsureSessionBelongsToClinic::class],
         );
     })

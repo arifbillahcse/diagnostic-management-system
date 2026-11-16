@@ -8,6 +8,19 @@ return [
     // Where module folders live.
     'modules_path' => env('DMS_MODULES_PATH', base_path('modules')),
 
+    'backup' => [
+        // Folder backups are written to. Empty switches the nightly backup off.
+        'path' => env('BACKUP_PATH'),
+
+        // When set, backups are encrypted with this passphrase (AES-256).
+        // Without it nobody can read the backup, so keep a copy somewhere
+        // other than this server.
+        'passphrase' => env('BACKUP_PASSPHRASE'),
+
+        // Backups older than this are deleted from the backup folder.
+        'keep_days' => (int) env('BACKUP_KEEP_DAYS', 30),
+    ],
+
     'clinics' => [
         // Each clinic database is named <prefix><clinic id>.
         'database_prefix' => env('CLINIC_DB_PREFIX', 'dms_clinic_'),

@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Modules\Laboratory\Enums\WorkStatus;
@@ -100,6 +101,9 @@ class WorkItemResource extends Resource
             ])
             ->searchPlaceholder('Scan a label, or type a patient')
             ->defaultSort('id')
+            // This list grows without limit. Counting it on every page load is slow,
+            // so it shows "next" and "previous" without a total.
+            ->paginationMode(PaginationMode::Simple)
             ->recordActions([
                 Action::make('open')
                     ->label(fn (WorkItem $record): string => match ($record->status) {
