@@ -48,6 +48,21 @@ final class LaboratoryModule extends Module
         ];
     }
 
+    public function exports(): array
+    {
+        return [
+            'lab_sample_types' => 'Sample types',
+            'lab_tests' => 'Lab tests',
+            'lab_analytes' => 'Analytes',
+            'lab_test_analytes' => 'Values per test',
+            'lab_reference_ranges' => 'Reference ranges',
+            'lab_samples' => 'Samples',
+            'lab_work_items' => 'Tests performed',
+            'lab_results' => 'Results',
+            'lab_result_versions' => 'Verified result versions',
+        ];
+    }
+
     public function resources(): array
     {
         return class_exists(Filament\Screens::class) ? Filament\Screens::resources() : [];
@@ -56,6 +71,11 @@ final class LaboratoryModule extends Module
     public function pages(): array
     {
         return class_exists(Filament\Screens::class) ? Filament\Screens::pages() : [];
+    }
+
+    public function widgets(): array
+    {
+        return class_exists(Filament\LabStatusWidget::class) ? [Filament\LabStatusWidget::class] : [];
     }
 
     public function boot(): void

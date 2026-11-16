@@ -21,7 +21,7 @@ class EditPatient extends EditRecord
         // An estimated birth date is shown back as the age it came from, so
         // staff are not misled into reading it as a known date.
         if ($this->getRecord()->dob_is_estimated) {
-            $diff = $this->getRecord()->date_of_birth->diff(now()->startOfDay());
+            $diff = $this->getRecord()->age();
             $data['date_of_birth'] = null;
             $data += ['age_years' => $diff->y, 'age_months' => $diff->m, 'age_days' => $diff->d];
         }

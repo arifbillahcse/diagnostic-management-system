@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Laboratory\Support;
 
+use App\Core\Tenancy\ClinicContext;
 use Carbon\CarbonInterface;
 use Modules\Laboratory\Models\Analyte;
 use Modules\Laboratory\Models\ReferenceRange;
@@ -20,7 +21,8 @@ final class RangeFinder
      */
     public function find(Analyte $analyte, string $sex, int $ageDays, CarbonInterface $on): ?ReferenceRange
     {
-        $date = $on->toDateString();
+        // The clinic's local date of collection.
+        $date = $on->copy()->setTimezone(app(ClinicContext::class)->get()?->timezone ?? config('app.timezone'))->toDateString();
 
         $candidates = $analyte->ranges
             ->filter(fn (ReferenceRange $r): bool => $ageDays >= $r->age_min_days && $ageDays <= $r->age_max_days)

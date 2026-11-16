@@ -45,6 +45,16 @@ abstract class Module
         return [];
     }
 
+    /**
+     * Tables this module owns, for the full data export.
+     *
+     * @return array<string, string> table name => label shown to the user
+     */
+    public function exports(): array
+    {
+        return [];
+    }
+
     /** @return list<class-string> Filament resources */
     public function resources(): array
     {

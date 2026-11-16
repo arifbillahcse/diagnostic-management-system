@@ -28,6 +28,13 @@ final class ReportsModule extends Module
         ];
     }
 
+    public function exports(): array
+    {
+        return [
+            'rep_signatories' => 'Report signatories',
+        ];
+    }
+
     public function resources(): array
     {
         return class_exists(Filament\Screens::class) ? Filament\Screens::resources() : [];

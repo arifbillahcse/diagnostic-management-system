@@ -30,6 +30,13 @@ final class DemoModule extends Module
         ];
     }
 
+    public function exports(): array
+    {
+        return [
+            'demo_notes' => 'Notes',
+        ];
+    }
+
     public function resources(): array
     {
         return [DemoNoteResource::class];

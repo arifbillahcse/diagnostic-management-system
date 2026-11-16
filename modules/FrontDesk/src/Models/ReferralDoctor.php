@@ -19,6 +19,9 @@ class ReferralDoctor extends ClinicModel
 
     protected $fillable = ['name', 'degree', 'phone', 'is_active'];
 
+    /** Defaults for a record made in code, matching the database defaults. */
+    protected $attributes = ['is_active' => true];
+
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];

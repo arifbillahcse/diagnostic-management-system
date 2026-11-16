@@ -1,0 +1,12 @@
+{
+  "key": "owner",
+  "name": "Owner dashboard and sales reports",
+  "description": "This month at a glance, a collections trend, and sales reports by day, test, referral doctor, and cashier.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["frontdesk"],
+  "suggests": ["finance"],
+  "table_prefix": "own_",
+  "default_enabled": false,
+  "entry": "Modules\\Owner\\OwnerModule"
+}

@@ -46,3 +46,7 @@
     .dms-textarea { width: 100%; border: 1px solid #C9D8D2; border-radius: .5rem; padding: .5rem .75rem; font: inherit; }
     .dms-textarea:focus { outline: 2px solid #17735D; outline-offset: 1px; }
 </style>
+<style>
+    .dms-filters { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .dms-filters label { display: grid; gap: .375rem; font-size: .875rem; font-weight: 500; min-width: 11rem; }
+</style>

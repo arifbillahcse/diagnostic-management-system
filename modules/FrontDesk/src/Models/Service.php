@@ -35,6 +35,9 @@ class Service extends ClinicModel
 
     protected $fillable = ['code', 'name', 'type', 'category_id', 'price', 'is_active'];
 
+    /** Defaults for a record made in code, matching the database defaults. */
+    protected $attributes = ['is_active' => true];
+
     protected function casts(): array
     {
         return [

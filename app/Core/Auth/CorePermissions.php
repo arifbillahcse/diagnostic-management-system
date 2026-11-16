@@ -28,6 +28,8 @@ final class CorePermissions
 
     public const PATIENTS_UPDATE = 'core.patients.update';
 
+    public const EXPORT_RUN = 'core.export.run';
+
     /** @return array<string, string> key => description */
     public static function all(): array
     {
@@ -41,6 +43,7 @@ final class CorePermissions
             self::PATIENTS_VIEW => 'View patients',
             self::PATIENTS_CREATE => 'Register patients',
             self::PATIENTS_UPDATE => 'Edit patient details',
+            self::EXPORT_RUN => 'Download a full export of the clinic\'s data',
         ];
     }
 

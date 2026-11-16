@@ -29,6 +29,9 @@ class Analyte extends ClinicModel
 
     protected $fillable = ['code', 'name', 'result_type', 'unit', 'decimals', 'options', 'abnormal_options', 'is_active'];
 
+    /** Defaults for a record made in code, matching the database defaults. */
+    protected $attributes = ['is_active' => true];
+
     protected function casts(): array
     {
         return [

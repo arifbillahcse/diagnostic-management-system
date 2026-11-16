@@ -21,6 +21,9 @@ class Branch extends ClinicModel
 
     protected $guarded = ['id', 'public_id'];
 
+    /** Defaults for a record made in code, matching the database defaults. */
+    protected $attributes = ['is_active' => true];
+
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];

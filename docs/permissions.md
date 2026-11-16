@@ -58,6 +58,20 @@ laboratory.results.amend
 laboratory.catalog.manage
 laboratory.settings.manage
 
+finance.accounts.view
+finance.accounts.manage
+finance.expenses.record
+finance.expenses.void
+finance.commission.view
+finance.commission.manage
+finance.commission.pay
+finance.reports.view
+
+owner.dashboard.view
+owner.reports.view
+
+core.export.run
+
 reports.reports.view
 reports.reports.print
 reports.reports.print_with_due

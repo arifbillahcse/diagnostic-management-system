@@ -36,6 +36,9 @@ class User extends Authenticatable implements FilamentUser
 
     protected $hidden = ['password', 'remember_token'];
 
+    /** Defaults for a record made in code, matching the database defaults. */
+    protected $attributes = ['is_active' => true];
+
     protected function casts(): array
     {
         return [

@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 3 are built.**
+**Phases 1 to 4 are built.**
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
   permissions, the audit log, clinic settings, branches, number counters,
@@ -23,9 +23,15 @@ title **DMS**.
   automatic flags, verification by a second person, amendments that keep
   every version, and PDF reports with letterhead and signatories.
 
-The owner dashboard, expenses, and commission come in Phase 4.
+- **Phase 4, owner basics:** accounts for cash, bank, and mobile money that
+  fill themselves from payments; expenses; referral commission with payouts;
+  a profit report; an owner dashboard with this month's figures and a
+  collections chart; sales reports by day, test, doctor, and cashier; and a
+  full export of the clinic's data.
 
-![Result screen](docs/screenshots/lab-results.png)
+Next is Phase 5: a performance and safety pass with years of simulated data.
+
+![Owner dashboard](docs/screenshots/owner-dashboard.png)
 
 A sample report is in
 [docs/screenshots/sample-lab-report.pdf](docs/screenshots/sample-lab-report.pdf).
@@ -102,6 +108,7 @@ includes `127.0.0.1` unless you create a clinic with that domain.
 | `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
+| `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |
 | `php artisan frontdesk:check-invoices` | Recalculates every invoice and reports any stored total that differs. Scheduled nightly, changes nothing |
 
 ## Tests
@@ -137,11 +144,14 @@ app/Core/            The fixed core
   Branches/          Branches
   Patients/          Patients, shared by every module
   Documents/         PDF rendering, letterhead, and the clinic's private files
+  Export/            Full export of a clinic's data as CSV
 app/Filament/        Admin screens for the core
 modules/             One folder per module
   FrontDesk/         Catalog, orders, invoices, payments, refunds, cash sessions
   Laboratory/        Lab set-up, samples, result entry, verification, amendments
   Reports/           PDF lab reports, layout, and signatories
+  Finance/           Accounts, expenses, referral commission, profit report
+  Owner/             Owner dashboard and sales reports
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

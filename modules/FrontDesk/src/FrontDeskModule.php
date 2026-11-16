@@ -55,6 +55,23 @@ final class FrontDeskModule extends Module
         ];
     }
 
+    public function exports(): array
+    {
+        return [
+            'fd_service_categories' => 'Service categories',
+            'fd_services' => 'Tests and services',
+            'fd_package_items' => 'Package contents',
+            'fd_referral_doctors' => 'Referral doctors',
+            'fd_orders' => 'Orders',
+            'fd_order_items' => 'Order items',
+            'fd_invoices' => 'Invoices',
+            'fd_invoice_lines' => 'Invoice lines',
+            'fd_payments' => 'Payments',
+            'fd_refunds' => 'Refunds',
+            'fd_cash_sessions' => 'Cash sessions',
+        ];
+    }
+
     public function resources(): array
     {
         return class_exists(Filament\Screens::class) ? Filament\Screens::resources() : [];

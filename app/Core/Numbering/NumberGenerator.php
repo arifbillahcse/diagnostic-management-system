@@ -26,6 +26,15 @@ final class NumberGenerator
         'accession' => '{yymmdd}{0001}',
     ];
 
+    /** @var array<string, string> formats added by modules for their own number types */
+    private static array $moduleFormats = [];
+
+    /** Lets a module give its own number type a default format. */
+    public static function registerDefault(string $type, string $pattern): void
+    {
+        self::$moduleFormats[$type] = $pattern;
+    }
+
     public function __construct(
         private readonly CounterService $counters,
         private readonly Settings $settings,
@@ -34,7 +43,7 @@ final class NumberGenerator
 
     public function format(string $type): NumberFormat
     {
-        $pattern = $this->settings->get("numbering.{$type}", self::DEFAULT_FORMATS[$type] ?? null);
+        $pattern = $this->settings->get("numbering.{$type}", self::DEFAULT_FORMATS[$type] ?? self::$moduleFormats[$type] ?? null);
 
         if (! is_string($pattern)) {
             throw new InvalidArgumentException("No number format is defined for [{$type}].");

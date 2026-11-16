@@ -37,7 +37,11 @@ Decision 12 is settled: dompdf, for the reasons in architecture.md. Decision
 | 11 | **Barcode format and label size** | Test with a real label printer and scanner | Code 128 |
 | 12 | **PDF engine** | Compare candidates on real report layouts | Decided by the comparison |
 
-## Needed before Phase 4
+## Built in Phase 4 with these defaults
+
+Both defaults below are what the system does now: simple accounts, and
+commission as a percent per doctor with per-test overrides, earned when the
+invoice is fully paid.
 
 | # | Decision | Recommendation | Default |
 |---|---|---|---|

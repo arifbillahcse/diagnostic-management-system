@@ -101,6 +101,10 @@ not built yet.
 | `address`, `email`, `blood_group`, `notes` | | Optional |
 | `registered_branch_id` | FK | |
 
+**Ages follow the clinic's calendar.** A patient's age on a given moment is
+counted on that moment's date in the clinic's time zone, not the UTC date, so
+nobody is a day younger in the hours after local midnight.
+
 **Age handling.** Many patients give an age and not a birth date. The system
 then stores a date of birth calculated from that age on the registration
 date, and marks it as estimated. Reference ranges always use age in days on
@@ -396,20 +400,55 @@ Rules:
 - Saving results carries the version of the form that was opened. If someone
   else saved in between, the save is refused.
 
-## 8. Module: finance (`fin_`), outline
+## 8. Module: finance (`fin_`)
 
-Detailed in Phase 4.
+Simple accounts, not a double-entry ledger.
 
-| Table | Purpose |
-|---|---|
-| `fin_accounts` | Cash, bank, bKash, and Nagad accounts |
-| `fin_account_entries` | Money in and out of each account. Append-only. Linked to the payment, refund, expense, or payout that caused it |
-| `fin_expense_categories`, `fin_expenses` | Expenses with category, account, and receipt file |
-| `fin_commission_rules` | Per doctor, per service, or per category; percent or fixed |
-| `fin_commission_entries` | Commission earned per order item, calculated when the invoice is paid |
-| `fin_commission_payouts` | Payments to doctors |
+| Table | Key columns | Notes |
+|---|---|---|
+| `fin_accounts` | `public_id`, `name` (unique), `type` (cash, bkash, nagad, card, bank), `is_default`, `is_active` | Where money is held. The type is a payment method; the default account of a type receives payments made by that method |
+| `fin_account_entries` | `account_id`, `amount` (positive in, negative out), `occurred_at`, `source_type`, `source_id`, `description` | Every movement of money. Append-only. Unique on (`source_type`, `source_id`), so the same cause cannot be posted twice. A balance is the sum of an account's entries |
+| `fin_transfers` | `from_account_id`, `to_account_id`, `amount`, `note` | Money moved between accounts; two entries each |
+| `fin_expense_categories`, `fin_expenses` | `expense_no` (unique), `category_id`, `account_id`, `branch_id`, `amount`, `expense_date`, `payee`, `description`, `voided_at`, `void_reason` | An expense is never edited. A wrong one is voided, which posts the money back |
+| `fin_commission_rules` | `referral_doctor_id`, `service_id` (nullable), `kind` (percent, fixed), `value` | One default rule per doctor (no service) and optional rules for particular tests |
+| `fin_commission_entries` | `referral_doctor_id`, `order_item_id`, `invoice_id`, `amount`, `reason` | Commission earned (positive) or taken back (negative). Append-only |
+| `fin_commission_payouts` | `payout_no` (unique), `referral_doctor_id`, `account_id`, `amount`, `paid_at`, `note` | Payments to doctors |
 
-Whether this grows into a full double-entry ledger is an open decision.
+**Front desk money.** Each payment posts into the default account of its
+method, and each approved refund posts out of it. Accounts are created the
+first time they are needed. Switching finance on in a clinic that already has
+payments posts the earlier ones at once, and a nightly task posts anything an
+interrupted request missed.
+
+**Commission.** A doctor earns commission on a test when its invoice becomes
+fully paid, on what the patient paid for that test (its price less its share
+of the discount). A fixed rate never exceeds that amount. If the test is
+cancelled, or the invoice stops being fully paid, an opposite entry takes the
+commission back. A rate change applies from then on; commission already
+earned is not recalculated. A payout cannot exceed what the doctor is owed.
+
+**Profit report.** Cash basis for a period of local days: collected, less
+refunded, expenses, and commission paid. It also shows what was billed, the
+commission earned, and the commission and patient dues outstanding now.
+
+**Known gap.** An expense paid in cash from the front desk drawer is not
+deducted from that cashier's cash session, so the session will show a
+shortfall to explain in its note.
+
+## 8a. Module: owner
+
+No tables. It reads the front desk's data: this month's figures and a 14-day
+collections chart on the dashboard, and sales reports by day, test, referral
+doctor, and cashier over periods of up to 92 days.
+
+## 8b. Data export (core)
+
+A user with the export permission can download every table of the clinic as
+CSV, one at a time or all in one zip. It covers the core tables and the
+tables of every module installed in the clinic, including modules that are
+switched off. Passwords are never exported. Text that a spreadsheet would run
+as a formula is prefixed with an apostrophe. Every download is audited, and
+the zip is deleted from the server as soon as it is sent.
 
 ## 9. Indexes for the busiest queries
 

@@ -1,0 +1,12 @@
+{
+  "key": "finance",
+  "name": "Finance",
+  "description": "Cash, bank, and mobile money accounts, expenses, referral commission with payouts, and a profit report.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["frontdesk"],
+  "suggests": [],
+  "table_prefix": "fin_",
+  "default_enabled": false,
+  "entry": "Modules\\Finance\\FinanceModule"
+}

@@ -86,11 +86,29 @@ final class PatientTest extends TestCase
         $this->assertSame('35 Y', $adult->ageLabel(CarbonImmutable::parse('2027-11-20')));
     }
 
+    public function test_age_is_counted_in_the_clinics_calendar_not_in_utc(): void
+    {
+        // 01:30 on 17 November in Dhaka is still 16 November in UTC.
+        $this->travelTo(CarbonImmutable::parse('2026-11-17 01:30', 'Asia/Dhaka'));
+
+        $bornToday = $this->register(['date_of_birth' => null, 'age_years' => 18]);
+        $this->assertSame('2008-11-17', $bornToday->date_of_birth->toDateString());
+        $this->assertSame('18 Y', $bornToday->ageLabel(), 'eighteen today, in the clinic\'s own calendar');
+        $this->assertSame(6574, $bornToday->ageInDays());
+
+        // The same holds for a moment passed in, such as a sample's collection time.
+        $collectedAt = CarbonImmutable::parse('2026-11-17 01:30', 'Asia/Dhaka')->utc();
+        $this->assertSame('2026-11-16', $collectedAt->toDateString());
+        $this->assertSame('18 Y', $bornToday->ageLabel($collectedAt));
+
+        $this->assertSame('17 Y', $bornToday->ageLabel(CarbonImmutable::parse('2026-11-16 23:00', 'Asia/Dhaka')));
+    }
+
     public function test_a_birth_date_or_age_is_required_and_must_be_sensible(): void
     {
         foreach ([
             ['date_of_birth' => null],
-            ['date_of_birth' => now()->addDay()->toDateString()],
+            ['date_of_birth' => now('Asia/Dhaka')->addDay()->toDateString()],
             ['date_of_birth' => null, 'age_years' => 131],
             ['date_of_birth' => null, 'age_years' => -1],
         ] as $data) {
