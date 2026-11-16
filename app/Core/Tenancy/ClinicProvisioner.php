@@ -110,7 +110,13 @@ final class ClinicProvisioner
     private function assertReachableAndEmpty(Clinic $clinic): void
     {
         try {
-            $tables = $this->manager->run($clinic, fn () => Schema::connection('clinic')->getTables());
+            // Only this database: without a schema, MySQL lists the tables of
+            // every database the user can see.
+            $tables = $this->manager->run($clinic, function (): array {
+                $schema = Schema::connection('clinic');
+
+                return $schema->getTables($schema->getCurrentSchemaName());
+            });
         } catch (Throwable $e) {
             throw new InvalidArgumentException(
                 "Could not open the database [{$clinic->db_name}]: {$e->getMessage()}", previous: $e,

@@ -213,7 +213,7 @@ final class TenancyTest extends TestCase
         $this->assertSame(1, Clinic::count());
         $this->assertSame(
             ['keep_me'],
-            $this->inDatabase('dmstest_clinic_used', fn () => Schema::connection('clinic')->getTableListing(schemaQualified: false)),
+            $this->inDatabase('dmstest_clinic_used', fn () => Schema::connection('clinic')->getTableListing(Schema::connection('clinic')->getCurrentSchemaName(), schemaQualified: false)),
         );
     }
 
@@ -243,7 +243,7 @@ final class TenancyTest extends TestCase
         }
 
         $this->assertSame(0, Clinic::count());
-        $this->assertSame([], $this->inDatabase('dmstest_clinic_hosted', fn () => Schema::connection('clinic')->getTableListing(schemaQualified: false)));
+        $this->assertSame([], $this->inDatabase('dmstest_clinic_hosted', fn () => Schema::connection('clinic')->getTableListing(Schema::connection('clinic')->getCurrentSchemaName(), schemaQualified: false)));
     }
 
     public function test_database_credentials_need_a_database_and_names_are_checked(): void
