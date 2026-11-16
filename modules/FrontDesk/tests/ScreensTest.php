@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\FrontDesk\Tests;
 
-use App\Core\Modules\ModuleManager;
 use App\Core\Money\Money;
 use App\Core\Patients\Patient;
 use App\Core\Settings\Settings;
@@ -423,7 +422,7 @@ final class ScreensTest extends FrontDeskTestCase
     public function test_switching_the_module_off_hides_all_of_its_screens(): void
     {
         $order = $this->order(['500']);
-        app(ModuleManager::class)->disable('frontdesk');
+        $this->disableModule('frontdesk');
 
         $this->signIn($this->ownerUser)->get(self::BASE.'/')->assertOk()->assertDontSee('Cash sessions');
         $this->assertFalse(TodayWidget::canView());

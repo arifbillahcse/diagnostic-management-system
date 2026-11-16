@@ -48,17 +48,20 @@ frontdesk.cash.view_all
 frontdesk.catalog.manage
 frontdesk.settings.manage
 
+laboratory.work.view
 laboratory.samples.collect
 laboratory.samples.receive
 laboratory.samples.reject
 laboratory.results.enter
-laboratory.results.verify
+laboratory.results.verify     (verifying also releases the result)
 laboratory.results.amend
 laboratory.catalog.manage
+laboratory.settings.manage
 
+reports.reports.view
 reports.reports.print
-reports.reports.release
-reports.templates.manage
+reports.reports.print_with_due
+reports.settings.manage
 ```
 
 Each module declares its keys and its default role grants in its entry

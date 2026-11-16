@@ -1,0 +1,12 @@
+{
+  "key": "laboratory",
+  "name": "Laboratory",
+  "description": "Lab test definitions with reference ranges, samples with barcode labels, result entry, abnormal flags, verification, and amendments.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["frontdesk"],
+  "suggests": [],
+  "table_prefix": "lab_",
+  "default_enabled": true,
+  "entry": "Modules\\Laboratory\\LaboratoryModule"
+}

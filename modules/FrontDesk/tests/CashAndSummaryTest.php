@@ -197,7 +197,7 @@ final class CashAndSummaryTest extends FrontDeskTestCase
         $order = $this->order(['1000']);
         $modules = app(ModuleManager::class);
 
-        $modules->disable('frontdesk');
+        $this->disableModule('frontdesk');
 
         try {
             $this->pay($order, '100');

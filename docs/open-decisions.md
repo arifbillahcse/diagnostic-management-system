@@ -25,7 +25,10 @@ against a real clinic, and each can be changed.
 | 7 | **Discount limits** per role | Take the figures from clinic interviews | Receptionist up to 10 percent, above that needs override |
 | 8 | **Refund approval** by a second person | On by default, owner can switch off | On |
 
-## Needed before Phase 3
+## Built in Phase 3 with these defaults
+
+Decision 12 is settled: dompdf, for the reasons in architecture.md. Decision
+11 still needs a real label printer and scanner.
 
 | # | Decision | Recommendation | Default |
 |---|---|---|---|

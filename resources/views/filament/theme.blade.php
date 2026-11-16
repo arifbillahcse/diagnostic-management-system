@@ -41,3 +41,8 @@
     .dms-struck td { color: #6B7F79; text-decoration: line-through; }
     .dms-link { color: #17735D; font-weight: 600; text-decoration: underline; }
 </style>
+<style>
+    .dms-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.25rem; }
+    .dms-textarea { width: 100%; border: 1px solid #C9D8D2; border-radius: .5rem; padding: .5rem .75rem; font: inherit; }
+    .dms-textarea:focus { outline: 2px solid #17735D; outline-offset: 1px; }
+</style>

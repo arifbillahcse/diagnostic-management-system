@@ -1,0 +1,12 @@
+{
+  "key": "reports",
+  "name": "Lab reports",
+  "description": "Printable PDF reports of verified results, with the clinic letterhead, signatories, and report settings.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["laboratory"],
+  "suggests": [],
+  "table_prefix": "rep_",
+  "default_enabled": true,
+  "entry": "Modules\\Reports\\ReportsModule"
+}

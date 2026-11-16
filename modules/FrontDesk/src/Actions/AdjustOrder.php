@@ -16,6 +16,7 @@ use Modules\FrontDesk\Enums\OrderStatus;
 use Modules\FrontDesk\Events\OrderCancelled;
 use Modules\FrontDesk\Events\OrderItemAdded;
 use Modules\FrontDesk\Events\OrderItemCancelled;
+use Modules\FrontDesk\Events\OrderItemCancelling;
 use Modules\FrontDesk\Models\Invoice;
 use Modules\FrontDesk\Models\InvoiceLine;
 use Modules\FrontDesk\Models\Order;
@@ -109,6 +110,10 @@ final class AdjustOrder
                 throw new FrontDeskException('A test inside a package cannot be cancelled on its own. Cancel the package.');
             }
 
+            // Other modules may refuse, for example the laboratory once a
+            // result has been entered.
+            event(new OrderItemCancelling($item));
+
             $cancellation = [
                 'status' => ItemStatus::Cancelled,
                 'cancelled_at' => now(),
@@ -176,6 +181,10 @@ final class AdjustOrder
             }
 
             $now = now();
+
+            foreach ($order->items()->where('status', ItemStatus::Active->value)->get() as $active) {
+                event(new OrderItemCancelling($active));
+            }
 
             $order->items()->where('status', ItemStatus::Active->value)->update([
                 'status' => ItemStatus::Cancelled,

@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 and 2 are built.**
+**Phases 1 to 3 are built.**
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
   permissions, the audit log, clinic settings, branches, number counters,
@@ -18,9 +18,17 @@ title **DMS**.
   after issue, daily cash closing, printable invoices and receipts, and
   today's figures on the dashboard.
 
-Laboratory work (samples, results, reports) starts in Phase 3.
+- **Phase 3, laboratory and reports:** lab tests with analytes and reference
+  ranges by sex and age, samples with barcode labels, result entry with
+  automatic flags, verification by a second person, amendments that keep
+  every version, and PDF reports with letterhead and signatories.
 
-![Order screen](docs/screenshots/order.png)
+The owner dashboard, expenses, and commission come in Phase 4.
+
+![Result screen](docs/screenshots/lab-results.png)
+
+A sample report is in
+[docs/screenshots/sample-lab-report.pdf](docs/screenshots/sample-lab-report.pdf).
 
 ## Requirements
 
@@ -93,6 +101,7 @@ includes `127.0.0.1` unless you create a clinic with that domain.
 | `php artisan queue:work` | Runs queued jobs. Each job reconnects to the clinic it was created for |
 | `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
+| `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan frontdesk:check-invoices` | Recalculates every invoice and reports any stored total that differs. Scheduled nightly, changes nothing |
 
 ## Tests
@@ -127,9 +136,12 @@ app/Core/            The fixed core
   Settings/          Clinic settings
   Branches/          Branches
   Patients/          Patients, shared by every module
+  Documents/         PDF rendering, letterhead, and the clinic's private files
 app/Filament/        Admin screens for the core
 modules/             One folder per module
   FrontDesk/         Catalog, orders, invoices, payments, refunds, cash sessions
+  Laboratory/        Lab set-up, samples, result entry, verification, amendments
+  Reports/           PDF lab reports, layout, and signatories
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

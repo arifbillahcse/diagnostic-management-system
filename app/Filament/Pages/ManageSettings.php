@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Core\Auth\CorePermissions;
+use App\Core\Documents\ClinicFiles;
 use App\Core\Settings\Actions\UpdateSettings;
 use App\Core\Settings\Settings;
 use BackedEnum;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -30,6 +32,7 @@ class ManageSettings extends Page
         'phone' => 'clinic.phone',
         'email' => 'clinic.email',
         'report_header' => 'clinic.report_header',
+        'logo_path' => 'clinic.logo_path',
     ];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
@@ -78,6 +81,18 @@ class ManageSettings extends Page
                             ->maxLength(500)
                             ->columnSpanFull()
                             ->helperText('Printed under the clinic name on reports, for example licence numbers.'),
+                        FileUpload::make('logo_path')
+                            ->label('Logo')
+                            ->disk(ClinicFiles::DISK)
+                            ->directory(fn (): string => app(ClinicFiles::class)->directory('branding'))
+                            ->visibility('private')
+                            ->acceptedFileTypes(['image/png', 'image/jpeg'])
+                            ->maxSize(1024)
+                            ->previewable(false)
+                            ->downloadable(false)
+                            ->openable(false)
+                            ->columnSpanFull()
+                            ->helperText('PNG or JPEG, up to 1 MB. Printed beside the clinic name on reports.'),
                     ]),
             ]);
     }

@@ -78,8 +78,9 @@ written in-house. The design above is what either must provide.
 | `counters` | See section 6 | |
 | `files` | `public_id`, `disk`, `path`, `mime`, `size`, `owner_type`, `owner_id` | Logos, signatures, generated documents |
 
-**Built so far (Phase 1):** every table above except `files`, which arrives
-with document rendering in Phase 3. `counters.branch_id` uses `0` for a
+**Built so far:** every table above except `files`. It turned out not to be
+needed: the only uploads are the clinic logo and signature images, whose
+paths are stored in settings and on the signatory. `counters.branch_id` uses `0` for a
 clinic-wide counter, not null, so the unique index can guarantee one row per
 counter.
 
@@ -208,12 +209,17 @@ an item discount above its price, and refunds above payments.
 |---|---|---|
 | `lab_sample_types` | `name`, `container`, `label_copies` | Blood (EDTA), serum, urine, and so on |
 | `lab_tests` | `service_id` (unique FK), `sample_type_id`, `department`, `turnaround_hours`, `method`, `report_notes` | Lab details for a billable service |
-| `lab_analytes` | `code` (unique), `name`, `result_type` (numeric, option, text, long_text, calculated), `unit`, `decimals`, `options` (JSON), `is_active` | One measured value, for example haemoglobin |
-| `lab_test_analytes` | `lab_test_id`, `analyte_id`, `sort_order`, `group_label` | Which analytes a test reports, and in what order |
+| `lab_analytes` | `code` (unique), `name`, `result_type` (numeric, option, text, long_text), `unit`, `decimals`, `options` (JSON), `abnormal_options` (JSON), `is_active` | One measured value, for example haemoglobin |
+| `lab_test_analytes` | `lab_test_id`, `analyte_id`, `sort_order`, `group_label`, `is_required` | Which analytes a test reports, in what order, and which must be filled before submitting |
 | `lab_reference_ranges` | `analyte_id`, `sex` (any, male, female), `age_min_days`, `age_max_days`, `low`, `high`, `critical_low`, `critical_high`, `text_range`, `effective_from`, `effective_to` | See lookup rule below |
 
-`calculated` is reserved for values derived from other analytes. It is not
-built in the first release.
+Values calculated from other analytes (ratios, LDL) are not built yet.
+
+**Exact numbers.** A numeric result is held as a whole number of millionths
+when it is compared with a limit, so no comparison involves floating point.
+A result equal to a limit is inside the range. Critical limits are checked
+before the ordinary ones. The value is stored as typed and printed rounded
+to the analyte's decimal places.
 
 **Reference range lookup.** For an analyte, a patient, and a collection date:
 
@@ -222,8 +228,9 @@ built in the first release.
    and `age_max_days` and the collection date falls inside the effective
    dates.
 3. Prefer a range for the patient's sex over a range for `any`.
-4. If more than one remains, the catalog is misconfigured. The system uses
-   the narrowest age band and flags the analyte for the lab manager.
+4. If more than one remains, the system uses the narrowest age band, and the
+   newest range on a tie. It does not yet warn the lab manager about the
+   overlap.
 5. If none matches, the result is saved with no range and no flag, and the
    report shows the range as not available.
 
@@ -236,9 +243,9 @@ never changes an existing result or report.
 |---|---|---|
 | `lab_samples` | `public_id`, `accession_no` (unique), `order_id`, `patient_id`, `sample_type_id`, `branch_id`, `status`, `collected_by`, `collected_at`, `received_by`, `received_at`, `rejection_reason` | One tube or container. The accession number is the barcode |
 | `lab_sample_events` | `sample_id`, `event`, `actor_id`, `occurred_at`, `note` | Full history of each sample |
-| `lab_work_items` | `public_id`, `order_item_id` (unique FK), `lab_test_id`, `sample_id`, `patient_id`, `branch_id`, `status`, `entered_by`, `entered_at`, `verified_by`, `verified_at`, `released_at`, `version`, `lock_version` | One test to be performed. Carries the result state machine |
-| `lab_results` | `work_item_id`, `analyte_id`, `value_numeric`, `value_text`, `unit`, `ref_low`, `ref_high`, `ref_text`, `flag` (normal, low, high, critical_low, critical_high, abnormal, none), `comment` | Unique on (`work_item_id`, `analyte_id`). Current values |
-| `lab_result_versions` | `work_item_id`, `version`, `snapshot` (JSON of all result rows), `reason`, `changed_by`, `changed_at` | Written at every verification and every amendment |
+| `lab_work_items` | `public_id`, `order_item_id` (unique FK), `order_id`, `lab_test_id`, `sample_id`, `patient_id`, `branch_id`, `test_name`, `department`, `status`, `entered_by`, `entered_at`, `verified_by`, `verified_at`, `released_at`, `version`, `lock_version`, `pending_reason` | One test to be performed. Carries the result state machine |
+| `lab_results` | `work_item_id`, `analyte_id`, `analyte_name`, `result_type`, `group_label`, `sort_order`, `value_numeric`, `value_text`, `unit`, `ref_low`, `ref_high`, `ref_text`, `flag` (normal, low, high, critical_low, critical_high, abnormal, none), `comment` | Unique on (`work_item_id`, `analyte_id`). Current values |
+| `lab_result_versions` | `work_item_id`, `version`, `snapshot` (JSON of all result rows), `reason`, `entered_by`, `verified_by`, `verified_at` | Written at every verification. Never changed or deleted |
 
 Design points:
 
@@ -255,9 +262,21 @@ Design points:
 - **Flags are calculated by the system** from the copied range. A user can
   add a comment but cannot change a flag.
 
-**Barcode.** The accession number is printed as Code 128. The format and
-length are settled in Phase 3 after testing with the clinic's label printer
-and scanner.
+**Barcode.** The sample number is printed as Code 128 on a 50 x 25 mm label,
+with blank margins at both ends of the bars. The default number is the date
+plus a four-digit daily counter, for example `2611170001`. A software
+barcode reader decodes the on-screen label correctly; a real label printer
+and hand scanner have not been tried.
+
+**From order to work.** When an order is placed, each lab test on it
+(including the tests inside a package) becomes a work item, and work items
+that need the same sample type share one sample. A lab test that has no
+laboratory set-up gets no work item; the lab test screen lists such tests,
+and an hourly task creates the missing work once the set-up exists.
+
+**The front desk and the lab.** The front desk cannot cancel a test once the
+laboratory has entered any result for it. Cancelling an untouched test
+cancels its work, and its sample too if nothing else is on it.
 
 ## 6. Number counters
 
@@ -344,17 +363,26 @@ clinic can switch that off in the front desk settings.
 
 ```
 pending -> collected -> received -> in_process -> completed
-collected or received -> rejected -> pending   (recollect)
+collected, received, or in_process -> rejected -> collected   (collected again, same number)
+any state with no test left -> cancelled
 ```
+
+Collecting and receiving can be one step when the sample is taken inside the
+laboratory. A sample with a verified result cannot be rejected; the result
+is amended instead.
 
 ### Lab work item (`lab_work_items.status`)
 
 ```
 awaiting_sample -> ready -> entered -> verified -> released
-entered -> ready                 (verifier sends back, with reason)
-released -> amending -> verified -> released    (version + 1)
-any state before verified -> cancelled
+entered -> ready                           (verifier sends back, with reason)
+released -> amending -> entered -> verified -> released    (version + 1)
+awaiting_sample or ready -> cancelled
 ```
+
+Verifying releases in the same step, so "verified" is never seen on screen.
+A draft can be saved while a test is ready; submitting needs every required
+value.
 
 Rules:
 
@@ -363,7 +391,10 @@ Rules:
   with a single qualified person can switch that rule off; the change is
   audited.
 - `released -> amending` needs the amend permission and a reason.
-- A report can be printed for the patient only in `released`.
+- A report can be printed for the patient only in `released`. While a
+  result is being amended, its test is left off the report.
+- Saving results carries the version of the form that was opened. If someone
+  else saved in between, the save is refused.
 
 ## 8. Module: finance (`fin_`), outline
 

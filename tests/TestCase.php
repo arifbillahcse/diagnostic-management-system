@@ -8,6 +8,7 @@ use App\Core\Auth\PermissionChecker;
 use App\Core\Auth\PermissionRegistry;
 use App\Core\Auth\Role;
 use App\Core\Auth\User;
+use App\Core\Modules\ModuleManager;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Modules\ModuleState;
 use App\Core\Tenancy\Clinic;
@@ -122,6 +123,16 @@ abstract class TestCase extends BaseTestCase
         return $this->actingAs($user)->withSession([
             EnsureSessionBelongsToClinic::SESSION_KEY => app(ClinicContext::class)->require()->id,
         ]);
+    }
+
+    /** Switch a module off, first switching off every module that depends on it. */
+    protected function disableModule(string $key): void
+    {
+        foreach (app(ModuleRegistry::class)->dependentsOf($key) as $dependent) {
+            $this->disableModule($dependent);
+        }
+
+        app(ModuleManager::class)->disable($key);
     }
 
     /** Point the module system at the fixture modules in tests/Fixtures/<set>. */

@@ -26,7 +26,8 @@ IPD), prescriptions and OPD, pharmacy, native mobile apps, free tier, ads.
 | Database | MySQL 8 | `utf8mb4`, InnoDB, strict SQL mode |
 | Cache and queue | Database driver first, Redis when Phase 7 adds SMS and heavy jobs | Queue jobs must not assume a driver |
 | Web server | Nginx with PHP-FPM | |
-| PDF | Chosen in Phase 3 by comparing output on real report layouts | English only, so any mainstream engine is a candidate |
+| PDF | dompdf | Pure PHP, so it runs on any hosting with no extra programs. Remote files and embedded PHP are switched off |
+| Barcodes | picqer/php-barcode-generator | Code 128 on sample labels |
 | Tests | PHPUnit | Runs on SQLite (fast) and on MySQL |
 | Analyzer bridge | Python agent on the clinic's lab PC (Phase 11) | Talks to the server over an authenticated HTTPS API |
 
@@ -66,8 +67,10 @@ Rules:
 - Migrations are split: control migrations, core clinic migrations, and
   module migrations. A deploy runs clinic migrations for every clinic and
   records the result per clinic.
-- Uploaded files (logos, signatures, generated PDFs) live under a per-clinic
-  path and are served only through authorized routes.
+- Uploaded files (logo, signatures) live on a private disk under
+  `clinics/<clinic id>/`. They have no web address at all; documents embed
+  them directly, and only from the current clinic's own folder. Generated
+  PDFs are not stored: a report is produced from the database each time.
 
 Tenancy is implemented in-house in `app/Core/Tenancy` (decided in Phase 1).
 It is about ten small classes, has no third-party dependency to keep
@@ -220,6 +223,15 @@ Direct dependencies only. `composer licenses` lists everything installed.
 | `laravel/framework` | Application framework | MIT | Phase 1 |
 | `filament/filament` | Admin screens (brings Livewire) | MIT | Phase 1 |
 | `laravel/tinker` | Command-line console for support work | MIT | Phase 1 |
+| `dompdf/dompdf` | PDF lab reports | LGPL-2.1 | Phase 3 |
+| `picqer/php-barcode-generator` | Barcodes on sample labels | LGPL-3.0-or-later | Phase 3 |
+
+**About the two LGPL libraries.** The LGPL allows a proprietary product to
+use a library as long as the library itself stays replaceable and any change
+made to the library is published. Both are used unmodified through Composer,
+which meets that. This is my reading, not legal advice; include it in the
+lawyer's review. mPDF was ruled out because it is GPL-2.0-only, and a
+Chromium-based engine because it needs a browser installed on every server.
 
 Roles and permissions, tenancy, the audit log, and the module system are
 written in-house, so they add no packages. The roles design needs
