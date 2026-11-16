@@ -158,7 +158,7 @@ class OrderResource extends Resource
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
                         // Index-friendly: order numbers from their start, or the patient search.
                         $q->where('order_no', 'like', str_replace(['%', '_'], ['\\%', '\\_'], $search).'%')
-                            ->orWhereIn('patient_id', Patient::search($search)->select('id')->limit(200));
+                            ->orWhereIn('patient_id', Patient::search($search)->select('id'));
                     })),
                 TextColumn::make('ordered_at')->label('Date')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
                 TextColumn::make('patient.name')->label('Patient')->description(fn (Order $record): ?string => $record->patient?->patient_code),

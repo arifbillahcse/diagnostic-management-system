@@ -20,6 +20,7 @@ use Modules\FrontDesk\Filament\Cash\ListCashSessions;
 use Modules\FrontDesk\Filament\Catalog\CreateService;
 use Modules\FrontDesk\Filament\FrontDeskSettings;
 use Modules\FrontDesk\Filament\Orders\CreateOrder;
+use Modules\FrontDesk\Filament\Orders\ListOrders;
 use Modules\FrontDesk\Filament\Orders\ViewOrder;
 use Modules\FrontDesk\Filament\Refunds\ListRefunds;
 use Modules\FrontDesk\Filament\TodayWidget;
@@ -72,6 +73,25 @@ final class ScreensTest extends FrontDeskTestCase
 
         $this->signIn($this->ownerUser)->get(self::BASE."/orders/{$order->id}")->assertNotFound();
         $this->signIn($this->ownerUser)->get(self::BASE."/print/invoice/{$this->invoice($order)->id}")->assertNotFound();
+    }
+
+    public function test_orders_are_found_by_order_number_or_patient(): void
+    {
+        $first = $this->order(['500']);
+        $second = $this->order(['300']);
+        $first->patient->update(['name' => 'Zubair Hossain', 'phone_normalized' => '8801911555000']);
+
+        Livewire::test(ListOrders::class)
+            ->searchTable($second->order_no)
+            ->assertCanSeeTableRecords([$second])->assertCanNotSeeTableRecords([$first]);
+
+        Livewire::test(ListOrders::class)
+            ->searchTable('Zub')
+            ->assertCanSeeTableRecords([$first])->assertCanNotSeeTableRecords([$second]);
+
+        Livewire::test(ListOrders::class)
+            ->searchTable('01911-555000')
+            ->assertCanSeeTableRecords([$first])->assertCanNotSeeTableRecords([$second]);
     }
 
     public function test_the_dashboard_shows_todays_figures(): void

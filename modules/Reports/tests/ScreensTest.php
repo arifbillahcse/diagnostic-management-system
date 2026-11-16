@@ -88,6 +88,16 @@ final class ScreensTest extends LabTestCase
             ->assertSee('1 of 2 ready')
             ->assertSee(route('reports.print', $ready->public_id), false);
 
+        $ready->patient->update(['name' => 'Zubair Hossain']);
+
+        Livewire::test(ListReports::class)
+            ->searchTable('Zub')
+            ->assertCanSeeTableRecords([$ready])->assertCanNotSeeTableRecords([$partly]);
+
+        Livewire::test(ListReports::class)
+            ->searchTable($partly->order_no)
+            ->assertCanSeeTableRecords([$partly])->assertCanNotSeeTableRecords([$ready]);
+
         $this->signIn($this->staff('receptionist'))->get(self::BASE.'/lab/reports')->assertOk();
         $this->signIn($this->userWithRoles())->get(self::BASE.'/lab/reports')->assertForbidden();
     }

@@ -189,6 +189,24 @@ final class ScreensTest extends LabTestCase
             ->searchTable($second->accession_no)
             ->assertCanSeeTableRecords([$second])
             ->assertCanNotSeeTableRecords([$first]);
+
+        // By patient name, on the samples list and on the worklist.
+        $first->patient->update(['name' => 'Zubair Hossain']);
+
+        Livewire::test(ListSamples::class)
+            ->searchTable('Zub')
+            ->assertCanSeeTableRecords([$first])
+            ->assertCanNotSeeTableRecords([$second]);
+
+        Livewire::test(ListWorkItems::class, ['activeTab' => 'all'])
+            ->searchTable('Zub')
+            ->assertCanSeeTableRecords($first->workItems)
+            ->assertCanNotSeeTableRecords($second->workItems);
+
+        Livewire::test(ListWorkItems::class, ['activeTab' => 'all'])
+            ->searchTable($second->accession_no)
+            ->assertCanSeeTableRecords($second->workItems)
+            ->assertCanNotSeeTableRecords($first->workItems);
     }
 
     public function test_the_worklist_tabs_show_what_needs_doing(): void

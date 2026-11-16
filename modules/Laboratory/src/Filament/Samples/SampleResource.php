@@ -86,7 +86,7 @@ class SampleResource extends Resource
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
                         // A scanned barcode is the whole number; typing matches from its start.
                         $q->where('accession_no', 'like', str_replace(['%', '_'], ['\\%', '\\_'], trim($search)).'%')
-                            ->orWhereIn('patient_id', Patient::search($search)->select('id')->limit(200));
+                            ->orWhereIn('patient_id', Patient::search($search)->select('id'));
                     })),
                 TextColumn::make('patient.name')->label('Patient')->description(fn (Sample $record): ?string => $record->patient?->patient_code),
                 TextColumn::make('sampleType.name')->label('Sample')->description(fn (Sample $record): ?string => $record->sampleType?->container),

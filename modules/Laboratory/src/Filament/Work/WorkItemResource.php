@@ -86,7 +86,7 @@ class WorkItemResource extends Resource
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
                         $like = str_replace(['%', '_'], ['\\%', '\\_'], trim($search)).'%';
                         $q->whereIn('sample_id', Sample::query()->select('id')->where('accession_no', 'like', $like))
-                            ->orWhereIn('patient_id', Patient::search($search)->select('id')->limit(200));
+                            ->orWhereIn('patient_id', Patient::search($search)->select('id'));
                     })),
                 TextColumn::make('test_name')->label('Test')->weight('bold')->description(fn (WorkItem $record): ?string => $record->department),
                 TextColumn::make('patient.name')->label('Patient')
