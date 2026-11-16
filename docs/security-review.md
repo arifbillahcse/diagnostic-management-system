@@ -57,6 +57,11 @@ before real patient data is entered.
    insider.** The clinic's MySQL user could remove the triggers. Tightening
    this means running migrations as a different MySQL user from the one the
    application uses day to day.
+   On hosting that refuses triggers (shared cPanel accounts), setup carries
+   on without them and says so; only the application-level rule remains
+   there. A clinic set up in an existing database with no user of its own
+   shares the control MySQL user, so database-level isolation between
+   clinics is also weaker there.
 4. **Lists are not filtered by branch.** Harmless with one branch. It must be
    done with the multi-branch module (Phase 11).
 5. **No content security policy.** Filament and Livewire rely on inline

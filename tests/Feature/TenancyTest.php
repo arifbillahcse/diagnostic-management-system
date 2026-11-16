@@ -13,6 +13,8 @@ use App\Core\Tenancy\ClinicManager;
 use App\Core\Tenancy\ClinicProvisioner;
 use App\Core\Tenancy\ClinicStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Tests\TestCase;
 use Throwable;
@@ -156,5 +158,145 @@ final class TenancyTest extends TestCase
         ])->assertSuccessful();
 
         $this->assertSame(1, Clinic::count());
+    }
+
+    public function test_a_clinic_can_be_set_up_in_a_database_that_already_exists(): void
+    {
+        // Shared hosting: the database is made in the hosting panel.
+        $this->makeEmptyDatabase('dmstest_clinic_hosted');
+
+        $this->artisan('clinic:create', [
+            'name' => 'Hosted Diagnostics',
+            'domain' => 'hosted.test',
+            '--owner-name' => 'Hosted Owner',
+            '--owner-email' => 'owner@hosted.test',
+            '--owner-password' => self::PASSWORD,
+            '--database' => 'dmstest_clinic_hosted',
+        ])->expectsOutputToContain('Database: dmstest_clinic_hosted')->assertSuccessful();
+
+        $clinic = Clinic::sole();
+
+        $this->assertSame('dmstest_clinic_hosted', $clinic->db_name);
+        $this->assertNull($clinic->db_username);
+        $this->assertSame(['hosted.test'], $clinic->domains->pluck('domain')->all());
+
+        app(ClinicManager::class)->run($clinic, function (): void {
+            $this->assertSame('owner@hosted.test', User::sole()->email);
+            $this->assertTrue(Role::where('key', 'owner')->exists());
+        });
+    }
+
+    public function test_an_existing_database_that_holds_tables_is_refused_and_left_alone(): void
+    {
+        $this->createClinic('alpha');
+        $taken = Clinic::sole()->db_name;
+
+        // The same database twice.
+        try {
+            $this->provisionInto($taken);
+            $this->fail('A database that belongs to a clinic was accepted.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertStringContainsString('already belongs to a clinic', $e->getMessage());
+        }
+
+        // A database with somebody else's tables in it.
+        $this->makeEmptyDatabase('dmstest_clinic_used');
+        $this->inDatabase('dmstest_clinic_used', fn () => Schema::connection('clinic')->create('keep_me', fn ($table) => $table->id()));
+
+        try {
+            $this->provisionInto('dmstest_clinic_used');
+            $this->fail('A database that is not empty was accepted.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertStringContainsString('is not empty', $e->getMessage());
+        }
+
+        $this->assertSame(1, Clinic::count());
+        $this->assertSame(
+            ['keep_me'],
+            $this->inDatabase('dmstest_clinic_used', fn () => Schema::connection('clinic')->getTableListing(schemaQualified: false)),
+        );
+    }
+
+    public function test_a_database_that_does_not_exist_is_refused(): void
+    {
+        try {
+            $this->provisionInto('dmstest_clinic_missing');
+            $this->fail('A missing database was accepted.');
+        } catch (InvalidArgumentException) {
+            // expected
+        }
+
+        $this->assertSame(0, Clinic::count());
+        $this->assertSame(0, DB::connection('control')->table('clinic_domains')->count());
+    }
+
+    public function test_a_failed_setup_in_an_existing_database_empties_it_but_keeps_it(): void
+    {
+        $this->makeEmptyDatabase('dmstest_clinic_hosted');
+        $this->useModuleFixtures('BrokenSet');
+
+        try {
+            $this->provisionInto('dmstest_clinic_hosted');
+            $this->fail('Provisioning should have failed.');
+        } catch (Throwable) {
+            // expected
+        }
+
+        $this->assertSame(0, Clinic::count());
+        $this->assertSame([], $this->inDatabase('dmstest_clinic_hosted', fn () => Schema::connection('clinic')->getTableListing(schemaQualified: false)));
+    }
+
+    public function test_database_credentials_need_a_database_and_names_are_checked(): void
+    {
+        $this->artisan('clinic:create', [
+            'name' => 'Hosted Diagnostics',
+            'domain' => 'hosted.test',
+            '--owner-name' => 'Hosted Owner',
+            '--owner-email' => 'owner@hosted.test',
+            '--owner-password' => self::PASSWORD,
+            '--db-username' => 'someone',
+            '--db-password' => 'secret',
+        ])->assertFailed();
+
+        foreach (['bad`name', 'Bad-Name', str_repeat('a', 65)] as $name) {
+            try {
+                $this->provisionInto($name);
+                $this->fail("The database name [{$name}] was accepted.");
+            } catch (InvalidArgumentException) {
+                // expected
+            }
+        }
+
+        $this->assertSame(0, Clinic::count());
+    }
+
+    private function provisionInto(string $database): Clinic
+    {
+        return app(ClinicProvisioner::class)->provision(
+            name: 'Hosted Diagnostics',
+            domain: 'hosted.test',
+            ownerName: 'Hosted Owner',
+            ownerEmail: 'owner@hosted.test',
+            ownerPassword: self::PASSWORD,
+            database: $database,
+        );
+    }
+
+    private function makeEmptyDatabase(string $name): void
+    {
+        if ($this->onMySql()) {
+            DB::connection('control')->statement("CREATE DATABASE `{$name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+            return;
+        }
+
+        $path = app(ClinicDatabase::class)->sqlitePath(new Clinic(['db_name' => $name]));
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, '');
+    }
+
+    private function inDatabase(string $name, callable $work): mixed
+    {
+        return app(ClinicManager::class)->run(new Clinic(['db_name' => $name]), $work);
     }
 }

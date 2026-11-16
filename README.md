@@ -99,11 +99,84 @@ A sample report is in
 A request to an address that belongs to no clinic gets "not found". That
 includes `127.0.0.1` unless you create a clinic with that domain.
 
+## Shared hosting (cPanel)
+
+A server you control (a VPS) is the recommended home, because the system
+creates one database and one MySQL user per clinic by itself. Shared cPanel
+hosting does not allow that, so there each clinic database is made in cPanel
+first and handed to `clinic:create`.
+
+1. **Files.** Put the project outside `public_html`, for example in
+   `~/dms`. In cPanel, *Domains*, set the domain's document root to the
+   project's `public` folder (`dms/public`). Nothing else may be reachable
+   from the web.
+2. **PHP.** Select PHP 8.3 or newer for the domain (*MultiPHP Manager*) and
+   use the same version on the command line, for example
+   `/opt/cpanel/ea-php84/root/usr/bin/php`.
+3. **Databases.** In *MySQL Databases* create a control database (for
+   example `account_dmscontrol`), one database per clinic (for example
+   `account_clinic1`), and one MySQL user. Add the user to every one of these
+   databases with *All privileges*.
+4. **Environment.** In `.env`:
+
+   ```ini
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://your-domain.example
+   DB_HOST=localhost
+   DB_DATABASE=account_dmscontrol
+   DB_USERNAME=account_dmsuser
+   DB_PASSWORD=the-password
+   SESSION_SECURE_COOKIE=true
+   ```
+
+5. **Install.**
+
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+
+   ```bash
+   php artisan key:generate
+   ```
+
+   ```bash
+   php artisan migrate --force
+   ```
+
+6. **Create the clinic** in the empty database from step 3. The domain must
+   be exactly the address typed in the browser, without `https://`.
+
+   ```bash
+   php artisan clinic:create "My Diagnostic Center" your-domain.example --owner-name="Owner" --owner-email=owner@example.com --database=account_clinic1
+   ```
+
+   To give the clinic a MySQL user of its own, add
+   `--db-username=account_clinic1user`; you are asked for its password.
+7. **Cron.** In *Cron Jobs* add, every minute:
+
+   ```bash
+   cd ~/dms && /opt/cpanel/ea-php84/root/usr/bin/php artisan schedule:run >/dev/null 2>&1
+   ```
+
+   ```bash
+   cd ~/dms && /opt/cpanel/ea-php84/root/usr/bin/php artisan queue:work --stop-when-empty --max-time=50 >/dev/null 2>&1
+   ```
+
+Limits on shared hosting: the database triggers that guard append-only
+tables are usually refused (`clinic:create` says so; the application itself
+still never edits those rows), and `clinic:backup` needs `mysqldump` and
+`gzip` on the command line.
+
+A "not found" page on every address means no clinic has that domain: run
+`php artisan clinic:list`. A server error page means look in
+`storage/logs/laravel.log`.
+
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `php artisan clinic:create <name> <domain>` | Creates a clinic: database, tables, default roles, owner |
+| `php artisan clinic:create <name> <domain>` | Creates a clinic: database, tables, default roles, owner. With `--database=` it uses an existing empty database |
 | `php artisan clinic:list` | Lists clinics with their domains and databases |
 | `php artisan clinic:migrate` | Runs core and module migrations for every clinic. Run on every deploy |
 | `php artisan migrate` | Migrates the control database only |

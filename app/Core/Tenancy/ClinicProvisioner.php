@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Tenancy;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Throwable;
@@ -12,6 +13,10 @@ use Throwable;
 /**
  * Creates a clinic end to end: control record, database, tables, first data.
  * If any step fails, everything it created is removed again.
+ *
+ * Given an existing database (shared hosting, where the application may not
+ * create one), it uses that database instead of creating it. The database
+ * must be empty, and on failure only the tables are removed.
  */
 final class ClinicProvisioner
 {
@@ -29,6 +34,9 @@ final class ClinicProvisioner
         string $ownerEmail,
         string $ownerPassword,
         ?string $planKey = null,
+        ?string $database = null,
+        ?string $databaseUsername = null,
+        ?string $databasePassword = null,
     ): Clinic {
         $domain = ClinicDomain::normalize($domain);
 
@@ -38,6 +46,10 @@ final class ClinicProvisioner
 
         if (ClinicDomain::where('domain', $domain)->exists()) {
             throw new InvalidArgumentException("The domain [{$domain}] already belongs to a clinic.");
+        }
+
+        if (filled($database) && Clinic::where('db_name', $database)->exists()) {
+            throw new InvalidArgumentException("The database [{$database}] already belongs to a clinic.");
         }
 
         $plan = $this->plan($planKey);
@@ -51,13 +63,21 @@ final class ClinicProvisioner
         ]);
 
         $databaseCreated = false;
+        $databaseAdopted = false;
 
         try {
-            $clinic->update(['db_name' => $this->databases->nameFor($clinic)]);
+            if (filled($database)) {
+                $this->databases->adopt($clinic, $database, $databaseUsername, $databasePassword);
+                $this->assertReachableAndEmpty($clinic);
+                $databaseAdopted = true;
+                $this->log($clinic, 'database', 'done', 'existing database');
+            } else {
+                $clinic->update(['db_name' => $this->databases->nameFor($clinic)]);
 
-            $this->databases->create($clinic);
-            $databaseCreated = true;
-            $this->log($clinic, 'database', 'done');
+                $this->databases->create($clinic);
+                $databaseCreated = true;
+                $this->log($clinic, 'database', 'done');
+            }
 
             $this->migrator->migrate($clinic);
             $this->log($clinic, 'migrate', 'done');
@@ -74,12 +94,34 @@ final class ClinicProvisioner
                 rescue(fn () => $this->databases->drop($clinic));
             }
 
+            if ($databaseAdopted) {
+                // It was empty before we started, so every table is ours.
+                rescue(fn () => $this->manager->run($clinic, fn () => Schema::connection('clinic')->dropAllTables()));
+            }
+
             $clinic->delete();
 
             throw $e;
         }
 
         return $clinic;
+    }
+
+    private function assertReachableAndEmpty(Clinic $clinic): void
+    {
+        try {
+            $tables = $this->manager->run($clinic, fn () => Schema::connection('clinic')->getTables());
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException(
+                "Could not open the database [{$clinic->db_name}]: {$e->getMessage()}", previous: $e,
+            );
+        }
+
+        if ($tables !== []) {
+            throw new InvalidArgumentException(
+                "The database [{$clinic->db_name}] is not empty. A clinic needs a database of its own.",
+            );
+        }
     }
 
     private function plan(?string $key): Plan
