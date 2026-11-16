@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Modules\Reports\Filament;
 
 use App\Core\Audit\AuditLogger;
+use App\Core\Documents\ClinicFiles;
 use App\Core\Modules\GatesModuleAccess;
 use App\Core\Settings\Settings;
 use BackedEnum;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -32,6 +34,9 @@ class ReportSettings extends Page
         'letterhead' => [Permissions::SETTING_LETTERHEAD, 'print'],
         'top_margin_mm' => [Permissions::SETTING_TOP_MARGIN, 40],
         'bottom_margin_mm' => [Permissions::SETTING_BOTTOM_MARGIN, 25],
+        'header_image' => [Permissions::SETTING_HEADER_IMAGE, null],
+        'footer_image' => [Permissions::SETTING_FOOTER_IMAGE, null],
+        'watermark' => [Permissions::SETTING_WATERMARK, false],
         'footer_text' => [Permissions::SETTING_FOOTER, null],
         'block_print_when_due' => [Permissions::SETTING_BLOCK_WHEN_DUE, false],
     ];
@@ -94,12 +99,37 @@ class ReportSettings extends Page
                 Textarea::make('footer_text')->label('Footer line')->rows(2)->maxLength(200)->columnSpanFull()
                     ->placeholder('Results relate only to the sample tested.'),
             ]),
+            Section::make('Banner images')
+                ->description('A coloured header and footer across the whole page, as on printed letterhead. Only used on plain paper; without them the clinic name and address are typed.')
+                ->visible(fn (Get $get): bool => $get('letterhead') !== 'preprinted')
+                ->schema([
+                    $this->banner('header_image', 'Header banner', Permissions::HEADER_IMAGE_MAX_KB, 'about 1240 pixels wide and 250 tall'),
+                    $this->banner('footer_image', 'Footer banner', Permissions::FOOTER_IMAGE_MAX_KB, 'about 1240 pixels wide and 100 tall'),
+                    Toggle::make('watermark')
+                        ->label('Print a faint copy of the logo behind the results')
+                        ->helperText('Uses the logo from Clinic settings.'),
+                ]),
             Section::make('Handing over reports')->schema([
                 Toggle::make('block_print_when_due')
                     ->label('Do not print a report while its invoice has a due')
                     ->helperText('Users with the "print while there is a due" permission can still print.'),
             ]),
         ]);
+    }
+
+    private function banner(string $field, string $label, int $maxKb, string $size): FileUpload
+    {
+        return FileUpload::make($field)
+            ->label($label)
+            ->disk(ClinicFiles::DISK)
+            ->directory(fn (): string => app(ClinicFiles::class)->directory('branding'))
+            ->visibility('private')
+            ->acceptedFileTypes(['image/png', 'image/jpeg'])
+            ->maxSize($maxKb)
+            ->previewable(false)
+            ->downloadable(false)
+            ->openable(false)
+            ->helperText("PNG or JPEG, up to {$maxKb} KB, {$size}. A small file keeps reports quick to create; save photos as JPEG.");
     }
 
     public function save(Settings $settings, AuditLogger $audit): void
@@ -116,7 +146,7 @@ class ReportSettings extends Page
 
             $new = match ($field) {
                 'top_margin_mm', 'bottom_margin_mm' => (int) $state[$field],
-                'block_print_when_due' => (bool) $state[$field],
+                'block_print_when_due', 'watermark' => (bool) $state[$field],
                 default => filled($state[$field]) ? $state[$field] : null,
             };
             $old = $settings->get($name, $default);

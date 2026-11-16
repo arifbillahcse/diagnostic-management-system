@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Modules\Reports\Support;
 
+use App\Core\Documents\Barcode;
 use App\Core\Documents\ClinicFiles;
 use App\Core\Documents\Letterhead;
 use App\Core\Settings\Settings;
 use App\Core\Tenancy\ClinicContext;
+use Illuminate\Support\Collection;
 use Modules\FrontDesk\Models\Order;
 use Modules\Laboratory\Enums\WorkStatus;
 use Modules\Laboratory\Models\WorkItem;
@@ -69,20 +71,88 @@ final class ReportBuilder
         return [
             'clinic' => $this->letterhead->data(),
             'timezone' => $this->clinics->require()->timezone,
-            'order' => $order->loadMissing(['patient', 'referralDoctor']),
+            'order' => $order->loadMissing(['patient', 'referralDoctor', 'invoice']),
+            'info' => $this->info($order, $items),
             'patient' => $order->patient,
             'departments' => $items->groupBy(fn (WorkItem $w): string => $w->department ?: 'Laboratory'),
             'items' => $items,
             'waiting' => $onlyWorkItemIds === null ? $waiting : [],
             'signers' => $signers,
             'amended' => $items->contains(fn (WorkItem $w): bool => $w->version > 1),
-            'layout' => [
-                'preprinted' => $preprinted,
-                'top_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_TOP_MARGIN, 40) : 12,
-                'bottom_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_BOTTOM_MARGIN, 25) : 14,
-                'footer' => $this->settings->get(Permissions::SETTING_FOOTER),
-            ],
+            'layout' => $this->layout($preprinted),
             'printed_at' => now($this->clinics->require()->timezone),
         ];
+    }
+
+    /**
+     * What the top block of the report says besides the patient: bill and
+     * lab numbers (with barcodes), specimen, and the dates.
+     *
+     * @param  Collection<int, WorkItem>  $items
+     * @return array<string, mixed>
+     */
+    private function info(Order $order, $items): array
+    {
+        $samples = $items->pluck('sample')->filter()->unique('id')->sortBy('collected_at')->values();
+        $labNos = $samples->pluck('accession_no')->all();
+        $billNo = $order->invoice?->invoice_no;
+        $doctor = $order->referralDoctor;
+
+        return [
+            'bill_no' => $billNo,
+            'lab_no' => implode(', ', $labNos),
+            'bill_barcode' => $billNo ? Barcode::pngDataUri($billNo) : null,
+            'lab_barcode' => $labNos !== [] ? Barcode::pngDataUri($labNos[0]) : null,
+            'specimen' => $samples->map(fn ($s) => $s->sampleType?->name)->filter()->unique()->implode(', '),
+            'received_at' => $samples->pluck('received_at')->filter()->sort()->first(),
+            'collected_at' => $samples->pluck('collected_at')->filter()->sort()->first(),
+            'delivery_at' => $order->delivery_at,
+            'consultant' => $doctor ? trim(($doctor->code ? $doctor->code.', ' : '').$doctor->name.($doctor->degree ? ', '.$doctor->degree : '')) : null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function layout(bool $preprinted): array
+    {
+        $header = $preprinted ? null : $this->banner(Permissions::SETTING_HEADER_IMAGE, 70);
+        $footer = $preprinted ? null : $this->banner(Permissions::SETTING_FOOTER_IMAGE, 40);
+        $logo = $this->settings->get(Permissions::SETTING_WATERMARK, false) && ! $preprinted
+            ? $this->files->dataUri($this->settings->get('clinic.logo_path'))
+            : null;
+
+        return [
+            'preprinted' => $preprinted,
+            'header_image' => $header,
+            'footer_image' => $footer,
+            'watermark' => $logo,
+            // Margins leave room for the banners, which are printed edge to edge.
+            'top_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_TOP_MARGIN, 40) : ($header ? (int) ceil($header['height_mm']) + 4 : 12),
+            'bottom_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_BOTTOM_MARGIN, 25) : ($footer ? (int) ceil($footer['height_mm']) + 8 : 14),
+            'footer' => $this->settings->get(Permissions::SETTING_FOOTER),
+        ];
+    }
+
+    /**
+     * A banner stretched across an A4 page (210 mm). One taller than the
+     * limit is shown at the limit's height instead, keeping its proportions.
+     *
+     * @return array{uri: string, width_mm: float, height_mm: float}|null
+     */
+    private function banner(string $setting, int $maxHeightMm): ?array
+    {
+        $uri = $this->files->dataUri($this->settings->get($setting));
+        $size = $uri === null ? false : @getimagesizefromstring((string) base64_decode(substr($uri, strpos($uri, ',') + 1), true));
+
+        if ($size === false || $size[0] < 1 || $size[1] < 1) {
+            return null;
+        }
+
+        $height = 210 * $size[1] / $size[0];
+
+        if ($height > $maxHeightMm) {
+            return ['uri' => $uri, 'width_mm' => round($maxHeightMm * $size[0] / $size[1], 1), 'height_mm' => (float) $maxHeightMm];
+        }
+
+        return ['uri' => $uri, 'width_mm' => 210.0, 'height_mm' => round($height, 1)];
     }
 }

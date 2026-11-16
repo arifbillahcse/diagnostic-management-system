@@ -117,3 +117,19 @@ the problem showed on a tiny data set: the month view made 103 queries, the
 - **Migration time:** adding these indexes to the two-year clinic took about
   six seconds. With many clinics, a deploy that adds indexes takes that long
   per large clinic.
+
+## Report banners
+
+Measured in Phase 5 follow-up work, on the development machine, creating one
+single-test report as a PDF (median of eight runs, SQLite, PDF engine warm):
+
+| Report | Time | PDF size |
+|---|---|---|
+| Typed header, no images | 82 ms | 32 KB |
+| Header banner (60 KB) and footer banner (37 KB) as PNG, plus faint logo watermark | 260 ms | 74 KB |
+
+The banners add about 180 ms per report, almost all of it decoding the two
+images. Upload limits (150 KB header, 60 KB footer) keep it in this range.
+Only creating a report is affected; no list, dashboard, or result-entry
+screen loads the images. Not measured: reports with many tests or pages,
+and MySQL.

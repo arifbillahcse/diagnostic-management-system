@@ -27,6 +27,19 @@ final class Permissions
 
     public const SETTING_FOOTER = 'reports.footer_text';
 
+    /** Full-width banner images for the top and bottom of every page (plain paper only). */
+    public const SETTING_HEADER_IMAGE = 'reports.header_image_path';
+
+    public const SETTING_FOOTER_IMAGE = 'reports.footer_image_path';
+
+    /** Faint copy of the logo behind the results. */
+    public const SETTING_WATERMARK = 'reports.watermark';
+
+    /** Banner file size limits, in KB. They keep PDF creation fast. */
+    public const HEADER_IMAGE_MAX_KB = 150;
+
+    public const FOOTER_IMAGE_MAX_KB = 60;
+
     public const SETTING_BLOCK_WHEN_DUE = 'reports.block_print_when_due';
 
     /** @return array<string, string> */

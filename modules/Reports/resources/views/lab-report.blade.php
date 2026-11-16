@@ -3,6 +3,9 @@
 
     $fmt = fn ($time) => $time?->timezone($timezone)->format('d M Y, h:i A') ?? '-';
     $firstSample = $items->pluck('sample')->filter()->sortBy('collected_at')->first();
+    $pageBottom = $layout['bottom_mm'] + 10; // the @page bottom margin, in mm
+    $footerH = $layout['footer_image']['height_mm'] ?? 0;
+    $sideShift = fn (array $banner): float => -13 + (210 - $banner['width_mm']) / 2;
 @endphp
 <!doctype html>
 <html lang="en">
@@ -44,20 +47,41 @@
         .signers img { max-height: 34pt; max-width: 110pt; }
         .signers .line { border-top: 0.75pt solid #111; padding-top: 2pt; font-weight: bold; font-size: 9pt; }
 
+        .banner { position: fixed; width: 210mm; text-align: center; }
+        .banner img { display: inline-block; }
+        .watermark { position: fixed; top: 85mm; left: 40mm; width: 130mm; opacity: 0.07; }
+        .codes td { padding: 0 0 3pt; font-size: 7.5pt; color: #444; }
+        .codes img { height: 9mm; width: 55mm; }
         .footer { position: fixed; left: 0; right: 0; bottom: -{{ 9 }}mm; height: 8mm; font-size: 7.5pt; color: #444; border-top: 0.4pt solid #999; padding-top: 2pt; }
         .footer td { vertical-align: top; }
         .page:after { content: counter(page); }
     </style>
 </head>
 <body>
-    <div class="footer">
+    @if ($layout['header_image'])
+        <div class="banner" style="top: -{{ $layout['top_mm'] }}mm; left: {{ $sideShift($layout['header_image']) }}mm">
+            <img src="{{ $layout['header_image']['uri'] }}" alt="" style="width: {{ $layout['header_image']['width_mm'] }}mm; height: {{ $layout['header_image']['height_mm'] }}mm">
+        </div>
+    @endif
+
+    @if ($layout['footer_image'])
+        <div class="banner" style="bottom: -{{ $pageBottom }}mm; left: {{ $sideShift($layout['footer_image']) }}mm">
+            <img src="{{ $layout['footer_image']['uri'] }}" alt="" style="width: {{ $layout['footer_image']['width_mm'] }}mm; height: {{ $layout['footer_image']['height_mm'] }}mm">
+        </div>
+    @endif
+
+    @if ($layout['watermark'])
+        <img class="watermark" src="{{ $layout['watermark'] }}" alt="">
+    @endif
+
+    <div class="footer" @if ($layout['footer_image']) style="bottom: -{{ $pageBottom - $footerH - 2 }}mm" @endif>
         <table><tr>
             <td>{{ $layout['footer'] }}</td>
             <td style="text-align: right; width: 58%; white-space: nowrap">{{ $order->order_no }} &middot; Printed {{ $printed_at->format('d M Y, h:i A') }} &middot; Page <span class="page"></span></td>
         </tr></table>
     </div>
 
-    @unless ($layout['preprinted'])
+    @unless ($layout['preprinted'] || $layout['header_image'])
         <table class="letterhead"><tr>
             @if ($clinic['logo'])
                 <td class="logo"><img src="{{ $clinic['logo'] }}" alt=""></td>
@@ -73,18 +97,33 @@
         </tr></table>
     @endunless
 
+    @if ($info['bill_barcode'] || $info['lab_barcode'])
+        <table class="codes"><tr>
+            <td>@if ($info['bill_barcode'])<img src="{{ $info['bill_barcode'] }}" alt="">@endif</td>
+            <td style="text-align: right">@if ($info['lab_barcode'])<img src="{{ $info['lab_barcode'] }}" alt="">@endif</td>
+        </tr></table>
+    @endif
+
     <table class="patient">
         <tr>
-            <td><span class="label">Patient:</span> <strong>{{ $patient->name }}</strong></td>
-            <td><span class="label">Patient ID:</span> {{ $patient->patient_code }}</td>
+            <td><span class="label">Bill ID:</span> {{ $info['bill_no'] ?? '-' }} &nbsp;&nbsp; <span class="label">Lab No:</span> {{ $info['lab_no'] ?: '-' }}</td>
+            <td><span class="label">Delivery date:</span> {{ $fmt($info['delivery_at']) }}</td>
         </tr>
         <tr>
-            <td><span class="label">Age / sex:</span> {{ $patient->ageLabel($firstSample?->collected_at ?? $order->ordered_at) }} / {{ $patient->sex->label() }}</td>
-            <td><span class="label">Order:</span> {{ $order->order_no }}</td>
+            <td><span class="label">UHID:</span> <strong>{{ $patient->patient_code }}</strong></td>
+            <td><span class="label">Received date:</span> {{ $fmt($info['received_at']) }}</td>
         </tr>
         <tr>
-            <td><span class="label">Referred by:</span> {{ $order->referralDoctor?->name ?? 'Self' }}</td>
-            <td><span class="label">Sample collected:</span> {{ $fmt($firstSample?->collected_at) }}</td>
+            <td><span class="label">Patient name:</span> <strong>{{ $patient->name }}</strong></td>
+            <td><span class="label">Age:</span> {{ $patient->ageLabel($firstSample?->collected_at ?? $order->ordered_at) }}</td>
+        </tr>
+        <tr>
+            <td><span class="label">Consultant:</span> {{ $info['consultant'] ?? 'Self' }}</td>
+            <td><span class="label">Sex:</span> {{ $patient->sex->label() }}</td>
+        </tr>
+        <tr>
+            <td><span class="label">Specimen:</span> <strong>{{ $info['specimen'] ?: '-' }}</strong></td>
+            <td><span class="label">Sample collected:</span> {{ $fmt($info['collected_at']) }}</td>
         </tr>
     </table>
 
