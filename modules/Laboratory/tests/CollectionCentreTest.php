@@ -23,6 +23,7 @@ use Modules\Laboratory\Filament\Samples\ListTransfers;
 use Modules\Laboratory\Models\Sample;
 use Modules\Laboratory\Models\Transfer;
 use Modules\Laboratory\Support\LabException;
+use Modules\Laboratory\Support\LabRoutes;
 use Modules\Reports\Actions\PrintReport;
 
 class CollectionCentreTest extends LabTestCase
@@ -181,7 +182,7 @@ class CollectionCentreTest extends LabTestCase
         Livewire::test(CollectionCentres::class)
             ->assertSee('Samples taken at Rupsha collection centre are tested at')
             ->call('save')->assertNotified('Saved');
-        $this->assertSame($this->branch->id, app(\Modules\Laboratory\Support\LabRoutes::class)->labFor($this->centre->id), 'Saving the shown routes keeps them');
+        $this->assertSame($this->branch->id, app(LabRoutes::class)->labFor($this->centre->id), 'Saving the shown routes keeps them');
 
         $this->actingAs($this->centreStaff);
         app(HandleSample::class)->collect($this->sampleOf($order));
