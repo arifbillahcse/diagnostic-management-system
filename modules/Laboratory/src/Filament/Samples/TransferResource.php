@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Modules\Laboratory\Actions\HandleSample;
@@ -50,14 +51,27 @@ class TransferResource extends Resource
         return in_array($operation, ['viewAny', 'view'], true) ? Permissions::WORK_VIEW : null;
     }
 
+    /**
+     * Shown once collection centres are in use. The menu is drawn on every page, so a
+     * database that has not been updated yet must hide the item, not break every page:
+     * the owner still needs to reach Database updates to apply the update.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return parent::shouldRegisterNavigation() && (Transfer::exists() || DB::connection('clinic')->table('lab_routes')->exists());
+        try {
+            return parent::shouldRegisterNavigation() && (Transfer::exists() || DB::connection('clinic')->table('lab_routes')->exists());
+        } catch (QueryException) {
+            return false;
+        }
     }
 
     public static function getNavigationBadge(): ?string
     {
-        $open = Transfer::where('status', 'in_transit')->count();
+        try {
+            $open = Transfer::where('status', 'in_transit')->count();
+        } catch (QueryException) {
+            return null;
+        }
 
         return $open > 0 ? (string) $open : null;
     }

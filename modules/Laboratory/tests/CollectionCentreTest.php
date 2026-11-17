@@ -10,6 +10,7 @@ use App\Core\Auth\User;
 use App\Core\Branches\Branch;
 use App\Core\Modules\ModuleManager;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Modules\FrontDesk\Actions\PlaceOrder;
 use Modules\FrontDesk\Models\Order;
@@ -20,6 +21,7 @@ use Modules\Laboratory\Enums\WorkStatus;
 use Modules\Laboratory\Filament\CollectionCentres;
 use Modules\Laboratory\Filament\Samples\ListSamples;
 use Modules\Laboratory\Filament\Samples\ListTransfers;
+use Modules\Laboratory\Filament\Samples\TransferResource;
 use Modules\Laboratory\Models\Sample;
 use Modules\Laboratory\Models\Transfer;
 use Modules\Laboratory\Support\LabException;
@@ -199,5 +201,15 @@ class CollectionCentreTest extends LabTestCase
 
         $this->signIn($this->mainLab)->get(self::BASE.'/print/transfer/'.$transfer->public_id)
             ->assertOk()->assertSee($transfer->transfer_no)->assertSee($this->sampleOf($order)->accession_no)->assertSee('Box 3');
+    }
+
+    public function test_a_database_not_yet_updated_does_not_break_the_menu(): void
+    {
+        Schema::connection('clinic')->table('lab_samples', fn ($t) => $t->dropConstrainedForeignId('transfer_id'));
+        Schema::connection('clinic')->drop('lab_transfers');
+
+        $this->assertFalse(TransferResource::shouldRegisterNavigation());
+        $this->assertNull(TransferResource::getNavigationBadge());
+        $this->signIn($this->ownerUser)->get(self::BASE.'/')->assertOk();
     }
 }
