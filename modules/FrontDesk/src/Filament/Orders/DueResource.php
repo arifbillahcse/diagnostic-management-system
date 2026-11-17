@@ -6,6 +6,7 @@ namespace Modules\FrontDesk\Filament\Orders;
 
 use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -64,6 +65,8 @@ class DueResource extends Resource
                 TextColumn::make('paid_total')->label('Paid')->alignEnd()->formatStateUsing($money),
                 TextColumn::make('due_amount')->label('Due')->alignEnd()->weight('bold')->formatStateUsing($money),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([BranchFilter::make()])
             ->defaultSort('issued_at')
             ->recordActions([
                 Action::make('open')->label('Open order')

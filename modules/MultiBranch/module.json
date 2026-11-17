@@ -1,0 +1,12 @@
+{
+  "key": "multibranch",
+  "name": "Multi-branch",
+  "description": "A branch switcher for staff who work in more than one branch, lists limited to the user's branches, each branch's own address on printed papers, and branch figures in the owner's reports.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": [],
+  "suggests": [],
+  "table_prefix": "mb_",
+  "default_enabled": false,
+  "entry": "Modules\\MultiBranch\\MultiBranchModule"
+}

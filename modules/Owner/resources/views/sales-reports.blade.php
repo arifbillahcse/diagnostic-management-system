@@ -16,6 +16,18 @@
                     </x-filament::input.select>
                 </x-filament::input.wrapper>
             </label>
+            @if ($this->branchOptions !== [])
+                <label>Branch
+                    <x-filament::input.wrapper>
+                        <x-filament::input.select wire:model.live="branch">
+                            <option value="">All my branches</option>
+                            @foreach ($this->branchOptions as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </x-filament::input.select>
+                    </x-filament::input.wrapper>
+                </label>
+            @endif
             <label>From
                 <x-filament::input.wrapper><x-filament::input type="date" wire:model.live="from" /></x-filament::input.wrapper>
             </label>
@@ -25,7 +37,7 @@
         </div>
     </x-filament::section>
 
-    <x-filament::section :heading="SalesReportsPage::REPORTS[$this->report] ?? 'Report'" description="All branches. Amounts in taka. Cancelled orders and cancelled tests are left out.">
+    <x-filament::section :heading="SalesReportsPage::REPORTS[$this->report] ?? 'Report'" description="{{ $this->branchOptions === [] || $branch === '' ? 'All branches.' : ($this->branchOptions[(int) $branch] ?? '').' only.' }} Amounts in taka. Cancelled orders and cancelled tests are left out.">
         @if ($table['error'])
             <p class="dms-alert dms-strong">{{ $table['error'] }}</p>
         @elseif ($table['rows'] === [])

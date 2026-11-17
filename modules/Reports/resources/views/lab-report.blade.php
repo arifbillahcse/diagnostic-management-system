@@ -88,6 +88,7 @@
             @endif
             <td>
                 <div class="clinic">{{ $clinic['name'] }}</div>
+                @if (! empty($clinic['branch']))<div class="small"><strong>{{ $clinic['branch'] }}</strong></div>@endif
                 <div class="small">{{ $clinic['address'] }}</div>
                 <div class="small">
                     {{ $clinic['phone'] }}@if ($clinic['phone'] && $clinic['email']) &middot; @endif{{ $clinic['email'] }}

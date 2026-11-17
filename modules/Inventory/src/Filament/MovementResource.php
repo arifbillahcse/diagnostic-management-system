@@ -7,6 +7,7 @@ namespace Modules\Inventory\Filament;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -70,7 +71,9 @@ class MovementResource extends Resource
                 TextColumn::make('note')->placeholder('-')->wrap(),
                 TextColumn::make('creator.name')->label('By')->placeholder('-'),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('item_id')->label('Item')->searchable()
                     ->options(fn (): array => Item::orderBy('name')->pluck('name', 'id')->all()),
                 SelectFilter::make('reason')->options(Enums::REASONS),

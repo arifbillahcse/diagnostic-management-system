@@ -37,7 +37,7 @@ final class PrintController
         $invoice->load(['patient', 'lines', 'payments.receiver', 'refunds', 'order.referralDoctor', 'order.creator', 'order.items.service.category', 'branch']);
 
         return view('frontdesk::print.invoice', [
-            'clinic' => $this->letterhead->data(),
+            'clinic' => $this->letterhead->data($invoice->branch),
             'invoice' => $invoice,
             'tz' => $this->clinics->require()->timezone,
             'copies' => match ($request->query('copy')) {
@@ -58,7 +58,7 @@ final class PrintController
         Gate::authorize(Permissions::ORDERS_VIEW, $payment->branch_id);
 
         return view('frontdesk::print.receipt', [
-            'clinic' => $this->letterhead->data(),
+            'clinic' => $this->letterhead->data($payment->invoice?->branch),
             'payment' => $payment->load(['invoice.patient', 'receiver']),
         ]);
     }

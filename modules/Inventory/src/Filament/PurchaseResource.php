@@ -7,6 +7,7 @@ namespace Modules\Inventory\Filament;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
@@ -130,7 +131,9 @@ class PurchaseResource extends Resource
                     ->formatStateUsing(fn (string $state): string => ['void' => 'Void', 'paid' => 'Paid', 'unpaid' => 'Unpaid'][$state])
                     ->color(fn (string $state): string => ['void' => 'gray', 'paid' => 'success', 'unpaid' => 'danger'][$state]),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('supplier_id')->label('Supplier')->options(fn (): array => Supplier::orderBy('name')->pluck('name', 'id')->all()),
                 SelectFilter::make('payment')->label('Payment')
                     ->options(['unpaid' => 'Unpaid', 'paid' => 'Paid', 'void' => 'Void'])

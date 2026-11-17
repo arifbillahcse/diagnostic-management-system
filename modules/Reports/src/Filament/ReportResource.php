@@ -8,6 +8,7 @@ use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
 use App\Core\Patients\Patient;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -93,6 +94,8 @@ class ReportResource extends Resource
                     ->color(fn (?Money $state): ?string => $state?->isPositive() ? 'danger' : null),
             ])
             ->searchPlaceholder('Order number or patient')
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([BranchFilter::make()])
             ->defaultSort('id', 'desc')
             // This list grows without limit. Counting it on every page load is slow,
             // so it shows "next" and "previous" without a total.

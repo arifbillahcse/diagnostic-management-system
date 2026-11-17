@@ -74,6 +74,7 @@
             @if ($clinic['logo'])<img src="{{ $clinic['logo'] }}" alt="">@endif
             <div class="text">
                 <h1>{{ $clinic['name'] }}</h1>
+                @if (! empty($clinic['branch']))<div class="sub"><strong>{{ $clinic['branch'] }}</strong></div>@endif
                 <div class="sub">{{ $clinic['address'] }}</div>
                 <div class="sub">
                     @if ($clinic['phone'])Mobile: {{ $clinic['phone'] }}@endif

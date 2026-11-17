@@ -39,7 +39,7 @@ final class PayslipController
         $lines->load('staff');
 
         return view('people::print.payslip', [
-            'clinic' => $this->letterhead->data(),
+            'clinic' => $this->letterhead->data($run->branch),
             'run' => $run->load('branch'),
             'slips' => $lines->sortBy(fn (SalaryLine $l) => $l->staff->name)->values()
                 ->map(fn (SalaryLine $l) => ['line' => $l, 'words' => AmountInWords::for($l->net)]),

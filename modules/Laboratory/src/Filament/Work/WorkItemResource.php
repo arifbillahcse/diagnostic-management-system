@@ -6,6 +6,7 @@ namespace Modules\Laboratory\Filament\Work;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Patients\Patient;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -100,6 +101,8 @@ class WorkItemResource extends Resource
                     ->description(fn (WorkItem $record): ?string => $record->pending_reason),
             ])
             ->searchPlaceholder('Scan a label, or type a patient')
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([BranchFilter::make()])
             ->defaultSort('id')
             // This list grows without limit. Counting it on every page load is slow,
             // so it shows "next" and "previous" without a total.

@@ -6,6 +6,7 @@ namespace Modules\Finance\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -62,7 +63,9 @@ class ExpenseResource extends Resource
                     ->color(fn (string $state): string => $state === 'Void' ? 'danger' : 'success')
                     ->description(fn (Expense $record): ?string => $record->void_reason),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('category_id')->label('Category')->options(fn (): array => ExpenseCategory::orderBy('name')->pluck('name', 'id')->all()),
             ])
             ->defaultSort('id', 'desc')

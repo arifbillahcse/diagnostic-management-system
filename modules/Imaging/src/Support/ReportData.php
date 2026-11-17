@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Imaging\Support;
 
+use App\Core\Branches\Branch;
 use App\Core\Documents\Letterhead;
 use App\Core\Documents\PageLayout;
 use App\Core\Documents\Signers;
@@ -52,7 +53,7 @@ final class ReportData
         })->all();
 
         return [
-            'clinic' => $this->letterhead->data(),
+            'clinic' => $this->letterhead->data(Branch::find($order->branch_id)),
             'layout' => $this->layout->data(),
             'timezone' => $this->clinics->require()->timezone,
             'order' => $order,

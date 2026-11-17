@@ -10,6 +10,7 @@ use App\Core\Auth\PermissionRegistry;
 use App\Core\Auth\RoleLimits;
 use App\Core\Auth\User;
 use App\Core\Branches\Branch;
+use App\Core\Branches\CurrentBranch;
 use App\Core\Modules\EnsureModuleEnabled;
 use App\Core\Modules\Entitlements;
 use App\Core\Modules\ModuleRegistry;
@@ -41,6 +42,7 @@ final class CoreServiceProvider extends ServiceProvider
         $this->app->singleton(ClinicDatabase::class);
         $this->app->singleton(ClinicManager::class);
         $this->app->singleton(ModuleState::class);
+        $this->app->singleton(CurrentBranch::class);
         $this->app->singleton(Entitlements::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(PermissionChecker::class);

@@ -6,6 +6,7 @@ namespace Modules\FrontDesk\Filament\Refunds;
 
 use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -92,7 +93,9 @@ class RefundResource extends Resource
                         RefundStatus::Rejected => 'gray',
                     }),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('status')->options(RefundStatus::options())->default(RefundStatus::Pending->value),
             ])
             ->defaultSort('id', 'desc')

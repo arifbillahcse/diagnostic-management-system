@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\People\Filament;
 
 use App\Core\Modules\GatesModuleResource;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -64,6 +65,8 @@ class SalaryRunResource extends Resource
                     ->formatStateUsing(fn (string $state): string => SalaryRun::STATUSES[$state] ?? $state)
                     ->color(fn (string $state): string => static::statusColor($state)),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([BranchFilter::make()])
             ->defaultSort('month', 'desc')
             ->recordUrl(fn (SalaryRun $record): string => static::getUrl('view', ['record' => $record]))
             ->recordActions([

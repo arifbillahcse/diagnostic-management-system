@@ -7,6 +7,7 @@ namespace Modules\People\Filament;
 use App\Core\Auth\User;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -119,7 +120,9 @@ class StaffResource extends Resource
                     ->color(fn (Staff $record): string => $record->hasLeft() ? 'gray' : 'success'),
             ])
             ->defaultSort('name')
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('state')->label('Status')->default('working')
                     ->options(['working' => 'Working', 'left' => 'Left'])
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
@@ -127,7 +130,6 @@ class StaffResource extends Resource
                         'left' => $query->whereNotNull('left_on'),
                         default => $query,
                     }),
-                SelectFilter::make('branch_id')->label('Branch')->relationship('branch', 'name'),
             ])
             ->recordActions([
                 ActionGroup::make([

@@ -7,6 +7,7 @@ namespace Modules\Laboratory\Filament\Samples;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Patients\Patient;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -99,7 +100,9 @@ class SampleResource extends Resource
                     ->description(fn (Sample $record): ?string => $record->status === SampleStatus::Rejected ? $record->rejection_reason : null),
             ])
             ->searchPlaceholder('Scan a label, or type a patient')
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('status')->options(SampleStatus::options())->multiple()
                     ->default([SampleStatus::Pending->value, SampleStatus::Collected->value, SampleStatus::Rejected->value]),
             ])

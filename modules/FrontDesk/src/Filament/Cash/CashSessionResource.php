@@ -6,6 +6,7 @@ namespace Modules\FrontDesk\Filament\Cash;
 
 use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -71,6 +72,8 @@ class CashSessionResource extends Resource
                     ->formatStateUsing(fn (CashSessionStatus $state): string => $state->label())
                     ->color(fn (CashSessionStatus $state): string => $state === CashSessionStatus::Open ? 'success' : 'gray'),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([BranchFilter::make()])
             ->defaultSort('id', 'desc');
     }
 

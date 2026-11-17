@@ -17,7 +17,7 @@ use Modules\FrontDesk\Support\DailyFigures;
 
 /**
  * Sales figures for the owner, over a period of the clinic's local days.
- * Every report covers all branches.
+ * Every report covers all branches, or only the branches passed in.
  */
 final class SalesReports
 {
@@ -33,10 +33,11 @@ final class SalesReports
      *
      * @return list<array{date: CarbonImmutable, orders: int, patients: int, billed: Money, collected: Money, refunded: Money}>
      */
-    public function byDay(string $from, string $to): array
+    /** @param list<int>|null $branchIds */
+    public function byDay(string $from, string $to, ?array $branchIds = null): array
     {
         [$start, $end] = $this->period($from, $to);
-        $branches = Branch::pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $branches = $this->branchIds($branchIds);
         $period = $this->daily->forPeriod($start, $end, $branches);
         $rows = [];
 
@@ -64,9 +65,10 @@ final class SalesReports
      *
      * @return list<array{name: string, count: int, gross: Money, discount: Money, net: Money}>
      */
-    public function byTest(string $from, string $to): array
+    /** @param list<int>|null $branchIds */
+    public function byTest(string $from, string $to, ?array $branchIds = null): array
     {
-        return $this->orderItems($from, $to)
+        return $this->orderItems($from, $to, $branchIds)
             ->selectRaw('fd_order_items.service_name as name, COUNT(*) as sold, SUM(fd_order_items.unit_price) as gross, SUM(fd_order_items.discount_amount) as discount, SUM(fd_order_items.net_amount) as net')
             ->groupBy('fd_order_items.service_name')
             ->orderByDesc('net')
@@ -87,9 +89,10 @@ final class SalesReports
      *
      * @return list<array{name: string, orders: int, net: Money}>
      */
-    public function byDoctor(string $from, string $to): array
+    /** @param list<int>|null $branchIds */
+    public function byDoctor(string $from, string $to, ?array $branchIds = null): array
     {
-        return $this->orderItems($from, $to)
+        return $this->orderItems($from, $to, $branchIds)
             ->leftJoin('fd_referral_doctors', 'fd_referral_doctors.id', '=', 'fd_orders.referral_doctor_id')
             ->selectRaw('fd_referral_doctors.name as name, COUNT(DISTINCT fd_orders.id) as orders, SUM(fd_order_items.net_amount) as net')
             ->groupBy('fd_referral_doctors.name')
@@ -104,12 +107,14 @@ final class SalesReports
      *
      * @return list<array{name: string, method: string, payments: int, amount: Money}>
      */
-    public function byCashier(string $from, string $to): array
+    /** @param list<int>|null $branchIds */
+    public function byCashier(string $from, string $to, ?array $branchIds = null): array
     {
         [$start, $end] = $this->period($from, $to);
 
         return DB::connection('clinic')->table('fd_payments')
             ->leftJoin('users', 'users.id', '=', 'fd_payments.received_by')
+            ->when($branchIds !== null, fn ($q) => $q->whereIn('fd_payments.branch_id', $branchIds))
             ->where('fd_payments.received_at', '>=', $start->utc())
             ->where('fd_payments.received_at', '<', $end->addDay()->utc())
             ->selectRaw('users.name as name, fd_payments.method as method, COUNT(*) as payments, SUM(fd_payments.amount) as amount')
@@ -119,6 +124,48 @@ final class SalesReports
             ->get()
             ->map(fn ($row): array => ['name' => $row->name ?? '-', 'method' => $row->method, 'payments' => (int) $row->payments, 'amount' => MoneyCast::fromDatabase($row->amount)])
             ->all();
+    }
+
+    /**
+     * Each branch side by side over the period: orders, patients, billed,
+     * collected, refunded.
+     *
+     * @param  list<int>|null  $branchIds
+     * @return list<array{name: string, orders: int, patients: int, billed: Money, collected: Money, refunded: Money}>
+     */
+    public function byBranch(string $from, string $to, ?array $branchIds = null): array
+    {
+        [$start, $end] = $this->period($from, $to);
+        $ids = $this->branchIds($branchIds);
+        $period = $this->daily->forPeriod($start, $end, $ids);
+        $names = Branch::whereIn('id', $ids)->pluck('name', 'id');
+        $rows = [];
+
+        foreach ($ids as $branchId) {
+            $row = ['name' => (string) ($names[$branchId] ?? $branchId), 'orders' => 0, 'patients' => 0, 'billed' => Money::zero(), 'collected' => Money::zero(), 'refunded' => Money::zero()];
+
+            for ($day = $start; $day->lessThanOrEqualTo($end); $day = $day->addDay()) {
+                $figures = $period[$day->toDateString()][$branchId];
+                $row['orders'] += $figures['orders_count'];
+                $row['patients'] += $figures['patients_count'];
+                $row['billed'] = $row['billed']->plus($figures['billed_total']);
+                $row['collected'] = $row['collected']->plus($figures['collected_total']);
+                $row['refunded'] = $row['refunded']->plus($figures['refunded_total']);
+            }
+
+            $rows[] = $row;
+        }
+
+        usort($rows, fn (array $a, array $b): int => $b['billed']->minor <=> $a['billed']->minor);
+
+        return $rows;
+    }
+
+    /** @param list<int>|null $only @return list<int> */
+    private function branchIds(?array $only): array
+    {
+        return Branch::query()->when($only !== null, fn ($q) => $q->whereIn('id', $only))
+            ->orderBy('id')->pluck('id')->map(fn ($id): int => (int) $id)->all();
     }
 
     /** First day of the current month, and today, in the clinic's calendar. */
@@ -149,7 +196,8 @@ final class SalesReports
         return [$start, $end];
     }
 
-    private function orderItems(string $from, string $to)
+    /** @param list<int>|null $branchIds */
+    private function orderItems(string $from, string $to, ?array $branchIds = null)
     {
         [$start, $end] = $this->period($from, $to);
 
@@ -170,6 +218,7 @@ final class SalesReports
             ->where('fd_orders.ordered_at', '<', $end->addDay()->utc())
             ->where('fd_orders.status', '!=', OrderStatus::Cancelled->value)
             ->where('fd_order_items.status', ItemStatus::Active->value)
-            ->whereNull('fd_order_items.package_item_of');
+            ->whereNull('fd_order_items.package_item_of')
+            ->when($branchIds !== null, fn ($q) => $q->whereIn('fd_orders.branch_id', $branchIds));
     }
 }

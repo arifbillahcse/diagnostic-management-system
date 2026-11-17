@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7, 9 and 10 are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7, 9 and 10, and step 11a, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -67,6 +67,10 @@ later; Phases 10 and 11 are not started.
   what is ready, and download their lab report, imaging reports, or both in
   one file. No account needed; tries are limited, every download is
   recorded, and the bill prints the portal address.
+- **Phase 11a, multi-branch** (module, off until switched on): a branch
+  switcher for staff in more than one branch, every list limited to the
+  user's branches, each branch's own address and phone on printed papers,
+  and branch figures in the owner's sales reports.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -408,7 +412,7 @@ app/Core/            The fixed core
   Numbering/         Counters and formats for invoice, patient, and other numbers
   Money/             Exact money arithmetic
   Settings/          Clinic settings
-  Branches/          Branches
+  Branches/          Branches, the current branch, and which branches a user works in
   Patients/          Patients, shared by every module
   Documents/         PDF rendering, letterhead, page layout, signatures, and the clinic's private files
   Export/            Full export of a clinic's data as CSV
@@ -424,6 +428,7 @@ modules/             One folder per module
   People/            Staff, attendance, advances, salary runs, payslips
   Imaging/           Imaging report templates, writing, signing, printing
   Portal/            Patients' own report page: bill number and mobile number
+  MultiBranch/       Branch switcher (core does the limits once it is on)
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

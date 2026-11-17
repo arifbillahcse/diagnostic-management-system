@@ -6,6 +6,7 @@ namespace Modules\People\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -92,7 +93,9 @@ class AdvanceResource extends Resource
                     ->color(fn (Advance $record): string => $record->isVoid() ? 'gray' : 'success'),
             ])
             ->defaultSort('given_on', 'desc')
-            ->filters([SelectFilter::make('staff_id')->label('Staff')->relationship('staff', 'name')])
+            ->modifyQueryUsing(BranchFilter::scope())
+            ->filters([
+                BranchFilter::make(), SelectFilter::make('staff_id')->label('Staff')->relationship('staff', 'name')])
             ->recordActions([
                 Action::make('void')->label('Void')->color('danger')
                     ->visible(fn (Advance $record): bool => ! $record->isVoid() && Gate::allows(Permissions::ADVANCES_MANAGE, $record->branch_id))

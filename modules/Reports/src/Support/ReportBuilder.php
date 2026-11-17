@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Reports\Support;
 
+use App\Core\Branches\Branch;
 use App\Core\Documents\Barcode;
 use App\Core\Documents\Letterhead;
 use App\Core\Documents\PageLayout;
@@ -58,7 +59,7 @@ final class ReportBuilder
         );
 
         return [
-            'clinic' => $this->letterhead->data(),
+            'clinic' => $this->letterhead->data(Branch::find($order->branch_id)),
             'timezone' => $this->clinics->require()->timezone,
             'order' => $order->loadMissing(['patient', 'referralDoctor', 'invoice']),
             'info' => $this->info($order, $items),

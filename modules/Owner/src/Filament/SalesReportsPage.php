@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Owner\Filament;
 
+use App\Core\Branches\CurrentBranch;
 use App\Core\Modules\GatesModuleAccess;
 use App\Core\Money\Money;
 use BackedEnum;
@@ -25,6 +26,7 @@ class SalesReportsPage extends Page
         'test' => 'By test',
         'doctor' => 'By referral doctor',
         'cashier' => 'By cashier',
+        'branch' => 'By branch',
     ];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
@@ -44,6 +46,9 @@ class SalesReportsPage extends Page
     public string $from = '';
 
     public string $to = '';
+
+    /** Empty: every branch the user may see. */
+    public string $branch = '';
 
     public static function moduleKey(): string
     {
@@ -65,6 +70,26 @@ class SalesReportsPage extends Page
         [$this->from, $this->to] = app(SalesReports::class)->thisMonth();
     }
 
+    /** Branches to choose from, when the clinic has multi-branch on and more than one branch. @return array<int, string> */
+    public function getBranchOptionsProperty(): array
+    {
+        $branches = app(CurrentBranch::class);
+
+        return $branches->multi() ? $branches->allowed()->pluck('name', 'id')->all() : [];
+    }
+
+    /** The branches the report covers: all of them without multi-branch; else the chosen one or all the user's. @return list<int>|null */
+    private function branchIds(): ?array
+    {
+        $scope = app(CurrentBranch::class)->scope();
+
+        if ($scope === null) {
+            return null;
+        }
+
+        return filled($this->branch) && in_array((int) $this->branch, $scope, true) ? [(int) $this->branch] : $scope;
+    }
+
     /**
      * The chosen report as plain headings and rows, ready to draw. Columns
      * after the first $text ones are numbers and are right-aligned.
@@ -81,6 +106,8 @@ class SalesReportsPage extends Page
             return ['headings' => [], 'rows' => [], 'totals' => null, 'text' => 1, 'error' => 'Enter both dates.'];
         }
 
+        $ids = $this->branchIds();
+
         try {
             if (! array_key_exists($this->report, self::REPORTS)) {
                 throw new DomainException('Choose a report.');
@@ -89,27 +116,33 @@ class SalesReportsPage extends Page
             return ['error' => null] + match ($this->report) {
                 'day' => [
                     'headings' => ['Date', 'Orders', 'Patients', 'Billed', 'Collected', 'Refunded'],
-                    'rows' => array_map(fn (array $r): array => [$r['date']->format('D, d M Y'), (string) $r['orders'], (string) $r['patients'], $tk($r['billed']), $tk($r['collected']), $tk($r['refunded'])], $rows = $reports->byDay($this->from, $this->to)),
+                    'rows' => array_map(fn (array $r): array => [$r['date']->format('D, d M Y'), (string) $r['orders'], (string) $r['patients'], $tk($r['billed']), $tk($r['collected']), $tk($r['refunded'])], $rows = $reports->byDay($this->from, $this->to, $ids)),
                     'totals' => ['Total', (string) array_sum(array_column($rows, 'orders')), (string) array_sum(array_column($rows, 'patients')), $tk($sum($rows, 'billed')), $tk($sum($rows, 'collected')), $tk($sum($rows, 'refunded'))],
                     'text' => 1,
                 ],
                 'test' => [
                     'headings' => ['Test', 'Sold', 'Price total', 'Discount', 'Net'],
-                    'rows' => array_map(fn (array $r): array => [$r['name'], (string) $r['count'], $tk($r['gross']), $tk($r['discount']), $tk($r['net'])], $rows = $reports->byTest($this->from, $this->to)),
+                    'rows' => array_map(fn (array $r): array => [$r['name'], (string) $r['count'], $tk($r['gross']), $tk($r['discount']), $tk($r['net'])], $rows = $reports->byTest($this->from, $this->to, $ids)),
                     'totals' => ['Total', (string) array_sum(array_column($rows, 'count')), $tk($sum($rows, 'gross')), $tk($sum($rows, 'discount')), $tk($sum($rows, 'net'))],
                     'text' => 1,
                 ],
                 'doctor' => [
                     'headings' => ['Referred by', 'Orders', 'Net billed'],
-                    'rows' => array_map(fn (array $r): array => [$r['name'], (string) $r['orders'], $tk($r['net'])], $rows = $reports->byDoctor($this->from, $this->to)),
+                    'rows' => array_map(fn (array $r): array => [$r['name'], (string) $r['orders'], $tk($r['net'])], $rows = $reports->byDoctor($this->from, $this->to, $ids)),
                     'totals' => ['Total', (string) array_sum(array_column($rows, 'orders')), $tk($sum($rows, 'net'))],
                     'text' => 1,
                 ],
                 'cashier' => [
                     'headings' => ['Received by', 'Method', 'Payments', 'Amount'],
-                    'rows' => array_map(fn (array $r): array => [$r['name'], PaymentMethod::from($r['method'])->label(), (string) $r['payments'], $tk($r['amount'])], $rows = $reports->byCashier($this->from, $this->to)),
+                    'rows' => array_map(fn (array $r): array => [$r['name'], PaymentMethod::from($r['method'])->label(), (string) $r['payments'], $tk($r['amount'])], $rows = $reports->byCashier($this->from, $this->to, $ids)),
                     'totals' => ['Total', '', (string) array_sum(array_column($rows, 'payments')), $tk($sum($rows, 'amount'))],
                     'text' => 2,
+                ],
+                'branch' => [
+                    'headings' => ['Branch', 'Orders', 'Patients', 'Billed', 'Collected', 'Refunded'],
+                    'rows' => array_map(fn (array $r): array => [$r['name'], (string) $r['orders'], (string) $r['patients'], $tk($r['billed']), $tk($r['collected']), $tk($r['refunded'])], $rows = $reports->byBranch($this->from, $this->to, $ids)),
+                    'totals' => ['Total', (string) array_sum(array_column($rows, 'orders')), (string) array_sum(array_column($rows, 'patients')), $tk($sum($rows, 'billed')), $tk($sum($rows, 'collected')), $tk($sum($rows, 'refunded'))],
+                    'text' => 1,
                 ],
             };
         } catch (DomainException $e) {

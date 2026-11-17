@@ -7,6 +7,7 @@ namespace Modules\FrontDesk\Filament\Orders;
 use App\Core\Money\Money;
 use App\Core\Patients\Patient;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
@@ -79,7 +80,9 @@ class OrderResource extends Resource
                 TextColumn::make('status')->badge()->color('gray')->formatStateUsing(fn (OrderStatus $state): string => $state->label()),
             ])
             ->searchPlaceholder('Order number or patient')
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('status')->options(OrderStatus::options()),
             ])
             ->defaultSort('id', 'desc')

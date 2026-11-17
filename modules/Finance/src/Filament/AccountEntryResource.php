@@ -6,6 +6,7 @@ namespace Modules\Finance\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -77,7 +78,9 @@ class AccountEntryResource extends Resource
                 TextColumn::make('money_out')->label('Out')->alignEnd()
                     ->state(fn (AccountEntry $record): ?string => $record->amount->isNegative() ? '৳ '.$record->amount->negate()->formatted() : null),
             ])
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('account_id')->label('Account')->options(fn (): array => Account::orderBy('name')->pluck('name', 'id')->all()),
             ])
             ->paginationMode(PaginationMode::Simple)

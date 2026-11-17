@@ -654,6 +654,31 @@ of its own.
   online: <domain>/reports", through the front desk's `InvoiceNotes`
   registry.
 
+## 8i. Multi-branch (module `multibranch`, prefix `mb_`, no tables)
+
+Off by default. Every operational table already has `branch_id`.
+
+- **Which branches a user works in:** every active branch for the owner or a
+  role given for all branches; otherwise the branches of their roles
+  (`CurrentBranch::allowed()` in core).
+- **Switcher:** shown in the top bar to users with more than one branch. The
+  choice is kept for the session (`dms.branch_id`), only branches the user
+  works in are accepted, and each switch is audited (`branch.switched`).
+- **Lists:** every list that holds branch data (orders, dues, refunds, cash
+  sessions, samples, lab work, lab reports, imaging, expenses, account
+  entries, purchases, stock movements, staff, salary runs, advances) is
+  limited to the user's branches by `BranchFilter::scope()`, always, and
+  narrowed by the branch filter, which starts on the current branch.
+- **Printed papers:** invoices, receipts, lab and imaging reports and
+  payslips use their own branch's address and phone when the branch has
+  them, and name the branch when the clinic has more than one.
+- **Owner reports:** a branch choice on every sales report, and a "By branch"
+  report comparing orders, patients, billed, collected and refunded.
+- **Core stays independent:** the module hands core a check
+  (`CurrentBranch::useSwitching()`); without it switching and limits are off
+  and everything behaves as one branch.
+- Stock stays shared by all branches; prices are the same in every branch.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

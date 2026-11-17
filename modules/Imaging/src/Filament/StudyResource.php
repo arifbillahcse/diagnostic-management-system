@@ -6,6 +6,7 @@ namespace Modules\Imaging\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Support\BranchFilter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -76,7 +77,9 @@ class StudyResource extends Resource
                 TextColumn::make('signer.name')->label('Signed by')->placeholder('-'),
             ])
             ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(BranchFilter::scope())
             ->filters([
+                BranchFilter::make(),
                 SelectFilter::make('state')->label('Show')->default('open')
                     ->options(['open' => 'Waiting for a report', 'final' => 'Signed', 'cancelled' => 'Cancelled'])
                     ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
@@ -85,7 +88,6 @@ class StudyResource extends Resource
                         'cancelled' => $query->where('status', 'cancelled'),
                         default => $query,
                     }),
-                SelectFilter::make('branch_id')->label('Branch')->relationship('order.branch', 'name'),
             ])
             ->recordUrl(fn (Study $record): string => static::getUrl('report', ['record' => $record]))
             ->recordActions([
