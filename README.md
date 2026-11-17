@@ -172,6 +172,39 @@ A "not found" page on every address means no clinic has that domain: run
 `php artisan clinic:list`. A server error page means look in
 `storage/logs/laravel.log`.
 
+## Temporary: database updates from the portal
+
+For the trial period only. After the software is updated on the server, the
+database may need new columns or tables. This page lists them and applies
+them, so the owner does not need a terminal.
+
+1. In `.env` set `DMS_PORTAL_UPDATES=true`, then clear the cached settings:
+
+   ```bash
+   php artisan config:clear
+   ```
+
+2. Sign in as the owner. **Administration, Database updates** appears, with a
+   number in orange when updates are waiting. Press **Apply updates**.
+
+It is off unless that setting is true, and only the owner role sees it. It
+updates the platform database and the clinic you are signed in to; another
+clinic on the same server is updated with `php artisan clinic:migrate`. If an
+update fails, the page says why; what was applied before it stays applied and
+the rest is still waiting, so fix the cause and apply again. Take a backup
+first when there is real patient data, because a failed structure change
+cannot always be undone.
+
+**To remove it after the trial:** set `DMS_PORTAL_UPDATES=false` (the page
+disappears at once), or delete these and run `php artisan optimize:clear`:
+
+- `app/Core/Tenancy/PendingUpdates.php`
+- `app/Filament/Pages/PortalUpdates.php`
+- `resources/views/filament/pages/portal-updates.blade.php`
+- `tests/Feature/PortalUpdatesTest.php`
+- the `portal_updates` block in `config/dms.php` and the
+  `DMS_PORTAL_UPDATES` lines in `.env.example`
+
 ## Commands
 
 | Command | What it does |

@@ -21,9 +21,31 @@ final class ClinicMigrator
         private readonly ModuleState $state,
     ) {}
 
+    /**
+     * The folders holding the active clinic's migrations: the core tables,
+     * then those of every installed module. Only for a clinic that is already
+     * set up; migrate() does not use it for that reason.
+     *
+     * @return list<string>
+     */
+    public function paths(): array
+    {
+        $paths = [database_path('migrations/clinic')];
+
+        foreach (array_keys($this->registry->all()) as $key) {
+            if ($this->state->isInstalled($key)) {
+                $paths[] = $this->registry->get($key)->migrationsPath();
+            }
+        }
+
+        return $paths;
+    }
+
     public function migrate(Clinic $clinic): void
     {
         $this->manager->run($clinic, function (): void {
+            // The core tables first: a brand-new clinic has no table that
+            // says which modules are installed until this has run.
             $this->runPath(database_path('migrations/clinic'));
 
             foreach (array_keys($this->registry->all()) as $key) {

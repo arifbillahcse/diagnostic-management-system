@@ -21,6 +21,14 @@ return [
         'keep_days' => (int) env('BACKUP_KEEP_DAYS', 30),
     ],
 
+    // TEMPORARY, for the trial period: lets the clinic owner see and apply
+    // pending database updates from the portal. Off unless DMS_PORTAL_UPDATES
+    // is true. To remove the feature, see "Temporary: database updates from
+    // the portal" in the README.
+    'portal_updates' => [
+        'enabled' => (bool) env('DMS_PORTAL_UPDATES', false),
+    ],
+
     'clinics' => [
         // Each clinic database is named <prefix><clinic id>.
         'database_prefix' => env('CLINIC_DB_PREFIX', 'dms_clinic_'),
