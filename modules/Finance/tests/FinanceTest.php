@@ -184,7 +184,7 @@ final class FinanceTest extends FinanceTestCase
 
         $expense = $this->expense('350.50');
 
-        $this->assertMatchesRegularExpression('/^EXP-MAIN-\d{4}-00001$/', $expense->expense_no);
+        $this->assertMatchesRegularExpression('/^EXP-\d{4}-00001$/', $expense->expense_no);
         $this->assertSame('649.50', $this->balance('Cash'));
         $this->assertSame('350.50', AuditLog::where('action', 'expense.recorded')->sole()->after['amount']);
 

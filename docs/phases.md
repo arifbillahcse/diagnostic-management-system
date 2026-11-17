@@ -21,6 +21,13 @@
 - **Counter billing screen** (Phase 2 follow-up, from the owner's own
   layout): one compact page for patient, tests, discount, and payment. No
   VAT, no per-test discount, no booth, and commission stays with Finance.
+  The old order form was removed; its address opens the billing screen.
+- **Polish of Phases 0 to 7** (after an inconsistency review): one timezone
+  rule, full-width screens, one text size, short default numbers for new
+  clinics, the supplies table in the data export, doctor code and delivery
+  time on the order page, logo on the receipt, babies' age in months and
+  days, documents brought in line with the code. Not done: the MySQL test
+  run (skipped at the owner's request).
 
 ## How every phase ends
 

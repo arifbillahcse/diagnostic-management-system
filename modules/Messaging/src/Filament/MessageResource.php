@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Messaging\Filament;
 
 use App\Core\Modules\GatesModuleResource;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -81,7 +82,7 @@ class MessageResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with('patient'))
             ->columns([
-                TextColumn::make('created_at')->label('When')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('created_at')->label('When')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('recipient')->label('To')->searchable()
                     ->description(fn (Message $record): ?string => $record->patient?->name),
                 TextColumn::make('template_key')->label('Message')

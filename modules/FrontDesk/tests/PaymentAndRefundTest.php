@@ -34,7 +34,7 @@ final class PaymentAndRefundTest extends FrontDeskTestCase
         $order = $this->order(['1000']);
 
         $first = $this->pay($order, '300');
-        $this->assertMatchesRegularExpression('/^RCP-MAIN-\d{4}-00001$/', $first->receipt_no);
+        $this->assertMatchesRegularExpression('/^MR-\d{4}-00001$/', $first->receipt_no);
         $this->assertInvoice($order, '1000.00', '300.00', '0.00', '700.00', 'partially_paid');
 
         $this->pay($order, '699.99');
@@ -150,7 +150,7 @@ final class PaymentAndRefundTest extends FrontDeskTestCase
         $approved = app(DecideRefund::class)->approve($refund, 'Checked with lab');
 
         $this->assertSame(RefundStatus::Approved, $approved->status);
-        $this->assertMatchesRegularExpression('/^RFD-MAIN-\d{4}-00001$/', $approved->refund_no);
+        $this->assertMatchesRegularExpression('/^RF-\d{4}-00001$/', $approved->refund_no);
         $this->assertSame($accountant->id, $approved->decided_by);
         $this->assertInvoice($order, '1000.00', '1000.00', '400.00', '400.00', 'partially_paid');
         $this->assertSame(1, AuditLog::where('action', 'refund.requested')->count());

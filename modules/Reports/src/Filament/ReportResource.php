@@ -7,6 +7,7 @@ namespace Modules\Reports\Filament;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
 use App\Core\Patients\Patient;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -82,7 +83,7 @@ class ReportResource extends Resource
                         $q->where('order_no', 'like', str_replace(['%', '_'], ['\\%', '\\_'], trim($search)).'%')
                             ->orWhereIn('patient_id', Patient::search($search)->select('id'));
                     })),
-                TextColumn::make('ordered_at')->label('Date')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('ordered_at')->label('Date')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('patient.name')->label('Patient')->description(fn (Order $record): ?string => $record->patient?->phone),
                 TextColumn::make('readiness')->label('Results')->badge()
                     ->state(fn (Order $record): string => static::readiness($record))

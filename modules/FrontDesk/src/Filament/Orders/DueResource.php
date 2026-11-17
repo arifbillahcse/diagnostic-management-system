@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\FrontDesk\Filament\Orders;
 
 use App\Core\Money\Money;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
@@ -57,7 +58,7 @@ class DueResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('invoice_no')->label('Invoice'),
-                TextColumn::make('issued_at')->label('Date')->date('d M Y', 'Asia/Dhaka'),
+                TextColumn::make('issued_at')->label('Date')->date('d M Y', app(ClinicContext::class)->timezone()),
                 TextColumn::make('patient.name')->label('Patient')->description(fn (Invoice $record): ?string => $record->patient?->phone),
                 TextColumn::make('total')->alignEnd()->formatStateUsing($money),
                 TextColumn::make('paid_total')->label('Paid')->alignEnd()->formatStateUsing($money),

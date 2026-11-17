@@ -66,7 +66,7 @@ final class MessagingModule extends Module
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([DueRemindersCommand::class, RetryCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
-            $schedule->command('messaging:due-reminders')->dailyAt('10:30')->timezone('Asia/Dhaka');
+            $schedule->command('messaging:due-reminders')->dailyAt('10:30')->timezone(config('dms.clinics.default_timezone'));
             $schedule->command('messaging:retry')->everyTenMinutes();
         });
     }

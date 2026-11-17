@@ -22,13 +22,11 @@ use Modules\FrontDesk\Filament\Catalog\CreateService;
 use Modules\FrontDesk\Filament\Catalog\ManageReferralDoctors;
 use Modules\FrontDesk\Filament\Catalog\ManageServiceCategories;
 use Modules\FrontDesk\Filament\FrontDeskSettings;
-use Modules\FrontDesk\Filament\Orders\CreateOrder;
 use Modules\FrontDesk\Filament\Orders\ListOrders;
 use Modules\FrontDesk\Filament\Orders\ViewOrder;
 use Modules\FrontDesk\Filament\Refunds\ListRefunds;
 use Modules\FrontDesk\Filament\TodayWidget;
 use Modules\FrontDesk\Models\CashSession;
-use Modules\FrontDesk\Models\Order;
 use Modules\FrontDesk\Models\Payment;
 use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Models\Service;
@@ -54,7 +52,7 @@ final class ScreensTest extends FrontDeskTestCase
 
         foreach ([
             '/', '/patients', '/patients/create', "/patients/{$patient->public_id}/edit",
-            '/orders', '/orders/create', "/orders/{$order->public_id}",
+            '/orders', '/new-bill', "/orders/{$order->public_id}",
             '/dues', '/refunds', '/cash-sessions', '/front-desk/settings',
             '/catalog/services', '/catalog/services/create', "/catalog/services/{$service->public_id}/edit",
             '/catalog/categories', '/catalog/referral-doctors',
@@ -120,7 +118,7 @@ final class ScreensTest extends FrontDeskTestCase
         $url = fn (string $path): string => self::BASE.$path;
 
         $receptionist = $this->staff('receptionist');
-        foreach (['/patients', '/orders', '/orders/create', "/orders/{$order->public_id}", '/dues', '/cash-sessions', '/refunds'] as $path) {
+        foreach (['/patients', '/orders', '/new-bill', "/orders/{$order->public_id}", '/dues', '/cash-sessions', '/refunds'] as $path) {
             $this->signIn($receptionist)->get($url($path))->assertOk();
         }
         foreach (['/catalog/services', '/catalog/categories', '/catalog/referral-doctors', '/front-desk/settings'] as $path) {
@@ -251,7 +249,7 @@ final class ScreensTest extends FrontDeskTestCase
         $this->assertSame([$needle->id], Service::where('code', 'CBC')->sole()->addons()->pluck('fd_services.id')->all());
     }
 
-    public function test_the_delivery_time_is_set_from_settings_and_chosen_on_the_order_screen(): void
+    public function test_the_delivery_time_is_set_from_settings(): void
     {
         Livewire::test(FrontDeskSettings::class)
             ->assertFormSet(['delivery_days' => 1, 'delivery_time' => '19:00'])
@@ -262,78 +260,6 @@ final class ScreensTest extends FrontDeskTestCase
         $this->assertSame(2, app(Settings::class)->get(Permissions::SETTING_DELIVERY_DAYS));
         $this->assertSame('16:30', app(Settings::class)->get(Permissions::SETTING_DELIVERY_TIME));
 
-        $patient = $this->patient();
-        $cbc = $this->service('CBC', '400');
-
-        Livewire::test(CreateOrder::class)
-            ->fillForm(['patient_id' => $patient->id, 'service_ids' => [$cbc->id], 'delivery_at' => '2031-03-05 18:00', 'notes' => 'C/O Akbor Sir'])
-            ->call('create')
-            ->assertHasNoFormErrors();
-
-        $order = Order::sole();
-        $this->assertSame('2031-03-05 18:00', $order->delivery_at->timezone('Asia/Dhaka')->format('Y-m-d H:i'));
-        $this->assertSame('C/O Akbor Sir', $order->notes);
-    }
-
-    public function test_an_order_with_discount_and_part_payment_is_created_from_the_screen(): void
-    {
-        $patient = $this->patient();
-        $cbc = $this->service('CBC', '400');
-        $lipid = $this->service('Lipid profile', '600');
-        $this->openCash('0');
-
-        Livewire::test(CreateOrder::class)
-            ->fillForm([
-                'patient_id' => $patient->id,
-                'service_ids' => [$cbc->id, $lipid->id],
-            ])
-            ->assertSee('Subtotal: ৳ 1,000.00')
-            ->fillForm([
-                'discount_type' => 'percent',
-                'discount_value' => '10',
-                'discount_reason' => 'Senior citizen',
-                'pay_amount' => '500',
-                'pay_method' => 'cash',
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors()
-            ->assertNotified('Order created');
-
-        $order = Order::sole();
-        $this->assertSame($patient->id, $order->patient_id);
-        $this->assertInvoice($order, '900.00', '500.00', '0.00', '400.00', 'partially_paid');
-        $this->assertNotNull(Payment::sole()->cash_session_id);
-    }
-
-    public function test_a_refused_payment_does_not_lose_the_order(): void
-    {
-        $patient = $this->patient();
-        $cbc = $this->service('CBC', '400');
-
-        // Cash, but no cash session is open.
-        Livewire::test(CreateOrder::class)
-            ->fillForm(['patient_id' => $patient->id, 'service_ids' => [$cbc->id], 'pay_amount' => '400', 'pay_method' => 'cash'])
-            ->call('create')
-            ->assertNotified('Order created, but the payment was not recorded');
-
-        $this->assertInvoice(Order::sole(), '400.00', '0.00', '0.00', '400.00', 'issued');
-    }
-
-    public function test_a_refused_order_shows_the_reason_and_creates_nothing(): void
-    {
-        $patient = $this->patient();
-        $cbc = $this->service('CBC', '400');
-        $this->actingAs($this->staff('receptionist'));
-
-        Livewire::test(CreateOrder::class)
-            ->fillForm([
-                'patient_id' => $patient->id, 'service_ids' => [$cbc->id],
-                'discount_type' => 'percent', 'discount_value' => '50', 'discount_reason' => 'Friend',
-            ])
-            ->call('create')
-            ->assertNotified('Order not created');
-
-        $this->assertSame(0, Order::count());
     }
 
     public function test_the_order_screen_takes_a_payment_once_even_if_submitted_twice(): void
@@ -522,5 +448,10 @@ final class ScreensTest extends FrontDeskTestCase
 
         // Patients belong to the core and stay.
         $this->signIn($this->ownerUser)->get(self::BASE.'/patients')->assertOk();
+    }
+
+    public function test_the_old_order_form_address_opens_the_billing_screen(): void
+    {
+        $this->signIn($this->ownerUser)->get(self::BASE.'/orders/create')->assertRedirect('/new-bill');
     }
 }

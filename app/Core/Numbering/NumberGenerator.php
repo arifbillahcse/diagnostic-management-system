@@ -16,13 +16,19 @@ use InvalidArgumentException;
  */
 final class NumberGenerator
 {
-    /** Formats used until a clinic sets its own under the "numbering" settings group. */
+    /**
+     * Formats used until a clinic sets its own under the "numbering" settings
+     * group. Short, without the branch code: a clinic with several branches
+     * adds {branch} on the settings screen. Clinics made before these became
+     * the defaults keep the formats they had (see the clinic migration
+     * keep_number_formats_of_existing_clinics).
+     */
     public const DEFAULT_FORMATS = [
         'patient' => 'P-{yy}-{000001}',
-        'order' => 'ORD-{branch}-{yymm}-{00001}',
-        'invoice' => 'INV-{branch}-{yymm}-{00001}',
-        'receipt' => 'RCP-{branch}-{yymm}-{00001}',
-        'refund' => 'RFD-{branch}-{yymm}-{00001}',
+        'order' => 'ORD-{yymm}-{00001}',
+        'invoice' => '{yymm}-{00001}',
+        'receipt' => 'MR-{yymm}-{00001}',
+        'refund' => 'RF-{yymm}-{00001}',
         'accession' => '{yymmdd}{0001}',
     ];
 

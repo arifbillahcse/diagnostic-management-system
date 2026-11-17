@@ -66,6 +66,7 @@ final class FrontDeskModule extends Module
             'fd_service_categories' => 'Service categories',
             'fd_services' => 'Tests and services',
             'fd_package_items' => 'Package contents',
+            'fd_service_addons' => 'Supplies charged with a service',
             'fd_referral_doctors' => 'Referral doctors',
             'fd_orders' => 'Orders',
             'fd_order_items' => 'Order items',
@@ -106,8 +107,8 @@ final class FrontDeskModule extends Module
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             // Shortly after midnight in Bangladesh: closes yesterday's figures.
-            $schedule->command('frontdesk:summarize')->dailyAt('00:20')->timezone('Asia/Dhaka');
-            $schedule->command('frontdesk:check-invoices')->dailyAt('01:00')->timezone('Asia/Dhaka');
+            $schedule->command('frontdesk:summarize')->dailyAt('00:20')->timezone(config('dms.clinics.default_timezone'));
+            $schedule->command('frontdesk:check-invoices')->dailyAt('01:00')->timezone(config('dms.clinics.default_timezone'));
         });
 
         if (is_file($routes = $this->manifest->path.'/routes.php')) {

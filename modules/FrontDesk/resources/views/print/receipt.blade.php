@@ -1,5 +1,5 @@
 @php
-    $tz = 'Asia/Dhaka';
+    $tz = app(\App\Core\Tenancy\ClinicContext::class)->timezone();
     $invoice = $payment->invoice;
 @endphp
 <!doctype html>
@@ -29,6 +29,7 @@
     <div class="actions"><button type="button" onclick="window.print()">Print</button></div>
 
     <div class="center">
+        @if ($clinic['logo'])<img src="{{ $clinic['logo'] }}" alt="" style="max-height:14mm;max-width:30mm;display:block;margin:0 auto 2px">@endif
         <h1>{{ $clinic['name'] }}</h1>
         <div class="sub">{{ $clinic['address'] }}</div>
         <div class="sub">{{ $clinic['phone'] }}</div>

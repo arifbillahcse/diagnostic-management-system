@@ -6,6 +6,7 @@ namespace Modules\Finance\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Money\Money;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -49,7 +50,7 @@ class PayoutResource extends Resource
             ->modifyQueryUsing(fn ($query) => $query->with(['doctor', 'account', 'creator']))
             ->columns([
                 TextColumn::make('payout_no')->label('No.'),
-                TextColumn::make('paid_at')->label('Date')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('paid_at')->label('Date')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('doctor.name')->label('Doctor')->searchable(),
                 TextColumn::make('account.name')->label('Paid from'),
                 TextColumn::make('note')->placeholder('-'),

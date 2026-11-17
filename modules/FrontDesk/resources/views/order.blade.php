@@ -5,7 +5,7 @@
 
     $order = $this->record->loadMissing(['patient', 'referralDoctor', 'items', 'creator']);
     $invoice = $this->invoice;
-    $tz = 'Asia/Dhaka';
+    $tz = app(\App\Core\Tenancy\ClinicContext::class)->timezone();
     $money = fn ($amount) => '৳ '.$amount->formatted();
 @endphp
 
@@ -17,13 +17,14 @@
                 <dt>Code</dt><dd>{{ $order->patient->patient_code }}</dd>
                 <dt>Age / sex</dt><dd>{{ $order->patient->ageLabel($order->ordered_at) }} / {{ $order->patient->sex->label() }}</dd>
                 <dt>Phone</dt><dd>{{ $order->patient->phone ?? '-' }}</dd>
-                <dt>Referred by</dt><dd>{{ $order->referralDoctor?->name ?? '-' }}</dd>
+                <dt>Referred by</dt><dd>@if ($order->referralDoctor){{ $order->referralDoctor->code ? $order->referralDoctor->code.' · ' : '' }}{{ $order->referralDoctor->name }}@else - @endif</dd>
             </dl>
         </x-filament::section>
 
         <x-filament::section heading="Invoice {{ $invoice->invoice_no }}">
             <dl class="dms-facts">
                 <dt>Date</dt><dd>{{ $order->ordered_at->timezone($tz)->format('d M Y, h:i A') }}</dd>
+                <dt>Report delivery</dt><dd>{{ $order->delivery_at?->timezone($tz)->format('d M Y, h:i A') ?? '-' }}</dd>
                 <dt>Entered by</dt><dd>{{ $order->creator?->name ?? '-' }}</dd>
                 <dt>Order status</dt><dd><x-filament::badge color="gray">{{ $order->status->label() }}</x-filament::badge></dd>
                 <dt>Payment</dt>
@@ -37,7 +38,7 @@
                 @endif
             </dl>
             @if ($order->notes)
-                <p class="dms-muted">Note: {{ $order->notes }}</p>
+                <p class="dms-muted">Remarks: {{ $order->notes }}</p>
             @endif
             @if ($order->cancel_reason)
                 <p class="dms-muted">Cancelled: {{ $order->cancel_reason }}</p>

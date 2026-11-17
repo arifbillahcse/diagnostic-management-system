@@ -76,6 +76,11 @@ reports.reports.view
 reports.reports.print
 reports.reports.print_with_due
 reports.settings.manage
+
+messaging.log.view
+messaging.messages.manage
+messaging.templates.manage
+messaging.settings.manage
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -122,6 +127,10 @@ or create its own, except where noted.
 | Lab catalog and reference ranges | Yes | Yes | | | Yes | |
 | Reports: print released reports | Yes | Yes | Yes | Yes | Yes | |
 | Data export | Yes | Yes | | | | |
+| Messaging: see the message log | Yes | Yes | Yes | | | |
+| Messaging: send again, stop a number, wording, settings | Yes | Yes | | | | |
+| Number formats (part of clinic settings) | Yes | Yes | | | | |
+| Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:
 

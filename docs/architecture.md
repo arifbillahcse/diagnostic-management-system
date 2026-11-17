@@ -141,7 +141,8 @@ Layers inside core and inside each module:
   `module.resource.action`.
 - Status values are backed PHP enums, stored as short strings, never as
   numbers.
-- Dates and times are stored in UTC and displayed in `Asia/Dhaka`. A date
+- Dates and times are stored in UTC and displayed in the clinic's own
+  timezone (`clinics.timezone`, `Asia/Dhaka` for every clinic so far). A date
   with no time (date of birth, report date) is stored as a `DATE`.
 - No raw SQL in screens. Reports that need hand-written SQL keep it in a
   query class with a test.
@@ -240,3 +241,16 @@ permissions package cleanly.
 
 Three transitive packages (`nette/*`) are offered under BSD-3-Clause or GPL
 at the user's choice. They are used under BSD-3-Clause.
+
+## Conventions on screens and paper
+
+- **Money**: "৳" on screens; "Tk" on printed invoices, receipts, and SMS
+  (printers and phones show it reliably); "Taka" when an amount is written in
+  words. All amounts have two decimals.
+- **Time**: always shown in the clinic's own timezone (`clinics.timezone`).
+  Scheduled tasks run on the installation's default timezone
+  (`dms.clinics.default_timezone`), because they run once for every clinic.
+- **Age**: years for adults and children ("25 Y"); months and days for a baby
+  under one year ("3 M 12 D").
+- **Width**: every screen uses the full width of the window; text is one
+  compact size (about 13 px) everywhere.

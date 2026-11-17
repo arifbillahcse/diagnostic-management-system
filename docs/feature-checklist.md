@@ -23,6 +23,10 @@ not be built early.
 | Refunds | Not stated | Yes | 2 | |
 | Daily cash closing | Not stated | Yes | 2 | |
 | Referral doctor records | Smart Software | Yes | 2 | |
+| One-screen counter billing (find patient as you type, codes, supplies, print step) | Most desktop products | Built | 2, follow-up | From the pilot clinic's own screen |
+| Invoice on A5 with patient and office copies | Most | Built | 2, follow-up | Matches the pilot clinic's paper invoice |
+| Supplies charged with a test (tubes, needle) | Not stated | Built | 2, follow-up | Pilot clinic charges them |
+| Bill number formats chosen by the clinic | Not stated | Built | 2, follow-up | Pilot clinic wanted short numbers |
 
 ## Laboratory and reports
 
@@ -36,6 +40,7 @@ not be built early.
 | Amended reports with history | Not stated | Yes | 3 | |
 | Printed and PDF reports | All | Yes | 3 | |
 | Custom report templates | Esteem Soft | Yes | 3 | |
+| Report header and footer banners, watermark | Most | Built | 3, follow-up | Pilot clinic's letterhead |
 | Calculated values (for example ratios) | Not stated | Reserved, not built | Later | |
 | Analyzer integration (ASTM, HL7) | MySoft, Esteem Soft | Yes | 11 | |
 | Imaging reports (ultrasound, X-ray) | E-Medical Software | Yes, reports only | 10 | |
@@ -60,8 +65,9 @@ not be built early.
 
 | Feature | Competitors claiming it | Our plan | Phase | Clinic need |
 |---|---|---|---|---|
-| SMS alerts | Esteem Soft, Mediasoft | Yes | 7 | |
-| Email alerts | Mediasoft | Yes | 7 | |
+| SMS alerts | Esteem Soft, Mediasoft | Built (needs a provider) | 7 | |
+| Email alerts | Mediasoft | Built | 7 | |
+| Report download link by SMS | Not stated | Built | 7 | |
 | WhatsApp report delivery | Not stated | Yes | 7 | |
 | Online report access, patient portal | Esteem Soft, Smart Software, E-Medical Software | Yes | 10 | |
 | Online payment (bKash, Nagad, card) | Not stated | Yes | 7 | |

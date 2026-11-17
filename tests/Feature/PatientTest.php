@@ -79,7 +79,7 @@ final class PatientTest extends TestCase
         $this->assertSame('34 Y', $adult->ageLabel());
 
         $this->assertSame('2026-08-04', $infant->date_of_birth->toDateString());
-        $this->assertSame('3 M', $infant->ageLabel());
+        $this->assertSame('3 M 12 D', $infant->ageLabel(), 'a baby is shown in months and days');
         $this->assertSame(104, $infant->ageInDays());
 
         // A year later the same record gives the right age without re-entry.

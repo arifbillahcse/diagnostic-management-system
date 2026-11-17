@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\FrontDesk\Filament\Refunds;
 
 use App\Core\Money\Money;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -77,7 +78,7 @@ class RefundResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['invoice.patient', 'invoice.order', 'requester']))
             ->columns([
-                TextColumn::make('requested_at')->label('Requested')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('requested_at')->label('Requested')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('invoice.invoice_no')->label('Invoice')->description(fn (Refund $record): ?string => $record->invoice?->patient?->name),
                 TextColumn::make('amount')->alignEnd()->formatStateUsing(fn (Money $state): string => '৳ '.$state->formatted())
                     ->description(fn (Refund $record): string => $record->method->label()),

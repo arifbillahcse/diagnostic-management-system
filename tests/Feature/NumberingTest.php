@@ -90,11 +90,11 @@ final class NumberingTest extends TestCase
         ]);
 
         $this->assertSame([
-            'INV-MAIN-2611-00001',
-            'INV-MAIN-2611-00002',
+            '2611-00001',
+            '2611-00002',
             'P-26-000001',
             '2611150001',
-            'INV-MAIN-2612-00001',
+            '2612-00001',
         ], $numbers);
     }
 
@@ -108,7 +108,7 @@ final class NumberingTest extends TestCase
             fn () => app(NumberGenerator::class)->generate('invoice', $branch, CarbonImmutable::parse('2026-11-30 20:30', 'UTC')),
         );
 
-        $this->assertSame('INV-MAIN-2612-00001', $number);
+        $this->assertSame('2612-00001', $number);
     }
 
     public function test_a_clinic_can_set_its_own_format(): void
@@ -126,6 +126,7 @@ final class NumberingTest extends TestCase
     public function test_a_branch_format_without_a_branch_is_refused(): void
     {
         $this->useClinic();
+        app(Settings::class)->set('numbering.invoice', 'INV-{branch}-{yymm}-{00001}');
 
         $this->expectException(InvalidArgumentException::class);
         DB::connection('clinic')->transaction(fn () => app(NumberGenerator::class)->generate('invoice'));
@@ -180,6 +181,7 @@ final class NumberingTest extends TestCase
         $this->actingAs($this->owner());
         $branch = Branch::firstOrFail();
         $this->travelTo(CarbonImmutable::parse('2026-11-17 10:00', 'Asia/Dhaka'));
+        app(Settings::class)->set('numbering.invoice', 'INV-{branch}-{yymm}-{00001}'); // a clinic still on the long format
 
         $this->assertSame('INV-MAIN-2611-00001', $this->issue('invoice', $branch));
         $this->assertSame('INV-MAIN-2611-00002', $this->issue('invoice', $branch));
@@ -192,7 +194,7 @@ final class NumberingTest extends TestCase
         $this->assertSame('2612-00001', $this->issue('invoice', null, '2026-12-01 10:00'), 'a new month still starts again');
 
         // Going back resumes the old count for that month, not 1.
-        app(ChangeNumberFormats::class)->handle(['invoice' => '']);
+        app(ChangeNumberFormats::class)->handle(['invoice' => 'INV-{branch}-{yymm}-{00001}']);
         $this->assertSame('INV-MAIN-2611-00005', $this->issue('invoice', $branch));
 
         $audit = AuditLog::where('action', 'numbering.changed')->orderBy('id')->first();
@@ -230,7 +232,7 @@ final class NumberingTest extends TestCase
         }
 
         $this->assertNull(app(Settings::class)->get('numbering.receipt'), 'the good format in the same request was not saved either');
-        $this->assertSame([], $action->handle(['invoice' => 'INV-{branch}-{yymm}-{00001}']), 'the same format is no change');
+        $this->assertSame([], $action->handle(['invoice' => '{yymm}-{00001}']), 'the same format is no change');
     }
 
     public function test_only_staff_who_manage_settings_may_change_formats(): void
@@ -249,18 +251,58 @@ final class NumberingTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('admin'));
 
         Livewire::test(ManageSettings::class)
-            ->assertFormSet(['num_invoice' => 'INV-{branch}-{yymm}-{00001}', 'num_patient' => 'P-{yy}-{000001}'])
-            ->fillForm(['name' => 'Alpha Diagnostics', 'num_invoice' => '{yymm}-{00001}'])
+            ->assertFormSet(['num_invoice' => '{yymm}-{00001}', 'num_patient' => 'P-{yy}-{000001}'])
+            ->fillForm(['name' => 'Alpha Diagnostics', 'num_invoice' => 'BILL-{yymm}-{00001}'])
             ->call('save')
             ->assertNotified('Settings saved');
 
-        $this->assertSame('{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
+        $this->assertSame('BILL-{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
 
         Livewire::test(ManageSettings::class)
             ->fillForm(['name' => 'Alpha Diagnostics', 'num_invoice' => 'NOCOUNTER'])
             ->call('save')
             ->assertNotified('Number formats not saved');
 
-        $this->assertSame('{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
+        $this->assertSame('BILL-{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
+    }
+
+    public function test_a_clinic_that_already_issued_numbers_keeps_its_format_after_the_defaults_changed(): void
+    {
+        $this->useClinic();
+        $db = DB::connection('clinic');
+        $db->table('settings')->where('group', 'numbering')->delete();
+
+        // This clinic has issued invoices and receipts, but no refunds yet.
+        foreach (['invoice', 'receipt'] as $type) {
+            $db->table('counters')->insert(['counter_key' => $type, 'branch_id' => 1, 'period' => '2611', 'next_value' => 35, 'created_at' => now(), 'updated_at' => now()]);
+        }
+
+        $migration = base_path('database/migrations/clinic/2026_11_22_000001_keep_number_formats_of_existing_clinics.php');
+        (require $migration)->up();
+        app(Settings::class)->flush();
+
+        $this->assertSame('INV-{branch}-{yymm}-{00001}', app(NumberGenerator::class)->format('invoice')->pattern);
+        $this->assertSame('RCP-{branch}-{yymm}-{00001}', app(NumberGenerator::class)->format('receipt')->pattern);
+        $this->assertSame('RF-{yymm}-{00001}', app(NumberGenerator::class)->format('refund')->pattern, 'never used, so it takes the new short default');
+
+        // A format the clinic chose itself is left alone.
+        $db->table('settings')->where('group', 'numbering')->where('key', 'invoice')->update(['value' => json_encode('{yymm}-{00001}')]);
+        (require $migration)->up();
+        app(Settings::class)->flush();
+        $this->assertSame('{yymm}-{00001}', app(NumberGenerator::class)->format('invoice')->pattern);
+    }
+
+    public function test_a_new_clinic_starts_with_the_short_formats(): void
+    {
+        $this->useClinic();
+        $branch = Branch::firstOrFail();
+        $at = CarbonImmutable::parse('2026-11-17 10:00', 'Asia/Dhaka');
+
+        $numbers = DB::connection('clinic')->transaction(fn () => array_map(
+            fn (string $type): string => app(NumberGenerator::class)->generate($type, $branch, $at),
+            ['order', 'invoice', 'receipt', 'refund'],
+        ));
+
+        $this->assertSame(['ORD-2611-00001', '2611-00001', 'MR-2611-00001', 'RF-2611-00001'], $numbers);
     }
 }

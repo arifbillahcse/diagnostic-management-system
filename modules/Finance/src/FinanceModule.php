@@ -72,7 +72,7 @@ final class FinanceModule extends Module
     {
         View::addNamespace('finance', $this->manifest->path.'/resources/views');
 
-        NumberGenerator::registerDefault('expense', 'EXP-{branch}-{yymm}-{00001}', 'Expense number', 'finance');
+        NumberGenerator::registerDefault('expense', 'EXP-{yymm}-{00001}', 'Expense number', 'finance');
         NumberGenerator::registerDefault('payout', 'PAY-{yymm}-{00001}', 'Commission payout number', 'finance');
 
         foreach ([PaymentReceived::class, RefundIssued::class, OrderItemCancelled::class, OrderItemAdded::class, OrderCancelled::class] as $event) {
@@ -91,7 +91,7 @@ final class FinanceModule extends Module
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             // A safety net: anything an interrupted request failed to post.
-            $schedule->command('finance:sync')->dailyAt('00:40')->timezone('Asia/Dhaka');
+            $schedule->command('finance:sync')->dailyAt('00:40')->timezone(config('dms.clinics.default_timezone'));
         });
     }
 }

@@ -77,9 +77,11 @@ class Patient extends ClinicModel
     {
         $diff = $this->age($on);
 
+        // Adults and children in years; a baby under one year in months and
+        // days, because a few days matter for its reference ranges and doses.
         return match (true) {
             $diff->y >= 1 => $diff->y.' Y',
-            $diff->m >= 1 => $diff->m.' M',
+            $diff->m >= 1 => $diff->m.' M'.($diff->d > 0 ? ' '.$diff->d.' D' : ''),
             default => $diff->d.' D',
         };
     }

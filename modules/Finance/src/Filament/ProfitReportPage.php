@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Finance\Filament;
 
 use App\Core\Modules\GatesModuleAccess;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -53,7 +54,7 @@ class ProfitReportPage extends Page
 
     public function mount(): void
     {
-        $today = now('Asia/Dhaka');
+        $today = now(app(ClinicContext::class)->timezone());
         $this->from = $today->copy()->startOfMonth()->toDateString();
         $this->to = $today->toDateString();
     }

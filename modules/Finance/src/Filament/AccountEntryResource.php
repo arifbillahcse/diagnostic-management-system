@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Finance\Filament;
 
 use App\Core\Modules\GatesModuleResource;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -67,7 +68,7 @@ class AccountEntryResource extends Resource
         return $table
             ->modifyQueryUsing(fn ($query) => $query->with('account'))
             ->columns([
-                TextColumn::make('occurred_at')->label('Date')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('occurred_at')->label('Date')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('account.name')->label('Account'),
                 TextColumn::make('source_type')->label('What')->badge()->color('gray')->formatStateUsing(fn (string $state): string => static::sourceLabel($state)),
                 TextColumn::make('description')->wrap(),

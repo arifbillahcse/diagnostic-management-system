@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\FrontDesk\Filament\Cash;
 
 use App\Core\Money\Money;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -58,7 +59,7 @@ class CashSessionResource extends Resource
 
         return $table
             ->columns([
-                TextColumn::make('opened_at')->label('Opened')->dateTime('d M Y, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('opened_at')->label('Opened')->dateTime('d M Y, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('opener.name')->label('Cashier'),
                 TextColumn::make('opening_float')->label('Opening')->alignEnd()->formatStateUsing($money),
                 TextColumn::make('expected_cash')->label('Expected')->alignEnd()->formatStateUsing($money)->placeholder('-'),

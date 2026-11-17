@@ -67,7 +67,7 @@ final class NewBillTest extends FrontDeskTestCase
 
         $bill->assertSet('paid', '1750.00');
 
-        $bill->call('save')->assertHasNoErrors()->assertNotified('Bill INV-MAIN-'.now('Asia/Dhaka')->format('ym').'-00001 saved');
+        $bill->call('save')->assertHasNoErrors()->assertNotified('Bill '.now('Asia/Dhaka')->format('ym').'-00001 saved');
 
         $patient = Patient::sole();
         $this->assertSame('Md. Jahidul Islam', $patient->name);
@@ -83,7 +83,7 @@ final class NewBillTest extends FrontDeskTestCase
 
         // The screen is blank again and shows the bill it just saved.
         $bill->assertSet('name', '')->assertSet('serviceIds', [])->assertSet('patientId', null)->assertSet('paid', '')
-            ->assertSee('Saved INV-MAIN-')->assertSee('Print invoice')->assertSee('Office copy');
+            ->assertSee('Saved '.now('Asia/Dhaka')->format('ym').'-00001')->assertSee('Print invoice')->assertSee('Office copy');
     }
 
     public function test_the_age_unit_makes_a_baby_or_an_adult(): void

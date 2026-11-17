@@ -6,6 +6,7 @@ namespace Modules\Laboratory\Filament\Samples;
 
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Patients\Patient;
+use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -91,7 +92,7 @@ class SampleResource extends Resource
                 TextColumn::make('patient.name')->label('Patient')->description(fn (Sample $record): ?string => $record->patient?->patient_code),
                 TextColumn::make('sampleType.name')->label('Sample')->description(fn (Sample $record): ?string => $record->sampleType?->container),
                 TextColumn::make('tests')->state(fn (Sample $record): string => $record->workItems->pluck('test_name')->implode(', '))->wrap(),
-                TextColumn::make('created_at')->label('Ordered')->dateTime('d M, h:i A', 'Asia/Dhaka'),
+                TextColumn::make('created_at')->label('Ordered')->dateTime('d M, h:i A', app(ClinicContext::class)->timezone()),
                 TextColumn::make('status')->badge()
                     ->formatStateUsing(fn (SampleStatus $state): string => $state->label())
                     ->color(fn (SampleStatus $state): string => static::statusColor($state))

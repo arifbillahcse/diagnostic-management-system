@@ -29,8 +29,8 @@ final class OrderTest extends FrontDeskTestCase
 
         $order = $this->order(['500', '1250.50'], ['referral_doctor_id' => $doctor->id, 'notes' => ' Fasting sample ']);
 
-        $this->assertMatchesRegularExpression('/^ORD-MAIN-\d{4}-00001$/', $order->order_no);
-        $this->assertMatchesRegularExpression('/^INV-MAIN-\d{4}-00001$/', $order->invoice->invoice_no);
+        $this->assertMatchesRegularExpression('/^ORD-\d{4}-00001$/', $order->order_no);
+        $this->assertMatchesRegularExpression('/^\d{4}-00001$/', $order->invoice->invoice_no);
         $this->assertSame(OrderStatus::Confirmed, $order->status);
         $this->assertSame('Fasting sample', $order->notes);
         $this->assertSame($doctor->id, $order->referral_doctor_id);

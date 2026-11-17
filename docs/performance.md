@@ -133,3 +133,18 @@ images. Upload limits (150 KB header, 60 KB footer) keep it in this range.
 Only creating a report is affected; no list, dashboard, or result-entry
 screen loads the images. Not measured: reports with many tests or pages,
 and MySQL.
+
+## Not yet measured at full size
+
+Built after the measurements above, and not yet timed against two years of
+data:
+
+- **Billing screen**: the "find patient" search (indexed prefix searches on
+  patient code, name, and normalised mobile number, at most eight rows),
+  the supplies shown on screen (one query per chosen test), and the print
+  step (a second page load in a hidden frame).
+- **Messaging**: the message log (simple pagination, indexed by status and
+  date) and the daily due reminders (indexed by invoice status and date).
+
+They should be timed with `perf:seed` and `perf:measure` on MySQL before a
+clinic with years of data uses them.

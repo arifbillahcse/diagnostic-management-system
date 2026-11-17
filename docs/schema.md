@@ -303,8 +303,8 @@ How a number is issued, inside the transaction that creates the record:
    takes an exclusive row lock at once, so simultaneous callers queue and
    cannot deadlock, including on the very first number of a period.
 2. Read `next_value` back; the issued number is that value minus one.
-3. Build the number from the clinic's format, for example
-   `INV-{branch}-{yymm}-{00001}`.
+3. Build the number from the clinic's format, for example `{yymm}-{00001}`
+   for a bill (the built-in default) or `INV-{branch}-{yymm}-{00001}`.
 4. Insert the record. The unique index on the number is the final guard.
 
 Because the counter is updated in the same transaction as the record, a

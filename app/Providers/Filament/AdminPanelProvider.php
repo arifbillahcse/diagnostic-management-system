@@ -19,6 +19,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Enums\Width;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -58,6 +59,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
+            // Lists and forms use the whole screen, like the billing screen.
+            ->maxContentWidth(Width::Full)
             ->navigationGroups(['Front desk', 'Laboratory', 'Finance', 'Sales reports', 'Messaging', 'Catalog', 'Lab set-up', 'Administration'])
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

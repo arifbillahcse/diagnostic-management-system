@@ -210,14 +210,16 @@ wide monitor (on a 1366 x 768 monitor the page scrolls a little).
 - Cash needs an open cash session (Cash sessions); the screen warns when
   there is none.
 
-The older **Orders, New order** form still works at `/orders/create`.
+The old order form was replaced by this screen; its address (`/orders/create`) opens it.
 
 ## Number formats
 
 Bill, receipt, patient, and other numbers follow a format the clinic sets
-under **Administration, Settings, Number formats**. For example, a bill
-number can be `INV-{branch}-{yymm}-{00001}` (the built-in
-`INV-MALIBUGH-2611-00034`) or just `{yymm}-{00001}` (`2611-00035`).
+under **Administration, Settings, Number formats**. A new clinic starts with
+short formats: bill `2611-00001`, order `ORD-2611-00001`, money receipt
+`MR-2611-00001`, refund `RF-2611-00001`. A clinic that issued numbers before
+these became the defaults keeps its long format (for example
+`INV-MALIBUGH-2611-00034`) until it changes it here.
 
 - `{branch}` is the branch code; `{yymm}` year and month; `{yymmdd}` the
   full date; `{yy}` `{yyyy}` `{mm}` `{dd}` the parts; and one counter such as

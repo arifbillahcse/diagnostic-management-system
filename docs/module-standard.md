@@ -173,21 +173,27 @@ files or another module's files.
 | Scheduled tasks | Recurring jobs |
 | Export | Its tables, so a full data export includes module data |
 
-### Events available from the first phases
+### Events the code raises
 
-| Event | Raised by | Typical listener |
+Every event is raised after its database change has been committed.
+
+| Event | Raised by | Listeners today |
 |---|---|---|
-| `PatientRegistered` | Core | Communication (welcome message) |
-| `OrderPlaced` | Front desk | Laboratory (create lab work) |
-| `OrderItemCancelled` | Front desk | Laboratory (cancel lab work) |
-| `InvoiceIssued` | Front desk | Finance |
-| `PaymentReceived` | Front desk | Finance (ledger entry), Communication (receipt) |
-| `RefundIssued` | Front desk | Finance |
-| `CashSessionClosed` | Front desk | Owner dashboard |
-| `SampleCollected`, `SampleRejected` | Laboratory | Communication |
-| `ResultVerified` | Laboratory | Reports |
-| `ReportReleased`, `ReportAmended` | Reports | Communication, Patient portal |
-| `ModuleEnabled`, `ModuleDisabled` | Core | Cache clearing |
+| `PatientRegistered` | Core | None yet (a welcome message could use it) |
+| `ClinicSwitched` | Core | Core: forgets per-clinic values held in memory |
+| `ModuleEnabled`, `ModuleDisabled` | Core | Core: cache clearing. Finance: catches up when switched on |
+| `OrderPlaced` | Front desk | Laboratory (creates lab work), Messaging (bill confirmation) |
+| `OrderItemAdded` | Front desk | Laboratory (lab work for the new test), Finance (commission) |
+| `OrderItemCancelling` | Front desk | Laboratory (refuses when the test already has results) |
+| `OrderItemCancelled`, `OrderCancelled` | Front desk | Laboratory (cancels lab work), Finance (commission) |
+| `InvoiceIssued` | Front desk | None yet |
+| `PaymentReceived`, `RefundIssued` | Front desk | Finance (account entries and commission) |
+| `CashSessionClosed` | Front desk | None yet |
+| `SampleCollected`, `SampleRejected` | Laboratory | None yet |
+| `ResultsReleased` | Laboratory | Messaging ("report ready" once the whole order is released) |
+| `ResultsAmended` | Laboratory | None yet (an amended-report message could use it) |
+
+Reports raises no events: printing is recorded in the audit trail.
 
 Event names and payloads are a public contract. A change that breaks a
 listener needs a new major version of the module that raises the event.

@@ -5,7 +5,7 @@
 
     $item = $this->record->loadMissing(['patient', 'sample.sampleType', 'order', 'enterer', 'verifier']);
     $editable = $this->editable;
-    $tz = 'Asia/Dhaka';
+    $tz = app(\App\Core\Tenancy\ClinicContext::class)->timezone();
     $group = null;
 @endphp
 

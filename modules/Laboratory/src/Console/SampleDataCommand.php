@@ -59,7 +59,7 @@ final class SampleDataCommand extends Command
         {clinic : Numeric ID of the clinic (see clinic:list)}
         {--password= : Password for the three sample staff accounts; one is generated when omitted}
         {--days=10 : How many days of history, ending today}
-        {--force : Do not ask for confirmation}';
+        {--force : Do not ask for confirmation (and allow it on a production server)}';
 
     protected $description = 'Load a new clinic with sample catalog, staff, patients, and orders for trying the software';
 
@@ -109,6 +109,12 @@ final class SampleDataCommand extends Command
 
     public function handle(ClinicManager $manager): int
     {
+        if (app()->environment('production') && ! $this->option('force')) {
+            $this->error('This server is in production. Sample data is for trying the software; add --force only for a clinic that will never hold real patients.');
+
+            return self::FAILURE;
+        }
+
         $clinic = Clinic::find((int) $this->argument('clinic'));
 
         if ($clinic === null) {
