@@ -87,6 +87,7 @@ inventory.items.manage
 inventory.purchases.record
 inventory.purchases.void
 inventory.purchases.pay
+inventory.stock.adjust
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -140,6 +141,7 @@ or create its own, except where noted.
 | Inventory: items and suppliers | Yes | Yes | | | | |
 | Inventory: record and pay purchases | Yes | Yes | | | | Yes |
 | Inventory: void a purchase | Yes | Yes | | | | |
+| Inventory: take out stock, count, sort out shortfalls | Yes | Yes | | | | |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

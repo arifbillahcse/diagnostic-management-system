@@ -41,6 +41,7 @@ final class StockLedger
         ?string $expiresOn = null,
         ?string $note = null,
         ?CarbonInterface $at = null,
+        ?string $postingKey = null,
     ): Movement {
         $db = DB::connection('clinic');
 
@@ -91,6 +92,7 @@ final class StockLedger
             'reason' => $reason,
             'source_type' => $sourceType,
             'source_id' => $sourceId,
+            'posting_key' => $postingKey ?? ($sourceType !== null && $sourceId !== null ? "{$sourceType}:{$sourceId}" : null),
             'batch_no' => $batchNo,
             'expires_on' => $expiresOn,
             'note' => $note !== null ? mb_substr(trim($note), 0, 255) : null,
@@ -104,6 +106,82 @@ final class StockLedger
         ])->saveQuietly(); // the movement is the record; no audit line per stock change
 
         return $movement;
+    }
+
+    /**
+     * Take stock out without going below zero: from the batch that expires
+     * first for an item kept by batch. Takes what there is when there is not
+     * enough, and returns what could not be taken.
+     *
+     * @param  string  $keyPrefix  each movement's posting key is this plus the batch, so it never posts twice
+     * @return array{taken: list<Movement>, short: Quantity}
+     */
+    public function takeOut(
+        Item $item,
+        Quantity $wanted,
+        string $reason,
+        string $keyPrefix,
+        ?string $sourceType = null,
+        ?int $sourceId = null,
+        ?int $branchId = null,
+        ?string $note = null,
+        ?string $batchNo = null,
+    ): array {
+        $item = Item::whereKey($item->id)->lockForUpdate()->firstOrFail();
+        $left = $wanted;
+        $taken = [];
+
+        $sources = $item->tracks_expiry
+            ? array_values(array_filter($this->batches($item), fn (array $b): bool => $batchNo === null || $b['batch_no'] === $batchNo))
+            : [['batch_no' => null, 'expires_on' => null, 'quantity' => $item->quantity]];
+
+        foreach ($sources as $source) {
+            if (! $left->isPositive()) {
+                break;
+            }
+
+            $amount = $source['quantity']->lessThan($left) ? $source['quantity'] : $left;
+
+            if (! $amount->isPositive()) {
+                continue;
+            }
+
+            $key = $keyPrefix.':'.($source['batch_no'] ?? '-');
+
+            $taken[] = $this->post($item, $amount->negate(), null, $reason, $sourceType, $sourceId, $branchId, $source['batch_no'], $source['expires_on'], $note, null, $key);
+            $left = $left->minus($amount);
+        }
+
+        return ['taken' => $taken, 'short' => $left];
+    }
+
+    /**
+     * The batches of an item that still hold stock, the one expiring first first.
+     *
+     * @return list<array{batch_no: string, expires_on: ?string, quantity: Quantity}>
+     */
+    public function batches(Item $item): array
+    {
+        $rows = DB::connection('clinic')->table('inv_movements')
+            ->selectRaw('batch_no, MIN(expires_on) as expires_on, SUM(quantity) as q')
+            ->where('item_id', $item->id)
+            ->whereNotNull('batch_no')
+            ->groupBy('batch_no')
+            ->get();
+
+        $batches = [];
+
+        foreach ($rows as $row) {
+            $quantity = self::sumToQuantity($row->q);
+
+            if ($quantity->isPositive()) {
+                $batches[] = ['batch_no' => $row->batch_no, 'expires_on' => $row->expires_on, 'quantity' => $quantity];
+            }
+        }
+
+        usort($batches, fn (array $a, array $b): int => [$a['expires_on'] ?? '9999-12-31', $a['batch_no']] <=> [$b['expires_on'] ?? '9999-12-31', $b['batch_no']]);
+
+        return $batches;
     }
 
     public function batchQuantity(Item $item, string $batchNo): Quantity

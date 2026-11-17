@@ -462,8 +462,7 @@ at most three tries by the system; staff can send a failed one again).
 
 ## 8d. Module: inventory (`inv_`)
 
-Off by default. Requires front desk (stock use per test comes in the next
-step); uses finance when it is on. Quantities are exact decimals with three
+Off by default. Requires front desk (stock use per test); uses finance when it is on. Quantities are exact decimals with three
 places, never floats (a `Quantity` value object, held in thousandths).
 
 | Table | Key columns | Notes |
@@ -472,7 +471,9 @@ places, never floats (a `Quantity` value object, held in thousandths).
 | `inv_suppliers` | `public_id`, `name` (unique), `phone`, `address`, `notes`, `is_active` | |
 | `inv_purchases` | `public_id`, `purchase_no` (unique), `supplier_id`, `branch_id`, `purchase_date`, `supplier_bill_no`, `total`, `paid_at`, `paid_by`, `expense_id` (finance, no key), `voided_at`, `void_reason` | Never edited. A wrong one is voided while unpaid and its stock is still on hand |
 | `inv_purchase_lines` | `purchase_id`, `item_id`, `quantity`, `unit_cost`, `line_total`, `batch_no`, `expires_on` | Append-only |
-| `inv_movements` | `item_id`, `branch_id`, `quantity` (+ in, − out), `value`, `reason`, `source_type`, `source_id` (unique pair), `batch_no`, `expires_on`, `occurred_at` | Every change to stock. Append-only. Stock on hand is the sum |
+| `inv_movements` | `item_id`, `branch_id`, `quantity` (+ in, − out), `value`, `reason`, `source_type`, `source_id`, `posting_key` (unique), `batch_no`, `expires_on`, `occurred_at` | Every change to stock. Append-only. Stock on hand is the sum. The posting key stops the same change being posted twice |
+| `inv_usages` | `service_id`, `item_id` (unique pair), `quantity` | Stock use per test: what one test of this service uses. Edited only by managers; audited |
+| `inv_shortfalls` | `order_item_id`, `item_id` (unique pair), `quantity`, `resolved_at`, `resolved_by`, `resolve_note` | A test that needed stock that was not there. Billing never stops for it |
 
 **Valuation.** Average cost. Stock coming in brings its purchase value;
 stock going out takes its share of the value on hand, and the last unit takes
@@ -482,6 +483,21 @@ zero, overall or in a batch.
 **Expiry.** An item marked "tracks expiry" needs an expiry date on every
 purchase line and is kept by batch; without a batch number the batch is named
 after the expiry date. An expired date is refused.
+
+**Stock use.** When an order is placed or a test is added, the stock in
+its use rules is taken out (reason `use`), first expiry first. A package uses
+the rules of its tests. What cannot be taken becomes a shortfall; billing goes
+on. A cancelled test or order puts the stock back (reason `unuse`) into the
+same batch at the same value, and closes its open shortfalls.
+
+**Manual changes.** Issue, waste and expired take stock out; waste and
+expired need a note, and a batch item needs its batch. A stock count records
+the difference (reason `count`) and needs a note when it differs; found stock
+is valued at average cost. All need `inventory.stock.adjust` and are audited.
+
+**Alerts.** Low stock is at or under the reorder level. Expiring is within
+30 days. The dashboard shows stock value, low, expiring, expired and open
+shortfalls. Reports: batches by expiry, and cost of stock per test.
 
 **Payment.** A purchase is unpaid until marked paid. With finance on, marking
 it paid records an expense in the category "Purchases" from the chosen

@@ -56,7 +56,7 @@ not be built early.
 | Profit and financial reports | Pridesys | Yes | 4 | |
 | Full accounting ledger | Not confirmed | Undecided | | |
 | MIS and analytics reports | Mediasoft | Yes | 4 and later | |
-| Reagent and general inventory | Esteem Soft, Crystal Tech | Items, suppliers, purchases, batches and expiry, stock value built (9a); stock use, count, alerts next (9b) | 9 | |
+| Reagent and general inventory | Esteem Soft, Crystal Tech | Items, suppliers, purchases, batches and expiry, stock value (9a); stock use per test, shortfalls, issue/waste/expired, counts, alerts, expiry and use reports (9b) built | 9 | |
 | Staff, attendance, payroll basics | Esteem Soft | Yes | 9 | |
 | Multi-branch | Not confirmed | Yes | 11 | |
 | Full data export | Not stated | Yes | 4 | |

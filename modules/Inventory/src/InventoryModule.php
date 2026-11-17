@@ -8,8 +8,14 @@ use App\Core\Modules\Module;
 use App\Core\Numbering\NumberGenerator;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
+use Modules\FrontDesk\Events\OrderCancelled;
+use Modules\FrontDesk\Events\OrderItemAdded;
+use Modules\FrontDesk\Events\OrderItemCancelled;
+use Modules\FrontDesk\Events\OrderPlaced;
 use Modules\Inventory\Console\CheckCommand;
+use Modules\Inventory\Listeners\UseStockForOrders;
 
 final class InventoryModule extends Module
 {
@@ -41,6 +47,8 @@ final class InventoryModule extends Module
             'inv_purchases' => 'Purchases',
             'inv_purchase_lines' => 'Purchase lines',
             'inv_movements' => 'Stock movements',
+            'inv_usages' => 'Stock use per test',
+            'inv_shortfalls' => 'Stock used without stock on hand',
         ];
     }
 
@@ -49,11 +57,25 @@ final class InventoryModule extends Module
         return class_exists(Filament\Screens::class) ? Filament\Screens::resources() : [];
     }
 
+    public function pages(): array
+    {
+        return class_exists(Filament\Screens::class) ? Filament\Screens::pages() : [];
+    }
+
+    public function widgets(): array
+    {
+        return class_exists(Filament\Screens::class) ? Filament\Screens::widgets() : [];
+    }
+
     public function boot(): void
     {
         View::addNamespace('inventory', $this->manifest->path.'/resources/views');
 
         NumberGenerator::registerDefault('purchase', 'PO-{yymm}-{00001}', 'Purchase number', 'inventory');
+
+        foreach ([OrderPlaced::class, OrderItemAdded::class, OrderItemCancelled::class, OrderCancelled::class] as $event) {
+            Event::listen($event, [UseStockForOrders::class, 'handle']);
+        }
 
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([CheckCommand::class]));
 

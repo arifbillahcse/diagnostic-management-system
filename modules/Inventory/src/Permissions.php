@@ -22,6 +22,9 @@ final class Permissions
     /** Mark a purchase paid (with finance on, this records an expense). */
     public const PURCHASES_PAY = 'inventory.purchases.pay';
 
+    /** Take stock out by hand (issued, wasted, expired), count stock, and sort out shortfalls. */
+    public const STOCK_ADJUST = 'inventory.stock.adjust';
+
     /** @return array<string, string> */
     public static function all(): array
     {
@@ -31,6 +34,7 @@ final class Permissions
             self::PURCHASES_RECORD => 'Record purchases (stock coming in)',
             self::PURCHASES_VOID => 'Void a purchase, taking its stock out again',
             self::PURCHASES_PAY => 'Mark a purchase paid',
+            self::STOCK_ADJUST => 'Take stock out by hand, count stock, and sort out stock used without stock on hand',
         ];
     }
 }

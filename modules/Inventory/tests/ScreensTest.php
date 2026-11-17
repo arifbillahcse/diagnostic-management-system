@@ -11,13 +11,18 @@ use Modules\Finance\Models\Account;
 use Modules\Finance\Models\Expense;
 use Modules\Inventory\Filament\CreatePurchase;
 use Modules\Inventory\Filament\ListMovements;
+use Modules\Inventory\Filament\ListShortfalls;
 use Modules\Inventory\Filament\ManageItems;
 use Modules\Inventory\Filament\ManageSuppliers;
+use Modules\Inventory\Filament\ManageUsages;
+use Modules\Inventory\Filament\StockAlertsWidget;
 use Modules\Inventory\Filament\ViewPurchase;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\Movement;
 use Modules\Inventory\Models\Purchase;
+use Modules\Inventory\Models\Shortfall;
 use Modules\Inventory\Models\Supplier;
+use Modules\Inventory\Models\Usage;
 
 final class ScreensTest extends InventoryTestCase
 {
@@ -179,5 +184,95 @@ final class ScreensTest extends InventoryTestCase
             ->filterTable('low')
             ->assertCanSeeTableRecords([$tubes])
             ->assertCanNotSeeTableRecords([$plenty]);
+    }
+
+    public function test_stock_is_taken_out_and_counted_from_the_stock_list(): void
+    {
+        $tubes = $this->item();
+        $this->buy([['item_id' => $tubes->id, 'quantity' => '10', 'unit_cost' => '3.00']]);
+
+        Livewire::test(ManageItems::class)
+            ->callTableAction('takeOut', $tubes, ['reason' => 'waste', 'quantity' => '2'])
+            ->assertHasTableActionErrors(['note']);
+
+        Livewire::test(ManageItems::class)
+            ->callTableAction('takeOut', $tubes, ['reason' => 'waste', 'quantity' => '2', 'note' => 'Broken'])
+            ->assertNotified('Stock taken out');
+        $this->assertSame('8 @ 24.00', $this->stock($tubes));
+
+        Livewire::test(ManageItems::class)
+            ->callTableAction('count', $tubes, ['counted' => '8'])
+            ->assertNotified('The count matches: nothing changed');
+
+        Livewire::test(ManageItems::class)
+            ->callTableAction('count', $tubes, ['counted' => '7', 'note' => 'One missing'])
+            ->assertNotified('Stock count saved');
+        $this->assertSame('7 @ 21.00', $this->stock($tubes));
+
+        $this->actingAs($this->staff('lab_technician'));
+        Livewire::test(ManageItems::class)->assertTableActionHidden('takeOut', $tubes)->assertTableActionHidden('count', $tubes);
+    }
+
+    public function test_a_batch_item_asks_for_the_batch_with_what_is_in_it(): void
+    {
+        $reagent = $this->item('GLU', 'Glucose reagent', true, 'ml');
+        $this->buy([['item_id' => $reagent->id, 'quantity' => '50', 'unit_cost' => '2', 'batch_no' => 'A1', 'expires_on' => '2027-06-30']]);
+
+        Livewire::test(ManageItems::class)
+            ->mountTableAction('takeOut', $reagent)
+            ->setTableActionData(['reason' => 'expired', 'batch_no' => 'A1', 'quantity' => '10', 'note' => 'Old'])
+            ->callMountedTableAction()
+            ->assertNotified('Stock taken out');
+
+        $this->assertSame('40 @ 80.00', $this->stock($reagent));
+    }
+
+    public function test_stock_use_rules_are_set_up_from_their_screen(): void
+    {
+        $tubes = $this->item();
+        $cbc = $this->service('CBC', '400');
+
+        Livewire::test(ManageUsages::class)
+            ->callAction('create', ['service_id' => $cbc->id, 'item_id' => $tubes->id, 'quantity' => '1'])
+            ->assertHasNoActionErrors();
+        $this->assertSame('1', Usage::sole()->quantity->formatted());
+
+        Livewire::test(ManageUsages::class)
+            ->callAction('create', ['service_id' => $cbc->id, 'item_id' => $tubes->id, 'quantity' => '2'])
+            ->assertHasActionErrors(['service_id']);
+
+        Livewire::test(ManageUsages::class)
+            ->callAction('create', ['service_id' => $cbc->id, 'item_id' => $this->item('NEEDLE', 'Needle')->id, 'quantity' => '0'])
+            ->assertHasActionErrors(['quantity']);
+    }
+
+    public function test_a_shortfall_is_sorted_out_from_its_list(): void
+    {
+        $tubes = $this->item();
+        $order = $this->order(['400']);
+        $shortfall = Shortfall::create(['order_item_id' => $order->items()->first()->id, 'item_id' => $tubes->id, 'quantity' => '1']);
+
+        $this->signIn($this->ownerUser)->get(self::BASE.'/inventory/used-without-stock')->assertOk()->assertSee('EDTA tube');
+
+        Livewire::test(ListShortfalls::class)
+            ->callTableAction('resolve', $shortfall, ['note' => 'Purchase entered late'])
+            ->assertNotified('Marked as sorted out');
+        $this->assertNotNull($shortfall->fresh()->resolved_at);
+    }
+
+    public function test_the_expiry_page_the_use_report_and_the_dashboard_open(): void
+    {
+        $reagent = $this->item('GLU', 'Glucose reagent', true, 'ml');
+        $this->buy([['item_id' => $reagent->id, 'quantity' => '10', 'unit_cost' => '2', 'batch_no' => 'A1', 'expires_on' => now('Asia/Dhaka')->addDays(5)->toDateString()]]);
+
+        $this->signIn($this->ownerUser)->get(self::BASE.'/inventory/expiry')->assertOk()->assertSee('A1')->assertSee('In 5 day(s)');
+        $this->signIn($this->ownerUser)->get(self::BASE.'/inventory/use-report')->assertOk()->assertSee('Cost of stock per test');
+
+        Livewire::test(StockAlertsWidget::class)
+            ->assertSee('Stock value')->assertSee('20.00')->assertSee('Expiring within 30 days');
+
+        $this->signIn($this->staff('receptionist'))->get(self::BASE.'/inventory/expiry')->assertForbidden();
+        $this->actingAs($this->staff('receptionist'));
+        $this->assertFalse(StockAlertsWidget::canView());
     }
 }
