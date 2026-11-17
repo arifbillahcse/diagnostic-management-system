@@ -240,7 +240,6 @@
         <section class="card">
             <header>
                 <h2><x-filament::icon icon="heroicon-o-user-circle" /> Patient</h2>
-                <span class="chip">Type an ID, a name, or a mobile number to find a registered patient</span>
             </header>
             <div class="body">
                 @if ($locked)
