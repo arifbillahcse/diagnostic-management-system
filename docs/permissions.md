@@ -88,6 +88,10 @@ inventory.purchases.record
 inventory.purchases.void
 inventory.purchases.pay
 inventory.stock.adjust
+people.staff.view
+people.staff.manage
+people.salary.manage
+people.attendance.record
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -142,6 +146,10 @@ or create its own, except where noted.
 | Inventory: record and pay purchases | Yes | Yes | | | | Yes |
 | Inventory: void a purchase | Yes | Yes | | | | |
 | Inventory: take out stock, count, sort out shortfalls | Yes | Yes | | | | |
+| Staff: see staff list and attendance | Yes | Yes | | | | Yes |
+| Staff: add, edit, mark as left | Yes | Yes | | | | |
+| Staff: see and change salaries | Yes | Yes | | | | Yes |
+| Staff: record attendance | Yes | Yes | | | | |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

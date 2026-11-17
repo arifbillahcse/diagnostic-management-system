@@ -1,0 +1,12 @@
+{
+  "key": "people",
+  "name": "Staff and attendance",
+  "description": "Staff records with salary history, and daily attendance with a monthly summary. Salary runs come next.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": [],
+  "suggests": ["finance"],
+  "table_prefix": "ppl_",
+  "default_enabled": false,
+  "entry": "Modules\\People\\PeopleModule"
+}

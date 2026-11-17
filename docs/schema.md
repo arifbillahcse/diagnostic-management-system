@@ -503,6 +503,28 @@ shortfalls. Reports: batches by expiry, and cost of stock per test.
 it paid records an expense in the category "Purchases" from the chosen
 account, in the same transaction. A paid purchase cannot be voided.
 
+## 8e. Module: staff and attendance (`ppl_`, key `people`)
+
+Off by default. Requires nothing; finance is used by salary runs (next step).
+Attendance is entered by hand; there is no device integration.
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `ppl_staff` | `public_id`, `staff_no` (unique, counter `staff`, `EMP-{0001}`), `name`, `designation`, `phone`, `branch_id`, `user_id` (optional sign-in account, unique), `joined_on`, `left_on`, `leave_reason`, `monthly_salary`, `notes` | Written only by `ManageStaff`, which audits every change. `monthly_salary` is the latest salary change and is never edited by hand |
+| `ppl_salary_changes` | `staff_id`, `monthly_salary`, `effective_from`, `reason`, `created_by` | Append-only salary history. The first row is "Joined". A new change cannot start before the last one, before joining, or in the future |
+| `ppl_attendance` | `staff_id`, `date` (unique pair), `status`, `in_time`, `out_time`, `note`, `recorded_by` | One mark per person per day. Can be changed, not removed; each new or changed mark is audited with before and after |
+
+**Staff state.** `working → left` (mark as left: last working day and a
+reason; refused if attendance exists after that day) and `left → working`
+(mark as back, with a reason). Only these two actions change it.
+
+**Attendance marks.** present, late, half day, absent, on leave, weekly off,
+holiday. Times are optional and only for present, late, and half day. No
+future days, no days before joining or after leaving, and only staff of the
+sheet's branch. The month view counts days worked (half day = ½), absent,
+leave, off and holidays, and days not marked up to today. There is no
+automatic deduction; the salary run will show these counts.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as
