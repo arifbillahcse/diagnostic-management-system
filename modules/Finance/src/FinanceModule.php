@@ -72,8 +72,8 @@ final class FinanceModule extends Module
     {
         View::addNamespace('finance', $this->manifest->path.'/resources/views');
 
-        NumberGenerator::registerDefault('expense', 'EXP-{branch}-{yymm}-{00001}');
-        NumberGenerator::registerDefault('payout', 'PAY-{yymm}-{00001}');
+        NumberGenerator::registerDefault('expense', 'EXP-{branch}-{yymm}-{00001}', 'Expense number', 'finance');
+        NumberGenerator::registerDefault('payout', 'PAY-{yymm}-{00001}', 'Commission payout number', 'finance');
 
         foreach ([PaymentReceived::class, RefundIssued::class, OrderItemCancelled::class, OrderItemAdded::class, OrderCancelled::class] as $event) {
             Event::listen($event, [RecordFrontDeskMoney::class, 'handle']);

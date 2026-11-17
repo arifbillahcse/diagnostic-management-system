@@ -26,13 +26,48 @@ final class NumberGenerator
         'accession' => '{yymmdd}{0001}',
     ];
 
+    /** What each core number type is called on the settings screen. */
+    public const LABELS = [
+        'patient' => 'Patient ID',
+        'order' => 'Order number',
+        'invoice' => 'Bill / invoice number',
+        'receipt' => 'Payment receipt number',
+        'refund' => 'Refund number',
+        'accession' => 'Sample (lab) number',
+    ];
+
     /** @var array<string, string> formats added by modules for their own number types */
     private static array $moduleFormats = [];
 
-    /** Lets a module give its own number type a default format. */
-    public static function registerDefault(string $type, string $pattern): void
+    /** @var array<string, array{label: string, module: ?string}> */
+    private static array $moduleTypes = [];
+
+    /** Lets a module give its own number type a default format, a name for the settings screen, and the module it belongs to. */
+    public static function registerDefault(string $type, string $pattern, ?string $label = null, ?string $module = null): void
     {
         self::$moduleFormats[$type] = $pattern;
+        self::$moduleTypes[$type] = ['label' => $label ?? ucfirst($type).' number', 'module' => $module];
+    }
+
+    /**
+     * Every number type with its name, built-in format, and the module it
+     * belongs to (null for the core).
+     *
+     * @return array<string, array{label: string, default: string, module: ?string}>
+     */
+    public static function types(): array
+    {
+        $types = [];
+
+        foreach (self::DEFAULT_FORMATS as $type => $default) {
+            $types[$type] = ['label' => self::LABELS[$type] ?? ucfirst($type), 'default' => $default, 'module' => null];
+        }
+
+        foreach (self::$moduleFormats as $type => $default) {
+            $types[$type] = ['label' => self::$moduleTypes[$type]['label'], 'default' => $default, 'module' => self::$moduleTypes[$type]['module']];
+        }
+
+        return $types;
     }
 
     public function __construct(

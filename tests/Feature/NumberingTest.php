@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Core\Audit\AuditLog;
 use App\Core\Branches\Branch;
+use App\Core\Numbering\Actions\ChangeNumberFormats;
 use App\Core\Numbering\CounterService;
 use App\Core\Numbering\NumberGenerator;
 use App\Core\Settings\Settings;
+use App\Filament\Pages\ManageSettings;
 use Carbon\CarbonImmutable;
+use Filament\Facades\Filament;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Livewire\Livewire;
 use LogicException;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -159,5 +165,102 @@ final class NumberingTest extends TestCase
         $sequences = array_map(fn (string $n): int => (int) substr($n, -5), $numbers);
         sort($sequences);
         $this->assertSame(range(1, $total), $sequences, 'no number was skipped');
+    }
+
+    private function issue(string $type, ?Branch $branch = null, string $at = '2026-11-17 10:00'): string
+    {
+        return DB::connection('clinic')->transaction(
+            fn () => app(NumberGenerator::class)->generate($type, $branch, CarbonImmutable::parse($at, 'Asia/Dhaka')),
+        );
+    }
+
+    public function test_dropping_the_prefix_keeps_the_count_going(): void
+    {
+        $this->useClinic();
+        $this->actingAs($this->owner());
+        $branch = Branch::firstOrFail();
+        $this->travelTo(CarbonImmutable::parse('2026-11-17 10:00', 'Asia/Dhaka'));
+
+        $this->assertSame('INV-MAIN-2611-00001', $this->issue('invoice', $branch));
+        $this->assertSame('INV-MAIN-2611-00002', $this->issue('invoice', $branch));
+
+        $changed = app(ChangeNumberFormats::class)->handle(['invoice' => '{yymm}-{00001}']);
+
+        $this->assertSame(['invoice'], $changed);
+        $this->assertSame('2611-00003', $this->issue('invoice', $branch));
+        $this->assertSame('2611-00004', $this->issue('invoice', null), 'one counter for the whole clinic now');
+        $this->assertSame('2612-00001', $this->issue('invoice', null, '2026-12-01 10:00'), 'a new month still starts again');
+
+        // Going back resumes the old count for that month, not 1.
+        app(ChangeNumberFormats::class)->handle(['invoice' => '']);
+        $this->assertSame('INV-MAIN-2611-00005', $this->issue('invoice', $branch));
+
+        $audit = AuditLog::where('action', 'numbering.changed')->orderBy('id')->first();
+        $this->assertSame('INV-{branch}-{yymm}-{00001}', $audit->before['numbering.invoice']);
+        $this->assertSame('{yymm}-{00001}', $audit->after['numbering.invoice']);
+    }
+
+    public function test_a_format_that_restarts_at_other_moments_does_not_inherit_the_count(): void
+    {
+        $this->useClinic();
+        $this->actingAs($this->owner());
+        $branch = Branch::firstOrFail();
+        $this->travelTo(CarbonImmutable::parse('2026-11-17 10:00', 'Asia/Dhaka'));
+
+        $this->issue('invoice', $branch);
+        $this->issue('invoice', $branch);
+        app(ChangeNumberFormats::class)->handle(['invoice' => '{yymmdd}{0001}']);
+
+        $this->assertSame('2611170001', $this->issue('invoice', null), 'daily numbers start at 1 each day');
+    }
+
+    public function test_a_bad_format_is_refused_and_nothing_changes(): void
+    {
+        $this->useClinic();
+        $this->actingAs($this->owner());
+        $action = app(ChangeNumberFormats::class);
+
+        foreach ([['invoice' => 'NOCOUNTER'], ['invoice' => '{00001}-{0001}'], ['invoice' => "BILL'; DROP--{00001}"], ['unknown' => '{00001}']] as $bad) {
+            try {
+                $action->handle(['receipt' => 'R-{00001}'] + $bad);
+                $this->fail('A bad format was accepted: '.json_encode($bad));
+            } catch (InvalidArgumentException) {
+                // expected
+            }
+        }
+
+        $this->assertNull(app(Settings::class)->get('numbering.receipt'), 'the good format in the same request was not saved either');
+        $this->assertSame([], $action->handle(['invoice' => 'INV-{branch}-{yymm}-{00001}']), 'the same format is no change');
+    }
+
+    public function test_only_staff_who_manage_settings_may_change_formats(): void
+    {
+        $this->useClinic();
+        $this->actingAs($this->userWithRoles('receptionist'));
+
+        $this->expectException(AuthorizationException::class);
+        app(ChangeNumberFormats::class)->handle(['invoice' => '{yymm}-{00001}']);
+    }
+
+    public function test_the_settings_screen_shows_the_formats_and_saves_a_new_one(): void
+    {
+        $this->useClinic();
+        $this->actingAs($this->owner());
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+        Livewire::test(ManageSettings::class)
+            ->assertFormSet(['num_invoice' => 'INV-{branch}-{yymm}-{00001}', 'num_patient' => 'P-{yy}-{000001}'])
+            ->fillForm(['name' => 'Alpha Diagnostics', 'num_invoice' => '{yymm}-{00001}'])
+            ->call('save')
+            ->assertNotified('Settings saved');
+
+        $this->assertSame('{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
+
+        Livewire::test(ManageSettings::class)
+            ->fillForm(['name' => 'Alpha Diagnostics', 'num_invoice' => 'NOCOUNTER'])
+            ->call('save')
+            ->assertNotified('Number formats not saved');
+
+        $this->assertSame('{yymm}-{00001}', app(Settings::class)->get('numbering.invoice'));
     }
 }

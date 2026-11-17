@@ -310,7 +310,7 @@ How a number is issued, inside the transaction that creates the record:
 Because the counter is updated in the same transaction as the record, a
 failed save rolls the counter back and leaves no gap. The lock makes
 simultaneous saves wait in line for a few milliseconds, which is fine at this
-volume. Formats are a clinic setting. Whether invoice numbers must be
+volume. Formats are a clinic setting (Administration, Settings, Number formats; stored as `numbering.<type>`). Changing one carries the count on when the new format restarts at the same moments as the old. Whether invoice numbers must be
 gapless for tax or audit purposes in Bangladesh is a question for the
 accountant or lawyer (see open-decisions.md).
 

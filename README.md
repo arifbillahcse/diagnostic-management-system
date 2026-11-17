@@ -207,6 +207,24 @@ wide monitor (on a 1366 x 768 monitor the page scrolls a little).
 
 The older **Orders, New order** form still works at `/orders/create`.
 
+## Number formats
+
+Bill, receipt, patient, and other numbers follow a format the clinic sets
+under **Administration, Settings, Number formats**. For example, a bill
+number can be `INV-{branch}-{yymm}-{00001}` (the built-in
+`INV-MALIBUGH-2611-00034`) or just `{yymm}-{00001}` (`2611-00035`).
+
+- `{branch}` is the branch code; `{yymm}` year and month; `{yymmdd}` the
+  full date; `{yy}` `{yyyy}` `{mm}` `{dd}` the parts; and one counter such as
+  `{00001}`, whose zeros set the width.
+- The count restarts when the date part changes: monthly with `{yymm}`,
+  daily with `{yymmdd}`, never with none.
+- A new format applies from the next number. Numbers already issued never
+  change. If the new format restarts at the same moments as the old one, the
+  count carries on where it was, so a clinic moving from the long format to
+  `{yymm}-{00001}` does not start again at 00001 in the same month.
+- Leave a box empty to go back to the built-in format.
+
 ## Messaging (SMS and email)
 
 The Messaging module is off by default. Switch it on under **Modules**, then
