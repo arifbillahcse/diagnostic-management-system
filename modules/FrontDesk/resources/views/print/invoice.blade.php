@@ -9,13 +9,6 @@
     $rows = $invoice->lines->filter(fn ($line) => $line->kind !== LineKind::Discount)->values();
     $gross = $invoice->subtotal->plus($invoice->adjustment_total);
     $refunded = $invoice->refunds->where('status', RefundStatus::Approved)->isNotEmpty();
-    $stamp = match (true) {
-        $invoice->isVoid() => null,
-        $invoice->status === InvoiceStatus::Paid => 'PAID',
-        $invoice->status === InvoiceStatus::PartiallyPaid => 'PART PAID',
-        $invoice->status === InvoiceStatus::Issued => 'UNPAID',
-        default => strtoupper($invoice->status->value),
-    };
 @endphp
 <!doctype html>
 <html lang="en">
@@ -49,7 +42,6 @@
         .num { text-align: right; white-space: nowrap; }
         .remarks { margin: 4px 0; font-size: 8.5pt; }
         .middle { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-top: 6px; }
-        .stamp { border: 2px solid #111; padding: 2px 10px; font-size: 13pt; font-weight: bold; letter-spacing: .08em; display: inline-block; transform: rotate(-4deg); margin-top: 6px; }
         .totals { width: 55mm; }
         .totals td { padding: 2px 3px; }
         .totals .strong td { font-weight: bold; border-top: 1px solid #111; }
@@ -129,9 +121,7 @@
         @endif
 
         <div class="middle">
-            <div>
-                @if ($stamp)<div class="stamp">{{ $stamp }}</div>@endif
-            </div>
+            <div></div>
             <table class="totals">
                 <tr><td>Total Tk.</td><td class="num">{{ $money($gross) }}</td></tr>
                 <tr><td>Discount Tk.</td><td class="num">{{ $money($invoice->discount_total) }}</td></tr>

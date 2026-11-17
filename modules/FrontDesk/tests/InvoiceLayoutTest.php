@@ -168,7 +168,7 @@ final class InvoiceLayoutTest extends FrontDeskTestCase
             ->assertSeeInOrder(['Total Tk.', '1,265.00', 'Discount Tk.', '150.00', 'Net payable', '1,115.00', 'Paid Tk.', '1,000.00', 'Due Tk.', '115.00'])
             ->assertSeeInOrder(['Initial payment (Cash)', '1,000.00'])
             ->assertSee('One Thousand Taka Only')
-            ->assertSee('PART PAID')
+            ->assertDontSee('PART PAID')->assertDontSee('UNPAID')->assertDontSee('>PAID<', false)
             ->assertSeeInOrder(['1. USG (Room 210)', '2. Sample collection (Room 106)']);
 
         $this->assertSame(1, substr_count($page->getContent(), 'Sample collection (Room 106)'));
