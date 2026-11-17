@@ -505,7 +505,7 @@ account, in the same transaction. A paid purchase cannot be voided.
 
 ## 8e. Module: staff and attendance (`ppl_`, key `people`)
 
-Off by default. Requires nothing; finance is used by salary runs (next step).
+Off by default. Requires nothing; uses finance when it is on.
 Attendance is entered by hand; there is no device integration.
 
 | Table | Key columns | Notes |
@@ -524,6 +524,39 @@ future days, no days before joining or after leaving, and only staff of the
 sheet's branch. The month view counts days worked (half day = ½), absent,
 leave, off and holidays, and days not marked up to today. There is no
 automatic deduction; the salary run will show these counts.
+
+| Table (payroll) | Key columns | Notes |
+|---|---|---|
+| `ppl_advances` | `public_id`, `advance_no` (counter `advance`), `staff_id`, `branch_id`, `amount`, `given_on`, `reason`, `expense_id` (finance, no key), `voided_at`, `voided_by`, `void_reason` | Never edited. Voided only while the whole amount is still owed; its finance expense is voided with it |
+| `ppl_salary_runs` | `public_id`, `run_no` (counter `salary_run`), `branch_id`, `month`, `status`, `live_key` (unique, `branch:month` until cancelled), totals (`total_gross`, `total_deductions`, `total_advances`, `total_net`), approved, paid (`paid_on`, `expense_id`) and cancelled fields | One live run per branch per month |
+| `ppl_salary_lines` | `public_id`, `run_id`, `staff_id` (unique pair), `monthly_salary`, day counts (snapshot), `gross`, `deduction`, `deduction_note`, `advance_recovery`, `net` | Changed only while the run is a draft (refused by the model otherwise) |
+
+**Salary run state machine.** `draft → approved → paid`, and `draft →
+cancelled`, `approved → cancelled`. A paid run is final. Only `RunPayroll`
+moves it. Preparing, approving and paying are separate permissions.
+
+**Salary run maths.** For each person employed in the month (in the run's
+branch): the salary in force on their last employed day of the month; the
+month's share is that salary × days employed ÷ days in month (exact, by
+allocation). Deductions are typed by hand with a reason, never automatic.
+Advance taken back starts at what is owed and can be lowered. Net = salary −
+deduction − advance taken back, never below zero. Refresh rebuilds a draft and
+keeps typed figures (capped).
+
+**Advance owed** = advances not void − advance taken back by approved or paid
+runs. Approving rechecks it, since another run may have taken it first.
+
+**Locks.** Approving locks the run's lines and, for that branch and month,
+attendance, salary changes starting in it and leaving dates in it. Cancelling
+an approved run opens them again and makes its advances owed again.
+
+**Finance.** With finance on, giving an advance records an expense "Staff
+advances" and paying a run records one expense "Salaries" for its net pay, in
+the same transaction, from the chosen account. Gross salary cost = advances +
+salary expenses. With finance off, only the dates are kept.
+
+**Payslips.** A5, one per page, for approved or paid runs; print one or the
+whole run. Need `people.salary.manage`.
 
 ## 8b. Data export (core)
 

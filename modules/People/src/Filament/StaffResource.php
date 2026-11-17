@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Gate;
 use Modules\People\Actions\ManageStaff;
 use Modules\People\Models\Staff;
 use Modules\People\Permissions;
+use Modules\People\Support\AdvanceBook;
 use UnitEnum;
 
 class StaffResource extends Resource
@@ -109,6 +110,9 @@ class StaffResource extends Resource
                 TextColumn::make('joined_on')->label('Joined')->date('d M Y')->sortable(),
                 TextColumn::make('monthly_salary')->label('Salary')->alignEnd()
                     ->formatStateUsing(fn ($state): string => '৳ '.$state->formatted())
+                    ->visible(fn (): bool => static::canSeeSalaries()),
+                TextColumn::make('advance_owed')->label('Advance owed')->alignEnd()
+                    ->state(fn (Staff $record): string => ($owed = app(AdvanceBook::class)->outstanding($record->id))->isZero() ? '-' : '৳ '.$owed->formatted())
                     ->visible(fn (): bool => static::canSeeSalaries()),
                 TextColumn::make('state')->label('Status')->badge()
                     ->state(fn (Staff $record): string => $record->hasLeft() ? 'Left '.$record->left_on->format('d M Y') : 'Working')

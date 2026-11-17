@@ -46,6 +46,10 @@ final class RecordAttendance
             throw new PeopleException('Attendance cannot be recorded for a future day.');
         }
 
+        if (RunPayroll::monthSettled($branch->id, substr($date, 0, 7))) {
+            throw new PeopleException('The salary run for '.$parsed->format('F Y').' is approved, so its attendance is locked. Cancel the run to change it.');
+        }
+
         $clean = [];
 
         foreach ($rows as $staffId => $row) {

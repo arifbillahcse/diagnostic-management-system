@@ -92,6 +92,10 @@ people.staff.view
 people.staff.manage
 people.salary.manage
 people.attendance.record
+people.advances.manage
+people.payroll.prepare
+people.payroll.approve
+people.payroll.pay
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -150,6 +154,10 @@ or create its own, except where noted.
 | Staff: add, edit, mark as left | Yes | Yes | | | | |
 | Staff: see and change salaries | Yes | Yes | | | | Yes |
 | Staff: record attendance | Yes | Yes | | | | |
+| Staff: give and void advances | Yes | Yes | | | | Yes |
+| Staff: prepare salary runs | Yes | Yes | | | | Yes |
+| Staff: approve or cancel an approved salary run | Yes | Yes | | | | |
+| Staff: mark a salary run paid | Yes | Yes | | | | Yes |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

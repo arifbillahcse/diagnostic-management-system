@@ -132,6 +132,10 @@ final class ManageStaff
                 throw new PeopleException('The start date is before the joining date.');
             }
 
+            if (RunPayroll::monthSettled($staff->branch_id, substr($from, 0, 7))) {
+                throw new PeopleException('The salary run for that month is approved. Start the change from a later month.');
+            }
+
             $last = $staff->salaryChanges()->reorder('effective_from', 'desc')->orderByDesc('id')->first();
 
             if ($last && $from < $last->effective_from->toDateString()) {
@@ -180,6 +184,9 @@ final class ManageStaff
             }
             if ($date < $staff->joined_on->toDateString()) {
                 throw new PeopleException('The last working day is before the joining date.');
+            }
+            if (RunPayroll::monthSettled($staff->branch_id, substr($date, 0, 7))) {
+                throw new PeopleException('The salary run for that month is approved. Cancel it first, or choose a later day.');
             }
             if (Attendance::where('staff_id', $staff->id)->whereDate('date', '>', $date)->exists()) {
                 throw new PeopleException('Attendance is recorded after that day.');

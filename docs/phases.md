@@ -11,7 +11,7 @@
 | **6. Pilot** | Install at one real clinic, collect feedback, fix issues | Legal review done first. Run real work and report problems |
 | **7. Communication and payments** (messaging built ahead of the pilot at the owner's request; payments and WhatsApp wait for a provider) | Built: SMS and email (bill confirmation, report ready with a secure link, due reminders), message log, wording, retries. Not built: online payment gateway, WhatsApp | Choose the SMS provider, the payment gateway, and whether WhatsApp is worth its cost |
 | **8. Subscription layer** | Plans, module entitlements, license and trial dates, platform billing | Set editions and pricing |
-| **9. Inventory and people** (in progress: 9a, 9b and 9c built) | 9a items, suppliers, purchases, stock on hand (built). 9b stock use per test, manual issue and wastage, stock count, alerts, reports (built). 9c staff and attendance (built). 9d advances, salary run, payslip | Confirm with pilot clinics |
+| **9. Inventory and people** (built: 9a to 9d; polish and review next) | 9a items, suppliers, purchases, stock on hand (built). 9b stock use per test, manual issue and wastage, stock count, alerts, reports (built). 9c staff and attendance (built). 9d advances, salary run, payslip (built) | Confirm with pilot clinics |
 | **10. Patient portal and imaging reports** | Online report access; imaging report templates and printing | Decide with pilot data |
 | **11. Machine integration and multi-branch** | Local bridge agent and analyzer connectors; branches and branch reports | Choose analyzer models |
 | **12. Signup and provisioning** | Automatic clinic setup on the hosting platform | After there are paying customers |

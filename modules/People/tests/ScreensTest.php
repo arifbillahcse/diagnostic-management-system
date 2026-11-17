@@ -7,9 +7,15 @@ namespace Modules\People\Tests;
 use App\Core\Auth\Permission;
 use App\Core\Auth\Role;
 use Livewire\Livewire;
+use Modules\People\Actions\RunPayroll;
 use Modules\People\Filament\DailyAttendance;
+use Modules\People\Filament\ListAdvances;
+use Modules\People\Filament\ListSalaryRuns;
 use Modules\People\Filament\ListStaff;
+use Modules\People\Filament\ViewSalaryRun;
+use Modules\People\Models\Advance;
 use Modules\People\Models\Attendance;
+use Modules\People\Models\SalaryRun;
 use Modules\People\Models\Staff;
 
 class ScreensTest extends PeopleTestCase
@@ -104,5 +110,72 @@ class ScreensTest extends PeopleTestCase
         Livewire::test(DailyAttendance::class)->assertDontSee('Save attendance');
 
         $this->signIn($this->staff('accountant'))->get(self::BASE.'/staff/attendance-month')->assertOk()->assertSee('Karim Mia')->assertSee('Not marked');
+    }
+
+    public function test_an_advance_is_given_and_voided_from_its_list(): void
+    {
+        $karim = $this->person();
+        $this->signIn($this->ownerUser)->get(self::BASE.'/staff/advances')->assertOk();
+
+        Livewire::test(ListAdvances::class)
+            ->callAction('give', ['staff_id' => $karim->id, 'amount' => '3000', 'given_on' => '2026-11-10', 'reason' => 'Family need'])
+            ->assertNotified('Advance recorded');
+
+        $advance = Advance::sole();
+        Livewire::test(ListAdvances::class)
+            ->assertCanSeeTableRecords([$advance])
+            ->callTableAction('void', $advance, ['reason' => 'Mistake'])
+            ->assertNotified('Advance voided');
+        $this->assertTrue($advance->fresh()->isVoid());
+    }
+
+    public function test_a_salary_run_goes_from_start_to_paid_on_its_page_and_prints_payslips(): void
+    {
+        $karim = $this->person();
+        $this->signIn($this->ownerUser)->get(self::BASE.'/staff/salary-runs')->assertOk();
+
+        Livewire::test(ListSalaryRuns::class)
+            ->callAction('start', ['month' => '2026-10', 'branch_id' => $this->branch->id])
+            ->assertNotified('Salary run started');
+
+        $run = SalaryRun::sole();
+        $line = $run->lines()->sole();
+        $this->signIn($this->ownerUser)->get(self::BASE."/staff/salary-runs/{$run->public_id}")->assertOk()->assertSee('Karim Mia')->assertSee('15,000.00');
+
+        $page = Livewire::test(ViewSalaryRun::class, ['record' => $run->public_id])
+            ->set("edits.{$line->id}.deduction", '500')
+            ->call('saveLine', $line->id)
+            ->assertNotified('Not done')
+            ->set("edits.{$line->id}.note", 'Late too often')
+            ->call('saveLine', $line->id)
+            ->assertNotified('Line saved')
+            ->assertSee('14,500.00')
+            ->callAction('approve')
+            ->assertNotified('Salary run approved')
+            ->callAction('pay', ['date' => '2026-11-05'])
+            ->assertNotified('Salary run marked paid')
+            ->assertActionHidden('cancel');
+
+        $this->assertSame('paid', $run->fresh()->status);
+
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/payslips/{$run->public_id}")->assertOk()
+            ->assertSee('PAYSLIP')->assertSee('Karim Mia')->assertSee('Late too often')->assertSee('14,500.00');
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/payslip/{$line->public_id}")->assertOk();
+        $this->signIn($this->staff('receptionist'))->get(self::BASE."/print/payslip/{$line->public_id}")->assertForbidden();
+    }
+
+    public function test_draft_payslips_do_not_print_and_salary_screens_need_salary_access(): void
+    {
+        $this->person();
+        $run = app(RunPayroll::class)->start($this->branch, '2026-10');
+
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/payslips/{$run->public_id}")->assertNotFound();
+
+        $role = Role::create(['key' => 'office', 'name' => 'Office']);
+        $role->permissions()->sync(Permission::whereIn('key', ['people.staff.view', 'people.attendance.record'])->pluck('id'));
+        $office = $this->userWithRoles('office');
+
+        $this->signIn($office)->get(self::BASE.'/staff/salary-runs')->assertForbidden();
+        $this->signIn($office)->get(self::BASE.'/staff/advances')->assertForbidden();
     }
 }
