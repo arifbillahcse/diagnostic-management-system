@@ -21,8 +21,11 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class BranchFilter
 {
-    /** @param string $column the branch column, or "relation.branch_id" through a relation */
-    public static function make(string $column = 'branch_id'): SelectFilter
+    /**
+     * @param  string|list<string>  $column  the branch column, "relation.branch_id" through a relation, or
+     *                                       several columns, any of which may match (ordered here OR tested here)
+     */
+    public static function make(string|array $column = 'branch_id'): SelectFilter
     {
         $branches = app(CurrentBranch::class);
 
@@ -46,7 +49,8 @@ final class BranchFilter
     }
 
     /** The always-on limit to the user's branches, for ->modifyQueryUsing(). */
-    public static function scope(string $column = 'branch_id'): \Closure
+    /** @param string|list<string> $column */
+    public static function scope(string|array $column = 'branch_id'): \Closure
     {
         return function (Builder $query) use ($column): Builder {
             $scope = app(CurrentBranch::class)->scope();
@@ -55,9 +59,17 @@ final class BranchFilter
         };
     }
 
-    /** @param list<int> $ids */
-    private static function where(Builder $query, string $column, array $ids): Builder
+    /** @param string|list<string> $column @param list<int> $ids */
+    private static function where(Builder $query, string|array $column, array $ids): Builder
     {
+        if (is_array($column)) {
+            return $query->where(function (Builder $q) use ($column, $ids): void {
+                foreach ($column as $one) {
+                    $q->orWhere(fn (Builder $inner) => self::where($inner, $one, $ids));
+                }
+            });
+        }
+
         if (! str_contains($column, '.')) {
             return $query->whereIn($query->qualifyColumn($column), $ids);
         }

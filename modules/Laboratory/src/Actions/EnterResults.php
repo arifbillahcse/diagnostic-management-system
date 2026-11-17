@@ -38,7 +38,7 @@ final class EnterResults
     /** @param array<int|string, array{value?: ?string, comment?: ?string}> $values */
     public function handle(WorkItem $workItem, array $values, int $lockVersion, bool $submit = false): WorkItem
     {
-        Gate::authorize(Permissions::RESULTS_ENTER, $workItem->branch_id);
+        Gate::authorize(Permissions::RESULTS_ENTER, $workItem->labBranchId());
 
         $firstEntry = false;
 

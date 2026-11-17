@@ -65,6 +65,7 @@ final class WorkPlanner
                     'sample_id' => $sample->id,
                     'patient_id' => $order->patient_id,
                     'branch_id' => $order->branch_id,
+                    'lab_branch_id' => $sample->labBranchId(),
                     'test_name' => $item->service_name,
                     'department' => $test->department,
                     'status' => $inLab ? WorkStatus::Ready : WorkStatus::AwaitingSample,
@@ -84,7 +85,7 @@ final class WorkPlanner
             ->where('order_id', $order->id)
             ->where('sample_type_id', $sampleTypeId)
             ->whereIn('status', [
-                SampleStatus::Pending->value, SampleStatus::Collected->value, SampleStatus::Received->value,
+                SampleStatus::Pending->value, SampleStatus::Collected->value, SampleStatus::InTransit->value, SampleStatus::Received->value,
                 SampleStatus::InProcess->value, SampleStatus::Rejected->value,
             ])
             ->orderBy('id')
@@ -101,6 +102,7 @@ final class WorkPlanner
             'sample_type_id' => $sampleTypeId,
             'branch_id' => $order->branch_id,
             'status' => SampleStatus::Pending,
+            'lab_branch_id' => app(LabRoutes::class)->labFor((int) $order->branch_id),
         ]);
 
         SampleEvent::create(['sample_id' => $sample->id, 'event' => 'created', 'actor_id' => Auth::id(), 'occurred_at' => now()]);

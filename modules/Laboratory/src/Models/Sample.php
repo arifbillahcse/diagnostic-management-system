@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Laboratory\Models;
 
 use App\Core\Auth\User;
+use App\Core\Branches\Branch;
 use App\Core\Patients\Patient;
 use App\Core\Support\HasPublicId;
 use App\Core\Tenancy\ClinicModel;
@@ -72,5 +73,22 @@ class Sample extends ClinicModel
     public function events(): HasMany
     {
         return $this->hasMany(SampleEvent::class)->orderBy('id');
+    }
+
+    public function labBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'lab_branch_id');
+    }
+
+    /** The branch whose laboratory tests it: a collection centre sends its samples elsewhere. */
+    public function labBranchId(): int
+    {
+        return (int) ($this->lab_branch_id ?? $this->branch_id);
+    }
+
+    /** Tested at another branch than the one that ordered it. */
+    public function isSentAway(): bool
+    {
+        return $this->labBranchId() !== (int) $this->branch_id;
     }
 }

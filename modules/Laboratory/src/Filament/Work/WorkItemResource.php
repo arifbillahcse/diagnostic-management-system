@@ -101,8 +101,8 @@ class WorkItemResource extends Resource
                     ->description(fn (WorkItem $record): ?string => $record->pending_reason),
             ])
             ->searchPlaceholder('Scan a label, or type a patient')
-            ->modifyQueryUsing(BranchFilter::scope())
-            ->filters([BranchFilter::make()])
+            ->modifyQueryUsing(BranchFilter::scope(['branch_id', 'lab_branch_id']))
+            ->filters([BranchFilter::make(['branch_id', 'lab_branch_id'])])
             ->defaultSort('id')
             // This list grows without limit. Counting it on every page load is slow,
             // so it shows "next" and "previous" without a total.

@@ -71,6 +71,7 @@ class SampleResource extends Resource
         return match ($status) {
             SampleStatus::Pending => 'warning',
             SampleStatus::Rejected => 'danger',
+            SampleStatus::InTransit => 'warning',
             SampleStatus::Completed => 'success',
             SampleStatus::Cancelled => 'gray',
             default => 'info',
@@ -80,9 +81,10 @@ class SampleResource extends Resource
     public static function table(Table $table): Table
     {
         $can = fn (string $permission, Sample $record): bool => Gate::allows($permission, $record->branch_id);
+        $canInLab = fn (string $permission, Sample $record): bool => Gate::allows($permission, $record->labBranchId());
 
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['patient', 'sampleType', 'workItems', 'order']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['patient', 'sampleType', 'workItems', 'order', 'labBranch']))
             ->columns([
                 TextColumn::make('accession_no')->label('Sample no.')->weight('bold')
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(function (Builder $q) use ($search): void {
@@ -97,21 +99,25 @@ class SampleResource extends Resource
                 TextColumn::make('status')->badge()
                     ->formatStateUsing(fn (SampleStatus $state): string => $state->label())
                     ->color(fn (SampleStatus $state): string => static::statusColor($state))
-                    ->description(fn (Sample $record): ?string => $record->status === SampleStatus::Rejected ? $record->rejection_reason : null),
+                    ->description(fn (Sample $record): ?string => match (true) {
+                        $record->status === SampleStatus::Rejected => $record->rejection_reason,
+                        $record->isSentAway() => 'Tested at '.($record->labBranch?->name ?? ''),
+                        default => null,
+                    }),
             ])
             ->searchPlaceholder('Scan a label, or type a patient')
-            ->modifyQueryUsing(BranchFilter::scope())
+            ->modifyQueryUsing(BranchFilter::scope(['branch_id', 'lab_branch_id']))
             ->filters([
-                BranchFilter::make(),
+                BranchFilter::make(['branch_id', 'lab_branch_id']),
                 SelectFilter::make('status')->options(SampleStatus::options())->multiple()
-                    ->default([SampleStatus::Pending->value, SampleStatus::Collected->value, SampleStatus::Rejected->value]),
+                    ->default([SampleStatus::Pending->value, SampleStatus::Collected->value, SampleStatus::InTransit->value, SampleStatus::Rejected->value]),
             ])
             ->defaultSort('id', 'desc')
             ->recordActions([
                 Action::make('collect')
                     ->visible(fn (Sample $record): bool => in_array($record->status, [SampleStatus::Pending, SampleStatus::Rejected], true) && $can(Permissions::SAMPLES_COLLECT, $record))
-                    ->fillForm(fn (Sample $record): array => ['in_lab' => $can(Permissions::SAMPLES_RECEIVE, $record)])
-                    ->schema(fn (Sample $record): array => $can(Permissions::SAMPLES_RECEIVE, $record) ? [
+                    ->fillForm(fn (Sample $record): array => ['in_lab' => ! $record->isSentAway() && $canInLab(Permissions::SAMPLES_RECEIVE, $record)])
+                    ->schema(fn (Sample $record): array => ! $record->isSentAway() && $canInLab(Permissions::SAMPLES_RECEIVE, $record) ? [
                         Toggle::make('in_lab')->label('The sample is already in the laboratory')
                             ->helperText('Switch off when samples are collected elsewhere and carried to the lab later.'),
                     ] : [])
@@ -124,7 +130,8 @@ class SampleResource extends Resource
                     )),
                 Action::make('receive')
                     ->label('Receive in lab')
-                    ->visible(fn (Sample $record): bool => $record->status === SampleStatus::Collected && $can(Permissions::SAMPLES_RECEIVE, $record))
+                    ->visible(fn (Sample $record): bool => (($record->status === SampleStatus::Collected && ! $record->isSentAway()) || $record->status === SampleStatus::InTransit)
+                        && $canInLab(Permissions::SAMPLES_RECEIVE, $record))
                     ->action(fn (Sample $record) => Concerns::attempt(fn () => app(HandleSample::class)->receive($record), 'Sample received')),
                 Action::make('label')
                     ->label('Print label')
@@ -133,7 +140,8 @@ class SampleResource extends Resource
                     ->url(fn (Sample $record): string => route('laboratory.print.label', $record->public_id), shouldOpenInNewTab: true),
                 Action::make('reject')
                     ->color('danger')
-                    ->visible(fn (Sample $record): bool => in_array($record->status, [SampleStatus::Collected, SampleStatus::Received, SampleStatus::InProcess], true) && $can(Permissions::SAMPLES_REJECT, $record))
+                    ->visible(fn (Sample $record): bool => in_array($record->status, [SampleStatus::Collected, SampleStatus::InTransit, SampleStatus::Received, SampleStatus::InProcess], true)
+                        && ($can(Permissions::SAMPLES_REJECT, $record) || $canInLab(Permissions::SAMPLES_REJECT, $record)))
                     ->modalDescription('The tests on this sample will wait for a new collection. Results entered from it but not yet verified are discarded.')
                     ->schema([Textarea::make('reason')->required()->rows(2)->maxLength(255)->placeholder('Clotted, too little, wrong container')])
                     ->action(fn (Sample $record, array $data) => Concerns::attempt(fn () => app(HandleSample::class)->reject($record, $data['reason']), 'Sample rejected')),

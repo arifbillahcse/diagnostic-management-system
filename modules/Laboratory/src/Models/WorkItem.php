@@ -94,4 +94,16 @@ class WorkItem extends ClinicModel
     {
         return $this->hasMany(ResultVersion::class)->orderBy('version');
     }
+
+    /** The branch whose laboratory tests it: a collection centre sends its samples elsewhere. */
+    public function labBranchId(): int
+    {
+        return (int) ($this->lab_branch_id ?? $this->branch_id);
+    }
+
+    /** Tested at another branch than the one that ordered it. */
+    public function isSentAway(): bool
+    {
+        return $this->labBranchId() !== (int) $this->branch_id;
+    }
 }

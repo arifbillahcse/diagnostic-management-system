@@ -713,6 +713,29 @@ bridge program on the lab PC (11d) posts what the machine sends.
   output as the bridge would; "Try a message" on the machines screen does the
   same for pasted output.
 
+## 8k. Collection centres (laboratory)
+
+A collection centre is a branch that takes samples and sends them to another
+branch's laboratory.
+
+| Table or column | Notes |
+|---|---|
+| `lab_routes` | `branch_id` (unique), `lab_branch_id`: samples taken at the branch are tested at the lab branch. No row: the branch tests its own. No chains (a testing branch must test its own samples). Changes are audited and affect only new samples |
+| `lab_transfers` | `public_id`, `transfer_no` (counter `sample_transfer`, `TR-{yymm}-{0001}`), `from_branch_id`, `to_branch_id`, `status` (in_transit, received), `note`, `sent_by`, `sent_at`, `received_at` |
+| `lab_samples.lab_branch_id`, `lab_samples.transfer_id` | Where the sample is tested, set when it is made; the transfer it travelled in |
+| `lab_work_items.lab_branch_id` | Where the test is done |
+
+**Sample state machine** gains `in_transit`: `collected → in_transit →
+received`, and `in_transit → rejected | cancelled`. A sample tested elsewhere
+cannot be collected and received in one step at the centre.
+
+**Who does what.** The collecting branch collects, prints labels, sends, and
+bills and prints the report. The testing branch receives, enters, verifies
+and amends: those permission checks use the testing branch. Rejecting is
+allowed to either branch. A transfer is marked received when its last sample
+is received or rejected. With multi-branch on, the lab lists show samples
+and tests ordered at, or tested at, the user's branches.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

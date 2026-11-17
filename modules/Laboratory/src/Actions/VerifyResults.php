@@ -37,7 +37,7 @@ final class VerifyResults
      */
     public function verify(WorkItem $workItem): WorkItem
     {
-        Gate::authorize(Permissions::RESULTS_VERIFY, $workItem->branch_id);
+        Gate::authorize(Permissions::RESULTS_VERIFY, $workItem->labBranchId());
 
         $workItem = DB::connection('clinic')->transaction(function () use ($workItem): WorkItem {
             $item = $this->lock($workItem, WorkStatus::Entered, 'Only results waiting for verification can be verified.');
@@ -111,7 +111,7 @@ final class VerifyResults
     /** Return submitted results to the technician with a reason. */
     public function sendBack(WorkItem $workItem, string $reason): WorkItem
     {
-        Gate::authorize(Permissions::RESULTS_VERIFY, $workItem->branch_id);
+        Gate::authorize(Permissions::RESULTS_VERIFY, $workItem->labBranchId());
         $this->requireReason($reason);
 
         return DB::connection('clinic')->transaction(function () use ($workItem, $reason): WorkItem {
@@ -140,7 +140,7 @@ final class VerifyResults
      */
     public function startAmendment(WorkItem $workItem, string $reason): WorkItem
     {
-        Gate::authorize(Permissions::RESULTS_AMEND, $workItem->branch_id);
+        Gate::authorize(Permissions::RESULTS_AMEND, $workItem->labBranchId());
         $this->requireReason($reason);
 
         $workItem = DB::connection('clinic')->transaction(function () use ($workItem, $reason): WorkItem {

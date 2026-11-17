@@ -14,6 +14,7 @@ final class Screens
     {
         return [
             Samples\SampleResource::class,
+            Samples\TransferResource::class,
             Work\WorkItemResource::class,
             Catalog\LabTestResource::class,
             Catalog\AnalyteResource::class,
@@ -24,6 +25,6 @@ final class Screens
     /** @return list<class-string> */
     public static function pages(): array
     {
-        return [LabSettings::class];
+        return [LabSettings::class, CollectionCentres::class];
     }
 }

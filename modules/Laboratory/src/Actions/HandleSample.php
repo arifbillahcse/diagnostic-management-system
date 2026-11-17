@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Laboratory\Actions;
 
 use App\Core\Audit\AuditLogger;
+use App\Core\Branches\Branch;
+use App\Core\Numbering\NumberGenerator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -15,6 +17,7 @@ use Modules\Laboratory\Events\SampleRejected;
 use Modules\Laboratory\Models\Result;
 use Modules\Laboratory\Models\Sample;
 use Modules\Laboratory\Models\SampleEvent;
+use Modules\Laboratory\Models\Transfer;
 use Modules\Laboratory\Models\WorkItem;
 use Modules\Laboratory\Permissions;
 use Modules\Laboratory\Support\LabException;
@@ -36,7 +39,11 @@ final class HandleSample
         Gate::authorize(Permissions::SAMPLES_COLLECT, $sample->branch_id);
 
         if ($alsoReceive) {
-            Gate::authorize(Permissions::SAMPLES_RECEIVE, $sample->branch_id);
+            if ($sample->isSentAway()) {
+                throw new LabException('This sample is tested at '.Branch::find($sample->labBranchId())?->name.'. Collect it, then send it there with the other samples.');
+            }
+
+            Gate::authorize(Permissions::SAMPLES_RECEIVE, $sample->labBranchId());
         }
 
         $sample = DB::connection('clinic')->transaction(function () use ($sample, $alsoReceive): Sample {
@@ -51,20 +58,99 @@ final class HandleSample
         return $sample;
     }
 
-    /** Record that the sample has arrived in the laboratory. Its tests can now be worked on. */
+    /**
+     * Record that the sample has arrived in the laboratory that tests it.
+     * Its tests can now be worked on. A sample sent from a collection centre
+     * is received by that laboratory, and its transfer is closed when its
+     * last sample arrives.
+     */
     public function receive(Sample $sample): Sample
     {
-        Gate::authorize(Permissions::SAMPLES_RECEIVE, $sample->branch_id);
+        Gate::authorize(Permissions::SAMPLES_RECEIVE, $sample->labBranchId());
 
         return DB::connection('clinic')->transaction(function () use ($sample): Sample {
             $sample = $this->lock($sample);
 
-            if ($sample->status !== SampleStatus::Collected) {
+            if (! in_array($sample->status, [SampleStatus::Collected, SampleStatus::InTransit], true)) {
                 throw new LabException('Only a collected sample can be received. Mark it collected first.');
             }
 
-            return $this->markReceived($sample);
+            $sample = $this->markReceived($sample);
+            $this->closeTransfer($sample->transfer_id);
+
+            return $sample;
         });
+    }
+
+    /**
+     * Send collected samples from a collection centre to the laboratory
+     * that tests them, as one numbered transfer with a list for the courier.
+     *
+     * @param  list<int>|null  $sampleIds  only these; null sends every collected sample waiting to go there
+     */
+    public function send(Branch $from, Branch $to, ?array $sampleIds = null, ?string $note = null): Transfer
+    {
+        Gate::authorize(Permissions::SAMPLES_COLLECT, $from->id);
+
+        return DB::connection('clinic')->transaction(function () use ($from, $to, $sampleIds, $note): Transfer {
+            $samples = Sample::where('branch_id', $from->id)
+                ->where('lab_branch_id', $to->id)
+                ->where('status', SampleStatus::Collected->value)
+                ->when($sampleIds !== null, fn ($q) => $q->whereIn('id', $sampleIds))
+                ->lockForUpdate()->orderBy('id')->get();
+
+            if ($from->id === $to->id || $samples->isEmpty()) {
+                throw new LabException("No collected sample is waiting to go to {$to->name}.");
+            }
+
+            $transfer = Transfer::create([
+                'transfer_no' => app(NumberGenerator::class)->generate('sample_transfer', $from),
+                'from_branch_id' => $from->id,
+                'to_branch_id' => $to->id,
+                'status' => 'in_transit',
+                'note' => filled($note) ? mb_substr(trim((string) $note), 0, 255) : null,
+                'sent_by' => Auth::id(),
+                'sent_at' => now(),
+            ]);
+
+            foreach ($samples as $sample) {
+                $this->move($sample, SampleStatus::InTransit, ['transfer_id' => $transfer->id], "Sent to {$to->name} in {$transfer->transfer_no}");
+            }
+
+            $this->audit->record('samples.sent', $transfer, [], [
+                'transfer_no' => $transfer->transfer_no, 'from' => $from->name, 'to' => $to->name,
+                'samples' => $samples->pluck('accession_no')->all(),
+            ]);
+
+            return $transfer;
+        });
+    }
+
+    /** Receive every sample of a transfer that is still on its way. @return int how many were received */
+    public function receiveTransfer(Transfer $transfer): int
+    {
+        Gate::authorize(Permissions::SAMPLES_RECEIVE, $transfer->to_branch_id);
+
+        $samples = Sample::where('transfer_id', $transfer->id)->where('status', SampleStatus::InTransit->value)->get();
+
+        foreach ($samples as $sample) {
+            $this->receive($sample);
+        }
+
+        return $samples->count();
+    }
+
+    private function closeTransfer(?int $transferId): void
+    {
+        if ($transferId === null) {
+            return;
+        }
+
+        $open = Sample::where('transfer_id', $transferId)->where('status', SampleStatus::InTransit->value)->exists();
+
+        if (! $open) {
+            Transfer::whereKey($transferId)->where('status', 'in_transit')->update(['status' => 'received', 'received_at' => now(), 'updated_at' => now()]);
+        }
     }
 
     /**
@@ -74,7 +160,10 @@ final class HandleSample
      */
     public function reject(Sample $sample, string $reason): Sample
     {
-        Gate::authorize(Permissions::SAMPLES_REJECT, $sample->branch_id);
+        // The centre may reject before sending; the laboratory after receiving.
+        if (! Gate::allows(Permissions::SAMPLES_REJECT, $sample->branch_id)) {
+            Gate::authorize(Permissions::SAMPLES_REJECT, $sample->labBranchId());
+        }
 
         if (blank($reason)) {
             throw new LabException('A reason is required to reject a sample.');
@@ -91,6 +180,7 @@ final class HandleSample
             }
 
             $this->move($sample, SampleStatus::Rejected, ['rejection_reason' => trim($reason)], trim($reason));
+            $this->closeTransfer($sample->transfer_id);
 
             foreach ($items->whereIn('status', [WorkStatus::Ready, WorkStatus::Entered]) as $item) {
                 $discarded = $item->results()->get()->mapWithKeys(fn (Result $r): array => [$r->analyte_name => $r->value_text])->all();

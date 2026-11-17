@@ -6,6 +6,7 @@ namespace Modules\Laboratory;
 
 use App\Core\Modules\Module;
 use App\Core\Modules\ModuleState;
+use App\Core\Numbering\NumberGenerator;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
@@ -71,6 +72,8 @@ final class LaboratoryModule extends Module
             'lab_work_items' => 'Tests performed',
             'lab_results' => 'Results',
             'lab_result_versions' => 'Verified result versions',
+            'lab_routes' => 'Where each branch\'s samples are tested',
+            'lab_transfers' => 'Sample transfers',
         ];
     }
 
@@ -92,6 +95,8 @@ final class LaboratoryModule extends Module
     public function boot(): void
     {
         View::addNamespace('laboratory', $this->manifest->path.'/resources/views');
+
+        NumberGenerator::registerDefault('sample_transfer', 'TR-{yymm}-{0001}', 'Sample transfer number', 'laboratory');
 
         // After a bill is saved, the counter can print this order's sample labels.
         app(PrintLinks::class)->add(function (Order $order): ?array {

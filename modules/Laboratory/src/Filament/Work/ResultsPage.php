@@ -105,7 +105,7 @@ class ResultsPage extends Page
 
     public function getEditableProperty(): bool
     {
-        return $this->record->status->isEditable() && Gate::allows(Permissions::RESULTS_ENTER, $this->record->branch_id);
+        return $this->record->status->isEditable() && Gate::allows(Permissions::RESULTS_ENTER, $this->record->labBranchId());
     }
 
     public function save(): void
@@ -133,7 +133,7 @@ class ResultsPage extends Page
 
     private function can(string $permission): bool
     {
-        return Gate::allows($permission, $this->record->branch_id);
+        return Gate::allows($permission, $this->record->labBranchId());
     }
 
     protected function getHeaderActions(): array

@@ -23,7 +23,10 @@ final class LabelController
 {
     public function show(Request $request, Sample $sample): View
     {
-        Gate::authorize(Permissions::WORK_VIEW, $sample->branch_id);
+        // The collecting branch prints labels; the laboratory may print them again.
+        if (! Gate::allows(Permissions::WORK_VIEW, $sample->branch_id)) {
+            Gate::authorize(Permissions::WORK_VIEW, $sample->labBranchId());
+        }
 
         return $this->labels(new Collection([$sample]), $request->boolean('autoprint'));
     }

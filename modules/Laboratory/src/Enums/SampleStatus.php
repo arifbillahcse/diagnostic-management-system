@@ -11,6 +11,7 @@ enum SampleStatus: string
 {
     case Pending = 'pending';       // to be collected
     case Collected = 'collected';   // taken from the patient
+    case InTransit = 'in_transit';  // on its way from a collection centre to the laboratory
     case Received = 'received';     // in the laboratory
     case InProcess = 'in_process';  // results being entered
     case Completed = 'completed';   // every test on it is released
@@ -22,6 +23,7 @@ enum SampleStatus: string
         return match ($this) {
             self::Pending => 'To collect',
             self::Collected => 'Collected',
+            self::InTransit => 'On the way to the lab',
             self::Received => 'In the lab',
             self::InProcess => 'In process',
             self::Completed => 'Completed',
@@ -34,7 +36,8 @@ enum SampleStatus: string
     {
         return in_array($next, match ($this) {
             self::Pending, self::Rejected => [self::Collected, self::Received, self::Cancelled],
-            self::Collected => [self::Received, self::Rejected, self::Cancelled],
+            self::Collected => [self::InTransit, self::Received, self::Rejected, self::Cancelled],
+            self::InTransit => [self::Received, self::Rejected, self::Cancelled],
             self::Received => [self::InProcess, self::Completed, self::Rejected, self::Cancelled],
             self::InProcess => [self::Completed, self::Rejected, self::Cancelled],
             self::Completed => [self::InProcess],
