@@ -11,3 +11,4 @@ use Modules\Laboratory\Http\LabelController;
 */
 
 Route::get('/print/sample-label/{sample:public_id}', [LabelController::class, 'show'])->name('laboratory.print.label');
+Route::get('/print/order-labels/{order:public_id}', [LabelController::class, 'forOrder'])->name('laboratory.print.order-labels');

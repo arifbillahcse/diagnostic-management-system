@@ -51,6 +51,9 @@ final class Permissions
 
     public const SETTING_DELIVERY_TIME = 'frontdesk.delivery_time';
 
+    /** Setting: what the billing screen does after a bill is saved: "ask", "invoice", or "none". */
+    public const SETTING_AFTER_SAVE = 'frontdesk.after_save';
+
     /** @return array<string, string> */
     public static function all(): array
     {

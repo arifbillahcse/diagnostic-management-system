@@ -1,10 +1,9 @@
-@php $tz = 'Asia/Dhaka'; @endphp
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Label {{ $sample->accession_no }}</title>
+    <title>Sample labels</title>
     <style>
         /* Sized for a 50 x 25 mm label roll. One label per page. */
         @page { size: 50mm 25mm; margin: 0; }
@@ -22,16 +21,23 @@
     </style>
 </head>
 <body>
-    <div class="actions"><button type="button" onclick="window.print()">Print {{ $copies }} label{{ $copies > 1 ? 's' : '' }}</button></div>
+    @php $total = $labels->sum('copies'); @endphp
+    <div class="actions"><button type="button" onclick="window.print()">Print {{ $total }} label{{ $total > 1 ? 's' : '' }}</button></div>
 
-    @for ($i = 0; $i < $copies; $i++)
-        <div class="label">
-            <div class="name">{{ $sample->patient->name }}</div>
-            <div class="line">{{ $sample->patient->patient_code }} &middot; {{ $sample->patient->ageLabel() }} / {{ $sample->patient->sex->label() }}</div>
-            <div class="code" role="img" aria-label="Barcode {{ $sample->accession_no }}">{!! $barcode !!}</div>
-            <div class="number">{{ $sample->accession_no }}</div>
-            <div class="line">{{ $sample->sampleType->name }} &middot; {{ $sample->workItems->pluck('test_name')->implode(', ') }}</div>
-        </div>
-    @endfor
+    @foreach ($labels as $item)
+        @php $sample = $item['sample']; @endphp
+        @for ($i = 0; $i < $item['copies']; $i++)
+            <div class="label">
+                <div class="name">{{ $sample->patient->name }}</div>
+                <div class="line">{{ $sample->patient->patient_code }} &middot; {{ $sample->patient->ageLabel() }} / {{ $sample->patient->sex->label() }}</div>
+                <div class="code" role="img" aria-label="Barcode {{ $sample->accession_no }}">{!! $item['barcode'] !!}</div>
+                <div class="number">{{ $sample->accession_no }}</div>
+                <div class="line">{{ $sample->sampleType->name }} &middot; {{ $sample->workItems->pluck('test_name')->implode(', ') }}</div>
+            </div>
+        @endfor
+    @endforeach
+@if ($autoprint)
+<script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });</script>
+@endif
 </body>
 </html>

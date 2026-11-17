@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Modules\Laboratory;
 
 use App\Core\Modules\Module;
+use App\Core\Modules\ModuleState;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Modules\FrontDesk\Events\OrderCancelled;
@@ -15,8 +17,11 @@ use Modules\FrontDesk\Events\OrderItemAdded;
 use Modules\FrontDesk\Events\OrderItemCancelled;
 use Modules\FrontDesk\Events\OrderItemCancelling;
 use Modules\FrontDesk\Events\OrderPlaced;
+use Modules\FrontDesk\Models\Order;
+use Modules\FrontDesk\Support\PrintLinks;
 use Modules\Laboratory\Console\SampleDataCommand;
 use Modules\Laboratory\Console\SyncWorkCommand;
+use Modules\Laboratory\Http\LabelController;
 use Modules\Laboratory\Listeners\CancelWork;
 use Modules\Laboratory\Listeners\GuardItemCancellation;
 use Modules\Laboratory\Listeners\PlanWorkForAddedItem;
@@ -87,6 +92,21 @@ final class LaboratoryModule extends Module
     public function boot(): void
     {
         View::addNamespace('laboratory', $this->manifest->path.'/resources/views');
+
+        // After a bill is saved, the counter can print this order's sample labels.
+        app(PrintLinks::class)->add(function (Order $order): ?array {
+            if (! app(ModuleState::class)->isEnabled('laboratory') || ! Gate::allows(Permissions::WORK_VIEW, $order->branch_id)) {
+                return null;
+            }
+
+            $labels = LabelController::samplesOf($order)->sum(fn ($sample): int => max(1, (int) $sample->sampleType?->label_copies));
+
+            return $labels === 0 ? null : [
+                'key' => 'labels',
+                'label' => "Sample labels ({$labels})",
+                'url' => route('laboratory.print.order-labels', $order->public_id),
+            ];
+        });
 
         Event::listen(OrderPlaced::class, [PlanWorkForOrder::class, 'handle']);
         Event::listen(OrderItemAdded::class, [PlanWorkForAddedItem::class, 'handle']);

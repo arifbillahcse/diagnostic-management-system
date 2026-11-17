@@ -28,7 +28,7 @@ final class PrintController
         private readonly ClinicContext $clinics,
     ) {}
 
-    /** The invoice on A5. "?copy=office" prints the clinic's own copy. */
+    /** The invoice on A5. "?copy=office" prints the clinic's own copy and "?copy=both" prints both, one per page. */
     public function invoice(Request $request, Invoice $invoice): View
     {
         Gate::authorize(Permissions::ORDERS_VIEW, $invoice->branch_id);
@@ -39,7 +39,12 @@ final class PrintController
             'clinic' => $this->letterhead->data(),
             'invoice' => $invoice,
             'tz' => $this->clinics->require()->timezone,
-            'copy' => $request->query('copy') === 'office' ? 'Office copy' : 'Patient copy',
+            'copies' => match ($request->query('copy')) {
+                'office' => ['Office copy'],
+                'both' => ['Patient copy', 'Office copy'],
+                default => ['Patient copy'],
+            },
+            'autoprint' => $request->boolean('autoprint'),
             'barcode' => $this->barcode($invoice->invoice_no),
             'words' => AmountInWords::for($invoice->netPaid()),
             'rooms' => $this->rooms($invoice),

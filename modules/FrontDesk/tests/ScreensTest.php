@@ -479,6 +479,18 @@ final class ScreensTest extends FrontDeskTestCase
         Livewire::test(ListCashSessions::class)->assertCanSeeTableRecords([$mine, $theirs]);
     }
 
+    public function test_what_happens_after_a_bill_is_saved_is_chosen_in_settings(): void
+    {
+        Livewire::test(FrontDeskSettings::class)
+            ->assertFormSet(['after_save' => 'ask'])
+            ->fillForm(['after_save' => 'invoice'])
+            ->call('save')
+            ->assertNotified('Settings saved');
+
+        $this->assertSame('invoice', app(Settings::class)->get(Permissions::SETTING_AFTER_SAVE));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'settings.updated'], 'clinic');
+    }
+
     public function test_the_refund_approval_rule_is_changed_from_settings(): void
     {
         Livewire::test(FrontDeskSettings::class)

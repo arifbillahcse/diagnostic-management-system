@@ -102,6 +102,23 @@
         .bill .errs { padding: 8px 14px; border-radius: 12px; border: 1px solid #F0B8B2; background: #FEF3F2; color: #912018; }
         .bill .errs ul { margin: 0; padding-left: 18px; }
 
+        .bill .overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(20, 64, 58, .38); }
+        .bill .dialog { width: min(460px, 100%); background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, .28); overflow: hidden; }
+        .bill .dialog .head { display: flex; gap: 12px; align-items: center; padding: 16px 18px; background: var(--soft); border-bottom: 1px solid var(--line); }
+        .bill .dialog .head svg { width: 30px; height: 30px; color: #1B8F5F; flex: none; }
+        .bill .dialog .head b { display: block; font-size: 15px; color: var(--g); }
+        .bill .dialog .head span { color: var(--mute); font-size: 12.5px; }
+        .bill .dialog .opts { display: grid; gap: 8px; padding: 16px 18px; }
+        .bill .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #C4D4CD; background: #fff; color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; text-align: left; }
+        .bill .opt:hover { border-color: var(--a); background: var(--soft); }
+        .bill .opt.main { background: var(--a); border-color: var(--a); color: #fff; height: 52px; font-size: 15px; }
+        .bill .opt.main:hover { background: #125F4C; }
+        .bill .opt.main kbd { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); color: #fff; }
+        .bill .opt small { font-weight: 500; opacity: .8; margin-left: 6px; }
+        .bill .opt .tick { color: #1B8F5F; font-weight: 800; }
+        .bill .opt.main .tick { color: #fff; }
+        .bill .dialog .foot2 { display: flex; justify-content: space-between; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
+
         /* A 1366 px monitor leaves about 1000 px beside the menu. */
         @media (max-width: 1560px) {
             .bill .fields > div { grid-column: span var(--n, 4); }
@@ -117,10 +134,32 @@
     </style>
 
     <div class="bill"
-         x-data="{ code: '', focus(target) { this.$nextTick(() => this.$refs[target] && this.$refs[target].focus()) } }"
+         x-data="{
+            code: '',
+            printed: {},
+            focus(target) { this.$nextTick(() => this.$refs[target] && this.$refs[target].focus()) },
+            // Print in a hidden frame, so the counter stays on this screen.
+            print(key, url) {
+                const frame = document.createElement('iframe');
+                frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+                frame.src = url + (url.includes('?') ? '&' : '?') + 'autoprint=1';
+                document.body.appendChild(frame);
+                setTimeout(() => frame.remove(), 120000);
+                this.printed[key] = true;
+            },
+         }"
          x-init="focus('mobile')"
          @bill-focus.window="focus($event.detail.target)"
+         @bill-print.window="print('auto', $event.detail.url)"
          @keydown.window="
+            if ($wire.printPanel) {
+                const k = $event.key.toLowerCase();
+                if (k === 'p') { $event.preventDefault(); document.querySelector('[data-print=invoice]')?.click(); }
+                else if (k === 'l') { $event.preventDefault(); document.querySelector('[data-print=labels]')?.click(); }
+                else if (k === 'escape') { $event.preventDefault(); $wire.closePrint(); }
+                else if ($event.key === 'F2') { $event.preventDefault(); $wire.newBill(); }
+                return;
+            }
             if (($event.ctrlKey || $event.metaKey) && $event.key.toLowerCase() === 's') { $event.preventDefault(); $wire.save(); }
             else if ($event.key === 'F2') { $event.preventDefault(); $wire.newBill(); }
          ">
@@ -146,12 +185,41 @@
                 @if ($last['change'])<b>Return {{ $last['change'] }}</b>@endif
                 <a href="{{ route('frontdesk.print.invoice', $last['invoice']) }}" target="_blank"><x-filament::icon icon="heroicon-o-printer" style="width:15px;height:15px" /> Print invoice</a>
                 <a href="{{ route('frontdesk.print.invoice', $last['invoice']) }}?copy=office" target="_blank">Office copy</a>
+                @foreach ($last['links'] as $extra)<a href="{{ $extra['url'] }}" target="_blank">{{ $extra['label'] }}</a>@endforeach
                 @if ($last['note'])<span>{{ $last['note'] }}</span>@endif
             </div>
         @endif
 
         @if ($messages->isNotEmpty())
             <div class="errs"><ul>@foreach ($messages as $message)<li>{{ $message }}</li>@endforeach</ul></div>
+        @endif
+
+        @if ($printPanel && $last)
+            @php $invoiceUrl = route('frontdesk.print.invoice', $last['invoice']); @endphp
+            <div class="overlay" @click.self="$wire.closePrint()" x-init="$nextTick(() => $refs.printMain && $refs.printMain.focus())">
+                <div class="dialog" role="dialog" aria-label="Print">
+                    <div class="head">
+                        <x-filament::icon icon="heroicon-o-check-circle" />
+                        <div><b>Bill {{ $last['no'] }} saved</b><span>{{ $last['patient'] }} · Net {{ $last['net'] }} · Paid {{ $last['paid'] }} · Due {{ $last['due'] }}@if ($last['change']) · Return {{ $last['change'] }}@endif</span></div>
+                    </div>
+                    <div class="opts">
+                        <button type="button" class="opt main" x-ref="printMain" data-print="invoice" @click="print('invoice', '{{ $invoiceUrl }}?copy=both')">
+                            <span>Print invoice <small>patient + office copy</small></span><span><span class="tick" x-show="printed.invoice">✓</span> <kbd>P</kbd></span>
+                        </button>
+                        @foreach ($last['links'] as $extra)
+                            <button type="button" class="opt" data-print="{{ $extra['key'] ?? 'extra' }}" @click="print('{{ $extra['key'] ?? 'extra' }}', '{{ $extra['url'] }}')">
+                                <span>Print {{ strtolower($extra['label']) }}</span><span><span class="tick" x-show="printed['{{ $extra['key'] ?? 'extra' }}']">✓</span> <kbd>{{ strtoupper(substr($extra['key'] ?? 'x', 0, 1)) }}</kbd></span>
+                            </button>
+                        @endforeach
+                        <button type="button" class="opt" @click="print('patient', '{{ $invoiceUrl }}')"><span>Patient copy only</span><span class="tick" x-show="printed.patient">✓</span></button>
+                        <button type="button" class="opt" @click="print('office', '{{ $invoiceUrl }}?copy=office')"><span>Office copy only</span><span class="tick" x-show="printed.office">✓</span></button>
+                    </div>
+                    <div class="foot2">
+                        <button type="button" class="btn alt" wire:click="closePrint">Close <kbd>Esc</kbd></button>
+                        <button type="button" class="btn" wire:click="newBill">New bill <kbd>F2</kbd></button>
+                    </div>
+                </div>
+            </div>
         @endif
 
         <section class="card">

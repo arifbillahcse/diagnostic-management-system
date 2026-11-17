@@ -96,6 +96,9 @@ final class FrontDeskModule extends Module
     {
         View::addNamespace('frontdesk', $this->manifest->path.'/resources/views');
 
+        // Other modules add what can be printed after a bill is saved.
+        app()->singleton(Support\PrintLinks::class);
+
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([
             SummarizeCommand::class,
             CheckInvoicesCommand::class,

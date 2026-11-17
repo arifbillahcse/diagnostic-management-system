@@ -190,8 +190,18 @@ wide monitor (on a 1366 x 768 monitor the page scrolls a little).
 - **Paid amount** starts equal to the net payable (**exact** goes back to it).
   Less leaves a due; more shows the **Return** (the change), and only the
   amount owed is recorded.
-- **Ctrl+S** saves, **F2** starts a new bill. After saving, the strip at the
-  top has the print links for the patient copy and the office copy.
+- **Ctrl+S** saves, **F2** starts a new bill.
+- **After saving**, a panel offers the printing: **P** prints the invoice
+  (patient copy and office copy, one per page), **L** prints the sample
+  labels for the order (when the laboratory module is on), and **Esc** closes
+  it. The Print button has the focus, so Enter prints at once. Printing is done
+  in the background, so the counter stays on the billing screen. What happens
+  after a save is the clinic's choice under **Front desk settings**: show
+  these options (the default), print the invoice at once, or do nothing. The
+  strip at the top always keeps the print links for reprinting.
+- For printing without a dialog each time, set the browser to print silently
+  to the invoice printer (Chrome: start it with `--kiosk-printing`); the
+  software cannot do that by itself, because a web page may not choose a printer.
 - Cash needs an open cash session (Cash sessions); the screen warns when
   there is none.
 

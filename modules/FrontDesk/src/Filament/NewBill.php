@@ -11,6 +11,7 @@ use App\Core\Money\Money;
 use App\Core\Patients\Actions\SavePatient;
 use App\Core\Patients\Patient;
 use App\Core\Patients\PhoneNumber;
+use App\Core\Settings\Settings;
 use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -29,6 +30,7 @@ use Modules\FrontDesk\Actions\PlaceOrder;
 use Modules\FrontDesk\Actions\RecordPayment;
 use Modules\FrontDesk\Enums\PaymentMethod;
 use Modules\FrontDesk\Models\Invoice;
+use Modules\FrontDesk\Models\Order;
 use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Permissions;
@@ -37,6 +39,7 @@ use Modules\FrontDesk\Support\CashDrawer;
 use Modules\FrontDesk\Support\DeliveryTime;
 use Modules\FrontDesk\Support\DiscountRules;
 use Modules\FrontDesk\Support\FrontDeskException;
+use Modules\FrontDesk\Support\PrintLinks;
 use UnitEnum;
 
 /**
@@ -121,9 +124,12 @@ class NewBill extends Page
 
     public string $paymentKey = '';
 
-    /** The bill saved just before, shown as a strip with its print links. @var array<string, string>|null */
+    /** The bill saved just before, shown as a strip with its print links. @var array<string, mixed>|null */
     #[Locked]
     public ?array $last = null;
+
+    /** The print options after a save: shown while true. */
+    public bool $printPanel = false;
 
     /** @var array<string, Money>|null */
     private ?array $figures = null;
@@ -161,19 +167,25 @@ class NewBill extends Page
         $this->newBill();
     }
 
-    /** A blank bill. The strip showing the last saved bill stays. */
+    /** A blank bill, with the cursor in the first box. The strip showing the last saved bill stays. */
     public function newBill(): void
+    {
+        $this->blank();
+        $this->dispatch('bill-focus', target: 'mobile');
+    }
+
+    private function blank(): void
     {
         $this->reset([
             'patientCode', 'name', 'age', 'ageUnit', 'sex', 'mobile', 'address', 'patientId', 'suggestions', 'doctorId',
             'serviceIds', 'discountPercent', 'discountAmount', 'discountSource', 'discountReason', 'notes', 'payMethod', 'payReference', 'paid', 'paidTouched',
+            'printPanel',
         ]);
 
         $this->billToken = (string) Str::uuid();
         $this->paymentKey = (string) Str::uuid();
         $this->deliveryAt = app(DeliveryTime::class)->after(now())->timezone(app(ClinicContext::class)->require()->timezone)->format('Y-m-d\TH:i');
         $this->forgetCaches();
-        $this->dispatch('bill-focus', target: 'mobile');
     }
 
     // Patient
@@ -525,8 +537,11 @@ class NewBill extends Page
         $paymentNote = $this->takePayment($invoice);
         $invoice->refresh();
 
+        $links = $this->printLinks($order, $invoice->public_id);
+
         $this->last = [
             'invoice' => $invoice->public_id,
+            'links' => array_map(fn (array $link): array => ['key' => $link['key'], 'label' => $link['label'], 'url' => $link['url']], array_slice($links, 3)),
             'no' => $invoice->invoice_no,
             'patient' => $patient->name.' ('.$patient->patient_code.')',
             'net' => $invoice->total->formatted(),
@@ -537,7 +552,46 @@ class NewBill extends Page
         ];
 
         Notification::make()->success()->title("Bill {$invoice->invoice_no} saved")->send();
-        $this->newBill();
+        $this->blank();
+
+        // What happens now is the clinic's choice (Front desk settings).
+        $mode = app(Settings::class)->get(Permissions::SETTING_AFTER_SAVE, 'ask');
+
+        if ($mode === 'ask') {
+            $this->printPanel = true;
+            $this->dispatch('bill-focus', target: 'printMain'); // so Enter prints
+        } else {
+            if ($mode === 'invoice') {
+                $this->dispatch('bill-print', url: $links[0]['url']);
+            }
+
+            $this->dispatch('bill-focus', target: 'mobile');
+        }
+    }
+
+    /** Close the print options and carry on with the next patient. */
+    public function closePrint(): void
+    {
+        $this->printPanel = false;
+        $this->dispatch('bill-focus', target: 'mobile');
+    }
+
+    /**
+     * What can be printed for the saved bill: the invoice in three ways, then
+     * whatever other modules add (the laboratory's sample labels).
+     *
+     * @return list<array{key: string, label: string, url: string}>
+     */
+    private function printLinks(Order $order, string $invoicePublicId): array
+    {
+        $invoice = route('frontdesk.print.invoice', $invoicePublicId);
+
+        return [
+            ['key' => 'invoice', 'label' => 'Invoice', 'url' => $invoice.'?copy=both'],
+            ['key' => 'patient', 'label' => 'Patient copy only', 'url' => $invoice],
+            ['key' => 'office', 'label' => 'Office copy only', 'url' => $invoice.'?copy=office'],
+            ...app(PrintLinks::class)->for($order),
+        ];
     }
 
     /** The same discount checks PlaceOrder makes, run early. @throws FrontDeskException */
