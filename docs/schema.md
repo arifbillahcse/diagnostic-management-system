@@ -518,6 +518,13 @@ Attendance is entered by hand; there is no device integration.
 reason; refused if attendance exists after that day) and `left → working`
 (mark as back, with a reason). Only these two actions change it.
 
+**Branch move.** A salary run takes staff by their branch. Someone who has
+worked this month in their current branch can move only once that month's
+salary run there is approved; otherwise they move at the start of next month.
+
+**Branch pickers** in this module list only branches where the user holds the
+permission, and start on the branch chosen in the panel's branch switcher.
+
 **Attendance marks.** present, late, half day, absent, on leave, weekly off,
 holiday. Times are optional and only for present, late, and half day. No
 future days, no days before joining or after leaving, and only staff of the
@@ -541,7 +548,8 @@ month's share is that salary × days employed ÷ days in month (exact, by
 allocation). Deductions are typed by hand with a reason, never automatic.
 Advance taken back starts at what is owed and can be lowered. Net = salary −
 deduction − advance taken back, never below zero. Refresh rebuilds a draft and
-keeps typed figures (capped).
+keeps typed figures (capped); an advance given after a line was built is added
+to it on refresh, and the run page says when that is waiting.
 
 **Advance owed** = advances not void − advance taken back by approved or paid
 runs. Approving rechecks it, since another run may have taken it first.

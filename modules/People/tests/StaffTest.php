@@ -7,8 +7,10 @@ namespace Modules\People\Tests;
 use App\Core\Audit\AuditLog;
 use App\Core\Auth\Permission;
 use App\Core\Auth\Role;
+use App\Core\Branches\Branch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Modules\People\Actions\ManageStaff;
+use Modules\People\Actions\RunPayroll;
 use Modules\People\Models\SalaryChange;
 use Modules\People\Models\Staff;
 use Modules\People\Support\PeopleException;
@@ -175,5 +177,23 @@ class StaffTest extends PeopleTestCase
                 $this->addToAssertionCount(1);
             }
         }
+    }
+
+    public function test_moving_branch_waits_for_the_month_to_be_settled_in_the_old_one(): void
+    {
+        $karim = $this->person();
+        $other = Branch::create(['code' => 'B2', 'name' => 'Second branch']);
+        $this->mark('2026-11-03', [$karim->id => 'present']);
+
+        try {
+            app(ManageStaff::class)->update($karim, ['branch_id' => $other->id]);
+            $this->fail('Moved mid-month');
+        } catch (PeopleException $e) {
+            $this->assertStringContainsString('Approve this month', $e->getMessage());
+        }
+
+        app(RunPayroll::class)->approve(app(RunPayroll::class)->start($this->branch, '2026-11'));
+        app(ManageStaff::class)->update($karim->fresh(), ['branch_id' => $other->id]);
+        $this->assertSame($other->id, $karim->fresh()->branch_id);
     }
 }

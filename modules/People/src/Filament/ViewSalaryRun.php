@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\People\Filament;
 
+use App\Core\Money\Money;
 use App\Core\Tenancy\ClinicContext;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -56,12 +57,18 @@ class ViewSalaryRun extends Page
         return $this->record->lines()->with('staff')->get()->sortBy(fn (SalaryLine $l) => $l->staff->name)->values();
     }
 
-    /** @return array<int, string> advance owed per staff id */
+    /** @return array<int, Money> advance owed per staff id */
     public function getOwedProperty(): array
     {
         $book = app(AdvanceBook::class);
 
-        return $this->lines->mapWithKeys(fn (SalaryLine $l): array => [$l->staff_id => $book->outstanding($l->staff_id)->formatted()])->all();
+        return $this->lines->mapWithKeys(fn (SalaryLine $l): array => [$l->staff_id => $book->outstanding($l->staff_id)])->all();
+    }
+
+    /** @return list<string> */
+    public function getNewAdvancesProperty(): array
+    {
+        return $this->record->isDraft() ? app(RunPayroll::class)->newAdvances($this->record) : [];
     }
 
     public function canEdit(): bool
@@ -84,7 +91,7 @@ class ViewSalaryRun extends Page
     private function reload(): void
     {
         $this->record->refresh();
-        unset($this->lines, $this->owed);
+        unset($this->lines, $this->owed, $this->newAdvances);
         $this->fillEdits();
     }
 

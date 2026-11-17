@@ -6,6 +6,7 @@ namespace Modules\People;
 
 use App\Core\Modules\Module;
 use App\Core\Numbering\NumberGenerator;
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 
@@ -51,6 +52,11 @@ final class PeopleModule extends Module
         return class_exists(Filament\Screens::class) ? Filament\Screens::pages() : [];
     }
 
+    public function widgets(): array
+    {
+        return class_exists(Filament\Screens::class) ? Filament\Screens::widgets() : [];
+    }
+
     public function boot(): void
     {
         View::addNamespace('people', $this->manifest->path.'/resources/views');
@@ -58,6 +64,8 @@ final class PeopleModule extends Module
         NumberGenerator::registerDefault('staff', 'EMP-{0001}', 'Staff number', 'people');
         NumberGenerator::registerDefault('advance', 'ADV-{yymm}-{0001}', 'Salary advance number', 'people');
         NumberGenerator::registerDefault('salary_run', 'SAL-{yymm}-{001}', 'Salary run number', 'people');
+
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\SampleDataCommand::class]));
 
         if (is_file($routes = $this->manifest->path.'/routes.php')) {
             Route::middleware(['web', 'auth', 'module:people'])->group($routes);

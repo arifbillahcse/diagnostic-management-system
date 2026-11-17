@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Modules\People\Filament;
 
 use App\Core\Auth\User;
-use App\Core\Branches\Branch;
 use App\Core\Modules\GatesModuleResource;
 use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
@@ -28,6 +27,7 @@ use Modules\People\Actions\ManageStaff;
 use Modules\People\Models\Staff;
 use Modules\People\Permissions;
 use Modules\People\Support\AdvanceBook;
+use Modules\People\Support\Branches;
 use UnitEnum;
 
 class StaffResource extends Resource
@@ -81,7 +81,7 @@ class StaffResource extends Resource
             TextInput::make('designation')->required()->maxLength(100)->placeholder('Lab technician, receptionist, cleaner'),
             TextInput::make('phone')->tel()->maxLength(30),
             Select::make('branch_id')->label('Branch')->required()->native(false)
-                ->options(fn (): array => Branch::orderBy('name')->pluck('name', 'id')->all()),
+                ->options(fn (): array => Branches::options(Permissions::STAFF_MANAGE)),
             DatePicker::make('joined_on')->label('Joining date')->required()->native(false)->maxDate(self::today()),
             Select::make('user_id')->label('Sign-in account (if any)')->native(false)->searchable()
                 ->options(fn (): array => User::query()

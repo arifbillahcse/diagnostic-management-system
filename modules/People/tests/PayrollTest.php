@@ -255,4 +255,19 @@ class PayrollTest extends PeopleTestCase
         $this->expectException(AuthorizationException::class);
         app(RunPayroll::class)->start($this->branch, '2026-09');
     }
+
+    public function test_an_advance_given_after_the_draft_joins_it_on_refresh(): void
+    {
+        $karim = $this->person('Karim Mia', '15000');
+        $run = $this->run_();
+        $this->assertSame([], app(RunPayroll::class)->newAdvances($run));
+
+        $this->travel(2)->seconds();
+        app(ManageAdvances::class)->give($karim, '1500', '2026-11-10', 'Need');
+
+        $this->assertSame(['Karim Mia'], app(RunPayroll::class)->newAdvances($run));
+        app(RunPayroll::class)->refresh($run);
+        $this->assertSame('1500.00', $this->line($run, $karim)->advance_recovery->toDecimal());
+        $this->assertSame([], app(RunPayroll::class)->newAdvances($run->fresh()));
+    }
 }

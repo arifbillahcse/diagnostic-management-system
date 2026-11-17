@@ -15,6 +15,7 @@ use Modules\FrontDesk\Events\OrderItemAdded;
 use Modules\FrontDesk\Events\OrderItemCancelled;
 use Modules\FrontDesk\Events\OrderPlaced;
 use Modules\Inventory\Console\CheckCommand;
+use Modules\Inventory\Console\SampleDataCommand;
 use Modules\Inventory\Listeners\UseStockForOrders;
 
 final class InventoryModule extends Module
@@ -77,7 +78,7 @@ final class InventoryModule extends Module
             Event::listen($event, [UseStockForOrders::class, 'handle']);
         }
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([CheckCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([CheckCommand::class, SampleDataCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('inventory:check')->dailyAt('01:20')->timezone(config('dms.clinics.default_timezone'));

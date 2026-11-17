@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Modules\People\Models\Advance;
 use Modules\People\Models\SalaryLine;
 use Modules\People\Models\SalaryRun;
 use Modules\People\Models\Staff;
@@ -254,7 +255,8 @@ final class RunPayroll
             $line = $existing->get($staff->id);
             $deduction = $line?->deduction ?? Money::zero();
             $owed = $this->book->outstanding($staff->id);
-            $recovery = $line ? $line->advance_recovery : $owed;
+            // An existing line keeps its typed figure, plus any advance given since it was last built.
+            $recovery = $line ? $line->advance_recovery->plus($this->givenSince($staff->id, $line->updated_at)) : $owed;
 
             // Keep what was typed, but never more than the salary or the advance owed.
             if ($deduction->greaterThan($gross)) {
@@ -288,6 +290,20 @@ final class RunPayroll
 
         $existing->except($kept)->each->delete();
         $this->total($run);
+    }
+
+    private function givenSince(int $staffId, ?\DateTimeInterface $since): Money
+    {
+        return $since === null ? Money::zero() : Money::sum(...Advance::where('staff_id', $staffId)->whereNull('voided_at')
+            ->where('created_at', '>', $since)->get()->map->amount->all());
+    }
+
+    /** Staff in a draft who were given an advance after their line was built. @return list<string> names */
+    public function newAdvances(SalaryRun $run): array
+    {
+        return $run->lines()->with('staff')->get()
+            ->filter(fn (SalaryLine $l): bool => $this->givenSince($l->staff_id, $l->updated_at)->isPositive())
+            ->map(fn (SalaryLine $l): string => $l->staff->name)->values()->all();
     }
 
     private function total(SalaryRun $run): void

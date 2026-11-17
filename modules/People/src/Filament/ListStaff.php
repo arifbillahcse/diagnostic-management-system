@@ -6,10 +6,10 @@ namespace Modules\People\Filament;
 
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Modules\People\Actions\ManageStaff;
 use Modules\People\Permissions;
+use Modules\People\Support\Branches;
 
 class ListStaff extends ListRecords
 {
@@ -20,7 +20,7 @@ class ListStaff extends ListRecords
         return [
             Action::make('add')->label('Add staff')
                 ->visible(fn (): bool => Gate::allows(Permissions::STAFF_MANAGE))
-                ->fillForm(fn (): array => ['branch_id' => Auth::user()?->default_branch_id, 'monthly_salary' => '0'])
+                ->fillForm(fn (): array => ['branch_id' => Branches::default(Permissions::STAFF_MANAGE), 'monthly_salary' => '0'])
                 ->schema(fn (): array => [
                     ...StaffResource::detailFields(),
                     StaffResource::salaryField()->visible(fn (): bool => StaffResource::canSeeSalaries())

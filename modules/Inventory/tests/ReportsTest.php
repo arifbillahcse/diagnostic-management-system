@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Modules\Inventory\Tests;
 
+use App\Core\Tenancy\Clinic;
 use Carbon\CarbonImmutable;
 use Modules\FrontDesk\Actions\AdjustOrder;
 use Modules\FrontDesk\Actions\PlaceOrder;
 use Modules\FrontDesk\Models\OrderItem;
 use Modules\Inventory\Actions\AdjustStock;
+use Modules\Inventory\Models\Item;
+use Modules\Inventory\Models\Purchase;
 use Modules\Inventory\Models\Usage;
 use Modules\Inventory\Support\StockReports;
 
@@ -62,5 +65,20 @@ final class ReportsTest extends InventoryTestCase
         $this->assertSame('4', $byItem[0]['used']->formatted());
         $this->assertSame('1', $byItem[0]['other']->formatted());
         $this->assertSame('15.00', $byItem[0]['value']->toDecimal());
+    }
+
+    public function test_the_sample_data_command_loads_stock_and_use_rules(): void
+    {
+        $this->service('CBC', '400')->forceFill(['code' => 'CBC'])->save();
+        $clinic = app(\App\Core\Tenancy\ClinicContext::class)->require();
+
+        $this->artisan('inventory:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
+
+        $this->assertSame(6, Item::count());
+        $this->assertSame(1, Purchase::count());
+        $this->assertSame(3, Usage::count(), 'Only CBC exists');
+        $this->assertSame('300', Item::where('code', 'EDTA')->value('quantity')->formatted());
+
+        $this->artisan('inventory:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertFailed();
     }
 }

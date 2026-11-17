@@ -229,7 +229,7 @@ listener needs a new major version of the module that raises the event.
 | `finance` | Finance | `fin_` | `frontdesk` | `inventory` | Off |
 | `owner` | Owner dashboard and analytics | `own_` | `frontdesk` | `laboratory`, `finance` | Off |
 | `communication` | SMS, email, WhatsApp | `com_` | | `frontdesk`, `reports` | Off |
-| `inventory` | Inventory | `inv_` | | `laboratory`, `finance` | Off |
+| `inventory` | Inventory | `inv_` | `frontdesk` | `laboratory`, `finance` | Off |
 | `people` | Staff and attendance | `ppl_` | | `finance` | Off |
 | `payments` | Online payments | `pay_` | `frontdesk` | | Off |
 | `portal` | Patient portal | `por_` | `reports` | `payments` | Off |

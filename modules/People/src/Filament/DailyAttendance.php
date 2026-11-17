@@ -12,12 +12,12 @@ use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Modules\People\Actions\RecordAttendance;
 use Modules\People\Models\Attendance;
 use Modules\People\Models\Staff;
 use Modules\People\Permissions;
+use Modules\People\Support\Branches;
 use UnitEnum;
 
 /**
@@ -68,7 +68,7 @@ class DailyAttendance extends Page
     public function mount(): void
     {
         $this->date = $this->today();
-        $this->branchId = Auth::user()?->default_branch_id ?? Branch::orderBy('id')->value('id');
+        $this->branchId = Branches::default(Permissions::STAFF_VIEW);
         $this->load();
     }
 
@@ -87,6 +87,10 @@ class DailyAttendance extends Page
 
     public function updatedBranchId(): void
     {
+        if (! array_key_exists((int) $this->branchId, $this->branches)) {
+            $this->branchId = Branches::default(Permissions::STAFF_VIEW);
+        }
+
         $this->load();
     }
 
@@ -121,7 +125,7 @@ class DailyAttendance extends Page
     /** @return array<int, string> */
     public function getBranchesProperty(): array
     {
-        return Branch::orderBy('name')->pluck('name', 'id')->all();
+        return Branches::options(Permissions::STAFF_VIEW);
     }
 
     public function markAllPresent(): void

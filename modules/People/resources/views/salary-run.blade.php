@@ -27,6 +27,12 @@
         </x-filament::section>
     </div>
 
+    @if ($this->newAdvances !== [])
+        <x-filament::section>
+            <p><strong>New advances since this draft was made:</strong> {{ implode(', ', $this->newAdvances) }}. Use "Refresh from attendance" to take them back in this run; typed figures are kept.</p>
+        </x-filament::section>
+    @endif
+
     <x-filament::section>
         @if ($this->lines->isEmpty())
             <p class="dms-muted">Nobody worked in this branch in this month.</p>
@@ -65,7 +71,7 @@
                                     </td>
                                     <td style="min-width:140px">
                                         <x-filament::input.wrapper prefix="৳"><x-filament::input type="text" inputmode="decimal" wire:model="edits.{{ $line->id }}.recovery" /></x-filament::input.wrapper>
-                                        <div class="dms-small" @if ($line->advance_recovery->greaterThan(\App\Core\Money\Money::fromDecimal(str_replace(',', '', $this->owed[$line->staff_id])))) style="color:#dc2626" @endif>Owed ৳ {{ $this->owed[$line->staff_id] }}</div>
+                                        <div class="dms-small" @if ($line->advance_recovery->greaterThan($this->owed[$line->staff_id])) style="color:#dc2626" title="More than is owed now: approving will be refused" @endif>Owed {{ $money($this->owed[$line->staff_id]) }}</div>
                                     </td>
                                 @else
                                     <td>{{ $line->deduction->isPositive() ? $money($line->deduction).' · '.$line->deduction_note : '-' }}</td>

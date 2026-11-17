@@ -20,4 +20,10 @@ final class Screens
     {
         return [DailyAttendance::class, MonthlyAttendance::class];
     }
+
+    /** @return list<class-string> */
+    public static function widgets(): array
+    {
+        return [AttendanceTodayWidget::class];
+    }
 }

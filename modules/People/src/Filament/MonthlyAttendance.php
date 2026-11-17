@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\People\Filament;
 
-use App\Core\Branches\Branch;
 use App\Core\Modules\GatesModuleAccess;
 use App\Core\Tenancy\ClinicContext;
 use BackedEnum;
@@ -12,6 +11,7 @@ use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Modules\People\Permissions;
 use Modules\People\Support\AttendanceReport;
+use Modules\People\Support\Branches;
 use UnitEnum;
 
 class MonthlyAttendance extends Page
@@ -66,7 +66,7 @@ class MonthlyAttendance extends Page
     /** @return array<int, string> */
     public function getBranchesProperty(): array
     {
-        return Branch::orderBy('name')->pluck('name', 'id')->all();
+        return Branches::options(Permissions::STAFF_VIEW);
     }
 
     /** @return array<string, mixed> */

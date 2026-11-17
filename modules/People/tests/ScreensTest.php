@@ -6,8 +6,12 @@ namespace Modules\People\Tests;
 
 use App\Core\Auth\Permission;
 use App\Core\Auth\Role;
+use App\Core\Branches\Branch;
+use App\Core\Tenancy\Clinic;
 use Livewire\Livewire;
+use Modules\People\Actions\ManageAdvances;
 use Modules\People\Actions\RunPayroll;
+use Modules\People\Filament\AttendanceTodayWidget;
 use Modules\People\Filament\DailyAttendance;
 use Modules\People\Filament\ListAdvances;
 use Modules\People\Filament\ListSalaryRuns;
@@ -17,6 +21,8 @@ use Modules\People\Models\Advance;
 use Modules\People\Models\Attendance;
 use Modules\People\Models\SalaryRun;
 use Modules\People\Models\Staff;
+use Modules\People\Permissions;
+use Modules\People\Support\Branches;
 
 class ScreensTest extends PeopleTestCase
 {
@@ -177,5 +183,61 @@ class ScreensTest extends PeopleTestCase
 
         $this->signIn($office)->get(self::BASE.'/staff/salary-runs')->assertForbidden();
         $this->signIn($office)->get(self::BASE.'/staff/advances')->assertForbidden();
+    }
+
+    public function test_branch_pickers_list_only_branches_the_user_may_act_in(): void
+    {
+        $other = Branch::create(['code' => 'B2', 'name' => 'Second branch']);
+        $this->assertCount(2, Branches::options(Permissions::STAFF_MANAGE));
+
+        $admin = $this->userWithRoles('receptionist');
+        $role = Role::where('key', 'admin')->firstOrFail();
+        $admin->roles()->attach($role->id, ['branch_id' => $other->id]);
+        $this->actingAs($admin->fresh());
+
+        $this->assertSame([$other->id => 'Second branch'], Branches::options(Permissions::STAFF_MANAGE));
+        $this->assertSame($other->id, Branches::default(Permissions::STAFF_MANAGE));
+    }
+
+    public function test_the_dashboard_shows_who_is_not_marked_today(): void
+    {
+        $karim = $this->person();
+        $this->person('Rina Akter');
+        $this->mark('2026-11-17', [$karim->id => 'absent']);
+
+        $this->assertSame(['staff' => 2, 'marked' => 1, 'absent' => 1], AttendanceTodayWidget::figures());
+        Livewire::test(AttendanceTodayWidget::class)->assertSee('Not marked yet')->assertSee('of 2 staff');
+
+        $this->actingAs($this->staff('accountant'));
+        $this->assertFalse(AttendanceTodayWidget::canView());
+    }
+
+    public function test_the_run_page_tells_about_advances_given_after_the_draft(): void
+    {
+        $karim = $this->person();
+        $run = app(RunPayroll::class)->start($this->branch, '2026-10');
+        $this->travel(2)->seconds();
+        app(ManageAdvances::class)->give($karim, '1000', '2026-11-10', 'Need');
+
+        Livewire::test(ViewSalaryRun::class, ['record' => $run->public_id])
+            ->assertSee('New advances since this draft was made')
+            ->callAction('refresh')
+            ->assertDontSee('New advances since this draft was made');
+    }
+
+    public function test_the_sample_data_command_loads_a_usable_month(): void
+    {
+        $clinic = app(\App\Core\Tenancy\ClinicContext::class)->require();
+
+        $this->artisan('people:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
+
+        $this->assertSame(4, Staff::count());
+        $this->assertGreaterThan(40, Attendance::count());
+        $run = SalaryRun::sole();
+        $this->assertSame('2026-10', $run->month);
+        $this->assertSame('53000.00', $run->total_gross->toDecimal());
+        $this->assertSame('50000.00', $run->total_net->toDecimal());
+
+        $this->artisan('people:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertFailed();
     }
 }

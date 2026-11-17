@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Modules\People\Enums;
 use Modules\People\Models\Attendance;
 use Modules\People\Models\SalaryChange;
 use Modules\People\Models\Staff;
@@ -94,6 +95,10 @@ final class ManageStaff
                 if (SalaryChange::where('staff_id', $staff->id)->where('reason', '!=', 'Joined')->whereDate('effective_from', '<', $details['joined_on'])->exists()) {
                     throw new PeopleException('A salary change starts before that joining date.');
                 }
+            }
+
+            if ((int) $details['branch_id'] !== $staff->branch_id) {
+                $this->checkBranchMove($staff);
             }
 
             $before = $this->snapshot($staff);
@@ -223,6 +228,23 @@ final class ManageStaff
 
             return $staff;
         });
+    }
+
+    /**
+     * A salary run takes staff by their branch, so someone with attendance
+     * this month in their old branch moves only once that month's run there
+     * is approved; otherwise the old branch would leave them out.
+     */
+    private function checkBranchMove(Staff $staff): void
+    {
+        $month = CarbonImmutable::now($this->clinics->timezone())->format('Y-m');
+
+        $worked = Attendance::where('staff_id', $staff->id)
+            ->whereDate('date', '>=', $month.'-01')->whereIn('status', Enums::WORKED)->exists();
+
+        if ($worked && ! RunPayroll::monthSettled($staff->branch_id, $month)) {
+            throw new PeopleException("{$staff->name} has worked in their current branch this month. Approve this month's salary run there first, or move them at the start of next month.");
+        }
     }
 
     /** @param array<string, mixed> $data @return array<string, mixed> */
