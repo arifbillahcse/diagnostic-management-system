@@ -9,7 +9,7 @@
 | **4. Owner basics** (done) | Owner dashboard, basic reports, expenses, accounts, referral commission, profit reports, data export | Decide whether the accounting is enough |
 | **5. Performance and safety pass** (built, awaiting review) | Two to three years of simulated data, query timing and fixes, backup and restore test, security review | Provide a MySQL server for testing |
 | **6. Pilot** | Install at one real clinic, collect feedback, fix issues | Legal review done first. Run real work and report problems |
-| **7. Communication and payments** | SMS, email, WhatsApp report delivery; online payment gateway | Choose providers |
+| **7. Communication and payments** (messaging built ahead of the pilot at the owner's request; payments and WhatsApp wait for a provider) | Built: SMS and email (bill confirmation, report ready with a secure link, due reminders), message log, wording, retries. Not built: online payment gateway, WhatsApp | Choose the SMS provider, the payment gateway, and whether WhatsApp is worth its cost |
 | **8. Subscription layer** | Plans, module entitlements, license and trial dates, platform billing | Set editions and pricing |
 | **9. Inventory and people** | Reagents and consumables, purchases, suppliers, stock alerts; staff, attendance, salary basics | Confirm with pilot clinics |
 | **10. Patient portal and imaging reports** | Online report access; imaging report templates and printing | Decide with pilot data |

@@ -29,6 +29,27 @@ return [
         'enabled' => (bool) env('DMS_PORTAL_UPDATES', false),
     ],
 
+    // Messaging module. The SMS gateway is set once for the whole
+    // installation, so a clinic cannot point the server at an address of its
+    // own choosing. Each clinic switches SMS on or off for itself.
+    'messaging' => [
+        'sms' => [
+            // "log": test mode, messages are recorded but not sent.
+            // "http": a bulk SMS provider reached by a web request.
+            // "off": no SMS at all.
+            'driver' => env('SMS_DRIVER', 'log'),
+            'url' => env('SMS_HTTP_URL'),
+            'method' => env('SMS_HTTP_METHOD', 'post'),
+            // Sent as form fields (or as the query for "get"). Placeholders:
+            // {api_key}, {sender}, {to}, {message}.
+            'params' => env('SMS_HTTP_PARAMS', 'api_key={api_key}&senderid={sender}&number={to}&message={message}'),
+            'api_key' => env('SMS_API_KEY'),
+            'sender' => env('SMS_SENDER_ID'),
+            // When set, the gateway's reply must contain this text.
+            'success' => env('SMS_HTTP_SUCCESS_TEXT'),
+        ],
+    ],
+
     'clinics' => [
         // Each clinic database is named <prefix><clinic id>.
         'database_prefix' => env('CLINIC_DB_PREFIX', 'dms_clinic_'),

@@ -444,6 +444,22 @@ No tables. It reads the front desk's data: this month's figures and a 14-day
 collections chart on the dashboard, and sales reports by day, test, referral
 doctor, and cashier over periods of up to 92 days.
 
+## 8c. Module: messaging (`msg_`)
+
+Off by default. Requires reports. The SMS gateway is set once for the whole
+installation (`config/dms.php`, `messaging.sms`); a clinic only switches
+channels and messages on or off.
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `msg_messages` | `public_id`, `channel` (sms, email), `recipient`, `template_key`, `subject`, `body`, `segments`, `status` (queued, sent, failed), `provider`, `provider_ref`, `error`, `attempts`, `dedupe_key` (unique, nullable), `patient_id`, `order_id`, `sent_at` | The log of everything sent. `dedupe_key` stops one event sending the same message twice. `segments` is what the provider charges for |
+| `msg_templates` | `template_key`, `channel` (unique pair), `subject`, `body`, `is_active` | The clinic's wording. No row means the built-in text |
+| `msg_report_links` | `token_hash` (unique), `order_id`, `expires_at`, `revoked_at`, `opened_count`, `last_opened_at` | A patient's link to their report. Only the SHA-256 hash of the secret is stored. Not in the data export |
+| `msg_opt_outs` | `recipient` (unique) | Numbers and addresses that must not be messaged |
+
+Message status: `queued -> sent`, or `queued -> failed -> queued` (a retry,
+at most three tries by the system; staff can send a failed one again).
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

@@ -1,0 +1,12 @@
+{
+  "key": "messaging",
+  "name": "Messaging",
+  "description": "SMS and email to patients: bill confirmation, report ready with a secure download link, and due reminders, with a log of every message.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["reports"],
+  "suggests": [],
+  "table_prefix": "msg_",
+  "default_enabled": false,
+  "entry": "Modules\\Messaging\\MessagingModule"
+}

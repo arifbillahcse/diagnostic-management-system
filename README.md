@@ -172,6 +172,35 @@ A "not found" page on every address means no clinic has that domain: run
 `php artisan clinic:list`. A server error page means look in
 `storage/logs/laravel.log`.
 
+## Messaging (SMS and email)
+
+The Messaging module is off by default. Switch it on under **Modules**, then
+open **Messaging, Messaging settings**.
+
+- **Test mode is the default.** With `SMS_DRIVER=log`, messages appear in the
+  message log as sent but nothing reaches a phone. Use it to try the wording.
+- **Real SMS** needs a bulk SMS provider whose API takes a web request. Set it
+  once in `.env`, using the field names from the provider's own
+  documentation:
+
+  ```ini
+  SMS_DRIVER=http
+  SMS_HTTP_URL=https://your-provider.example/api/send
+  SMS_HTTP_METHOD=post
+  SMS_HTTP_PARAMS="api_key={api_key}&senderid={sender}&number={to}&message={message}"
+  SMS_API_KEY=your-key
+  SMS_SENDER_ID=your-sender-name
+  SMS_HTTP_SUCCESS_TEXT=
+  ```
+
+  `{to}` is the number as `8801XXXXXXXXX`. If the provider's reply contains a
+  fixed word on success, put it in `SMS_HTTP_SUCCESS_TEXT`. Run
+  `php artisan config:clear`, then use **Send a test SMS** on the settings page.
+- **Email** uses the `MAIL_*` settings in `.env`.
+- Messages are sent by the queue, so the queue worker (or the cron line for
+  shared hosting above) must be running. `php artisan schedule:run` must run
+  for reminders and retries.
+
 ## Temporary: database updates from the portal
 
 For the trial period only. After the software is updated on the server, the
@@ -218,6 +247,8 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan queue:work` | Runs queued jobs. Each job reconnects to the clinic it was created for |
 | `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
+| `php artisan messaging:due-reminders` | Reminds patients about unpaid bills, for clinics that switched reminders on. Scheduled daily at 10:30 |
+| `php artisan messaging:retry` | Tries failed messages again (three tries in all). Scheduled every ten minutes |
 | `php artisan laboratory:sample-data <clinic id>` | Loads a new clinic with sample tests, doctors, three staff accounts, patients, and ten days of orders, for trying the software. Never run it on a clinic with real data |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |

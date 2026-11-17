@@ -44,6 +44,17 @@ before real patient data is entered.
 | The audit log relied on the application alone | Database triggers on MySQL |
 | A failed `mysqldump` in the middle of a pipeline could have been saved as a good backup | The pipeline now fails as a whole, and every backup is checked by a trial restore |
 
+## Added with messaging (Phase 7)
+
+| Area | Finding | State |
+|---|---|---|
+| **Report link** | A patient opens their report from an SMS without signing in. The link's secret is 40 random characters; only its hash is stored; it expires (14 days by default), can be withdrawn, works only at its own clinic's address, obeys the unpaid-bill rule, is limited to 20 tries a minute per visitor, and every download is audited | Tested |
+| **Report link, remaining risk** | Anyone who has the link can open the report until it expires: a forwarded SMS, a shared phone, or a wrong number on the patient record. A clinic that does not accept this switches the link off and sends only "your report is ready" | Decision for each clinic |
+| **SMS gateway address** | Set in the server's environment, never by a clinic, so a clinic cannot make the server call an address of its choosing. Only `https://` addresses are called | Tested |
+| **Gateway key** | Kept in the environment. Removed from any error text before it is stored in the message log | Tested |
+| **Message log** | Holds patient names, numbers, and bill amounts. Needs its own permission; test mode does not write message text to the server log | Tested |
+| **Consent** | Messages can be stopped per number, but nothing records that a patient agreed to be messaged | Open: for the lawyer's review |
+
 ## Open, in order of importance
 
 1. **Server hardening is not part of the code.** HTTPS certificates, the
