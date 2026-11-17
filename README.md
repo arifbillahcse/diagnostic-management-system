@@ -172,6 +172,28 @@ A "not found" page on every address means no clinic has that domain: run
 `php artisan clinic:list`. A server error page means look in
 `storage/logs/laravel.log`.
 
+## The billing screen
+
+**Front desk, New bill** is the counter screen: patient, tests, discount, and
+payment on one page, small enough for a 1366 x 768 monitor.
+
+- Type the mobile number first. Patients already registered with it appear
+  to click. A patient who is not registered yet is **registered when the bill
+  is saved**; there is no separate step.
+- **Code + Enter** adds a test; the list and **Add** do the same. Supplies set
+  up as add-ons (tubes, needle) appear in italics and are billed once.
+- **Discount % and Discount Tk** follow each other; the box typed in last is
+  the one the bill is made from. A reason is required, and the role's
+  discount limit applies, as everywhere else.
+- **Paid amount** starts equal to the net payable. Less leaves a due; more
+  shows the **Return** (the change), and only the amount owed is recorded.
+- **Ctrl+S** saves, **F2** starts a new bill. After saving, the strip at the
+  top has the print links for the patient copy and the office copy.
+- Cash needs an open cash session (Cash sessions); the screen warns when
+  there is none.
+
+The older **Orders, New order** form still works at `/orders/create`.
+
 ## Messaging (SMS and email)
 
 The Messaging module is off by default. Switch it on under **Modules**, then

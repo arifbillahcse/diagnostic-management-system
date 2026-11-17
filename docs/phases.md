@@ -16,6 +16,12 @@
 | **11. Machine integration and multi-branch** | Local bridge agent and analyzer connectors; branches and branch reports | Choose analyzer models |
 | **12. Signup and provisioning** | Automatic clinic setup on the hosting platform | After there are paying customers |
 
+## Changes to a finished phase
+
+- **Counter billing screen** (Phase 2 follow-up, from the owner's own
+  layout): one compact page for patient, tests, discount, and payment. No
+  VAT, no per-test discount, no booth, and commission stays with Finance.
+
 ## How every phase ends
 
 1. All tests pass.

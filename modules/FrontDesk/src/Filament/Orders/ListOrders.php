@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\FrontDesk\Filament\Orders;
 
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
+use Modules\FrontDesk\Filament\NewBill;
 
 class ListOrders extends ListRecords
 {
@@ -13,6 +14,6 @@ class ListOrders extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('New order')];
+        return [Action::make('newBill')->label('New bill')->icon('heroicon-m-plus')->url(NewBill::getUrl())];
     }
 }

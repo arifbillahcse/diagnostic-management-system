@@ -26,7 +26,7 @@ final class Screens
     /** @return list<class-string> */
     public static function pages(): array
     {
-        return [FrontDeskSettings::class];
+        return [NewBill::class, FrontDeskSettings::class];
     }
 
     /** @return list<class-string> */

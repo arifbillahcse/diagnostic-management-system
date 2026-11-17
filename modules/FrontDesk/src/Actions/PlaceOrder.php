@@ -29,6 +29,7 @@ use Modules\FrontDesk\Models\OrderItem;
 use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Permissions;
+use Modules\FrontDesk\Support\Addons;
 use Modules\FrontDesk\Support\DeliveryTime;
 use Modules\FrontDesk\Support\DiscountRules;
 use Modules\FrontDesk\Support\FrontDeskException;
@@ -52,6 +53,7 @@ final class PlaceOrder
         private readonly InvoiceCalculator $calculator,
         private readonly AuditLogger $audit,
         private readonly DeliveryTime $delivery,
+        private readonly Addons $addons,
     ) {}
 
     /**
@@ -69,7 +71,8 @@ final class PlaceOrder
             throw new FrontDeskException('This branch is not active.');
         }
 
-        $services = $this->withAddons($this->services($serviceIds));
+        $services = $this->services($serviceIds);
+        $services = [...$services, ...$this->addons->for($services)];
         $subtotal = Money::sum(...array_map(fn (Service $s): Money => $s->price, $services));
 
         $discount = $this->discounts->amount($subtotal, $options['discount_type'] ?? null, $options['discount_value'] ?? null);
@@ -222,32 +225,6 @@ final class PlaceOrder
         }
 
         return $services;
-    }
-
-    /**
-     * Add the supplies (tube, needle) that go with the chosen services.
-     * Each supply is charged once per order, however many tests need it,
-     * and not at all if staff already chose it.
-     *
-     * @param  list<Service>  $services
-     * @return list<Service>
-     */
-    private function withAddons(array $services): array
-    {
-        $chosen = array_flip(array_map(fn (Service $s): int => $s->id, $services));
-        $needed = [];
-
-        foreach ($services as $service) {
-            foreach ($service->isPackage() ? $service->packageItems : [$service] as $part) {
-                foreach ($part->addons()->where('is_active', true)->orderBy('fd_services.id')->get() as $addon) {
-                    if (! isset($chosen[$addon->id]) && ! isset($needed[$addon->id])) {
-                        $needed[$addon->id] = $addon;
-                    }
-                }
-            }
-        }
-
-        return [...$services, ...array_values($needed)];
     }
 
     private function deliveryAt(mixed $chosen, CarbonInterface $orderedAt): CarbonInterface
