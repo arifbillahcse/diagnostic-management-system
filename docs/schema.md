@@ -679,6 +679,40 @@ Off by default. Every operational table already has `branch_id`.
   and everything behaves as one branch.
 - Stock stays shared by all branches; prices are the same in every branch.
 
+## 8j. Module: lab machine integration (`anz_`, key `analyzers`)
+
+Off by default. Requires the laboratory. This is the server side; the
+bridge program on the lab PC (11d) posts what the machine sends.
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `anz_machines` | `public_id`, `name` (unique), `model`, `protocol` (astm, hl7), `branch_id`, `user_id` (results are saved under this lab account), `token_hash` (sha256, unique), `token_hint`, `is_active`, `last_seen_at` | The key is shown once when made or replaced; only its hash is kept |
+| `anz_mappings` | `machine_id`, `machine_code` (unique pair), `analyte_id` | "This machine calls haemoglobin HGB". Audited |
+| `anz_messages` | `public_id`, `machine_id`, `protocol`, `raw`, `raw_hash` (unique per machine), `status` (applied, partial, unmatched, failed), `sample_codes`, `note`, `received_at` | Every message as it arrived. The raw text is never changed or deleted. The same message twice is stored once |
+| `anz_results` | `message_id`, `sample_code`, `machine_code`, `value`, `unit`, `machine_flag`, `analyte_id`, `work_item_id`, `status`, `note` | What became of each value: applied, unmapped, no_sample, not_received, no_test, already_submitted, failed. Rows not applied are replaced when staff match the message again |
+
+- **API:** `POST /api/analyzers/messages`, header `Authorization: Bearer
+  anz_...`, JSON `{"raw": "..."}`. No session or cookies. 202 with what
+  became of the message; 401 for a wrong or switched-off key; 422 for an
+  empty message; 404 when the module is off. 120 a minute.
+- **Reading:** ASTM E1394 (H, P, O, R, L records; low-level framing and
+  checksums removed; specimen from O-3 then O-4; code is the last filled part
+  of R-3) and HL7 v2 ORU (MLLP removed; specimen from OBR-3, OBR-2, SPM-2;
+  code OBX-3 first part, its second part as an alternative; images skipped).
+- **Matching:** the specimen number is the sample's accession number (the
+  barcode on the label). A value is saved only into a test on that sample
+  that is in the laboratory and not yet submitted.
+- **Saving:** through the laboratory's own `EnterResults`, as a **draft**,
+  under the machine's lab account: values already typed are kept, the
+  machine's value replaces its own analyte. Flags come from the clinic's own
+  reference ranges; the machine's flag is only kept for reference. A person
+  submits and a verifier verifies, as for typed results.
+- **Inbox:** messages needing attention (partly saved, not matched, could not
+  be read); staff can match a message to a sample number by hand.
+- **Simulator:** `analyzers:replay <clinic> <machine> <file>` feeds recorded
+  output as the bridge would; "Try a message" on the machines screen does the
+  same for pasted output.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

@@ -100,6 +100,8 @@ imaging.templates.manage
 imaging.reports.write
 imaging.reports.sign
 imaging.reports.print
+analyzers.machines.manage
+analyzers.inbox.resolve
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -166,6 +168,8 @@ or create its own, except where noted.
 | Imaging: templates, phrases, settings | Yes | Yes | | | | |
 | Imaging: write and sign reports | Yes | Yes | | | Yes | |
 | Imaging: see the list and print signed reports | Yes | Yes | Yes | | Yes | Yes |
+| Lab machines: add machines, keys, test codes | Yes | Yes | | | | |
+| Lab machines: inbox and matching by hand | Yes | Yes | | Yes | Yes | |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

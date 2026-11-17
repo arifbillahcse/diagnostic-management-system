@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7, 9 and 10, and step 11a, are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7, 9 and 10, and steps 11a and 11c, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -71,6 +71,11 @@ later; Phases 10 and 11 are not started.
   switcher for staff in more than one branch, every list limited to the
   user's branches, each branch's own address and phone on printed papers,
   and branch figures in the owner's sales reports.
+- **Phase 11c, lab machine integration, server side** (module, off until
+  switched on): machines with their own keys, test code mapping, an API for
+  the bridge program, ASTM and HL7 reading, matching by sample barcode,
+  results saved as drafts for a person to submit and verify, a machine inbox,
+  and a simulator. The bridge program for the lab PC comes in 11d.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -356,6 +361,7 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan inventory:sample-data <clinic id>` | Loads sample stock items, a supplier, one purchase, and stock use rules for the sample tests. Turn on Inventory first; best after `laboratory:sample-data` |
 | `php artisan people:sample-data <clinic id>` | Loads four sample staff, attendance for last month and this month, one advance, and a draft salary run for last month. Turn on Staff and attendance first |
 | `php artisan imaging:sync-studies` | Adds imaging studies missing from recent open orders, for example orders billed before Imaging was switched on. Scheduled hourly |
+| `php artisan analyzers:replay <clinic id> <machine> <file>` | Feeds recorded machine output to a machine as the bridge would, to test code mappings without the machine. Messages in the file are separated by lines of `---` |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |
 | `php artisan clinic:backup` | Backs up the control database and every clinic database. Add `--verify` to restore each into a scratch database and check it. Scheduled nightly once `BACKUP_PATH` is set |
@@ -429,6 +435,7 @@ modules/             One folder per module
   Imaging/           Imaging report templates, writing, signing, printing
   Portal/            Patients' own report page: bill number and mobile number
   MultiBranch/       Branch switcher (core does the limits once it is on)
+  Analyzers/         Lab machine results: API, ASTM and HL7 reading, matching, inbox
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

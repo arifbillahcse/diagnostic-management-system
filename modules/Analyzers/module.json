@@ -1,0 +1,12 @@
+{
+  "key": "analyzers",
+  "name": "Lab machine integration",
+  "description": "Results from lab analyzers arrive through the bridge program on the lab PC, are matched to samples by barcode, and are saved as draft results for a technician to submit and a verifier to verify.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["laboratory"],
+  "suggests": [],
+  "table_prefix": "anz_",
+  "default_enabled": false,
+  "entry": "Modules\\Analyzers\\AnalyzersModule"
+}
