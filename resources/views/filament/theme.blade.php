@@ -4,6 +4,15 @@
     palette in AdminPanelProvider.
 --}}
 <style>
+    /* One compact scale for every screen, the same as the billing screen.
+       Filament sizes everything in rem, so a 15 px root shrinks text, spacing,
+       and icons together (14 px text becomes about 13 px); the page titles,
+       breadcrumbs, and big figures are then set down to match. */
+    html { font-size: 15px; }
+    .fi-header-heading { font-size: 1.35rem; line-height: 1.3; }
+    .fi-breadcrumbs { font-size: .8rem; }
+    .fi-wi-stats-overview-stat-value { font-size: 1.6rem; }
+
     .fi-body { background: #F3F7F5; }
 
     .fi-main-sidebar, .fi-sidebar { background: #14403A; }
