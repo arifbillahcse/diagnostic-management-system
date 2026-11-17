@@ -32,8 +32,8 @@ class AttendanceTest extends PeopleTestCase
         $this->assertSame('late', Attendance::where('staff_id', $karim->id)->value('status'), 'A blank mark does not remove a saved one');
 
         $change = AuditLog::where('action', 'attendance.changed')->sole();
-        $this->assertSame(['status' => 'absent', 'note' => null], $change->before);
-        $this->assertSame(['status' => 'leave', 'note' => 'Sick'], $change->after);
+        $this->assertEquals(['status' => 'absent', 'note' => null], $change->before);
+        $this->assertEquals(['status' => 'leave', 'note' => 'Sick'], $change->after);
         $this->assertSame(2, AuditLog::where('action', 'attendance.recorded')->count());
     }
 

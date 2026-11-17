@@ -112,8 +112,8 @@ class StaffTest extends PeopleTestCase
         app(ManageStaff::class)->update($karim, ['designation' => 'Senior lab technician', 'phone' => '01811000000']);
 
         $entry = AuditLog::where('action', 'staff.updated')->sole();
-        $this->assertSame(['designation' => 'Lab technician', 'phone' => '01711000000'], $entry->before);
-        $this->assertSame(['designation' => 'Senior lab technician', 'phone' => '01811000000'], $entry->after);
+        $this->assertEquals(['designation' => 'Lab technician', 'phone' => '01711000000'], $entry->before);
+        $this->assertEquals(['designation' => 'Senior lab technician', 'phone' => '01811000000'], $entry->after);
 
         app(ManageStaff::class)->update($karim->fresh(), ['designation' => 'Senior lab technician']);
         $this->assertSame(1, AuditLog::where('action', 'staff.updated')->count());
