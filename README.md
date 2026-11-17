@@ -174,20 +174,22 @@ A "not found" page on every address means no clinic has that domain: run
 
 ## The billing screen
 
-**Front desk, New bill** is the counter screen: patient, tests, discount, and
-payment on one page, with a summary column that stays in view. It is laid out for wide monitors and still works on 1366 x 768 (the page scrolls a little).
+**Front desk, New bill** is the counter screen. The patient is one full-width
+section on top; below it sit the tests and the bill summary side by side.
+Cards in the clinic's green, tight spacing, and everything visible at once on a
+wide monitor (on a 1366 x 768 monitor the page scrolls a little).
 
 - Type the mobile number first. Patients already registered with it appear
   to click. A patient who is not registered yet is **registered when the bill
   is saved**; there is no separate step.
 - **Code + Enter** adds a test; the list and **Add** do the same. Supplies set
   up as add-ons (tubes, needle) appear in italics and are billed once.
-- **Discount % and Discount Tk** follow each other; the box typed in last is
-  the one the bill is made from. A reason is required, and the role's
+- **Discount %** and **Discount Tk** follow each other; the box typed in last
+  is the one the bill is made from. A reason is required, and the role's
   discount limit applies, as everywhere else.
-- **Pay mode** is a row of buttons. **Paid amount** starts equal to the net
-  payable (**Exact amount** goes back to it). Less leaves a due; more shows
-  the **Return** (the change), and only the amount owed is recorded.
+- **Paid amount** starts equal to the net payable (**exact** goes back to it).
+  Less leaves a due; more shows the **Return** (the change), and only the
+  amount owed is recorded.
 - **Ctrl+S** saves, **F2** starts a new bill. After saving, the strip at the
   top has the print links for the patient copy and the office copy.
 - Cash needs an open cash session (Cash sessions); the screen warns when
