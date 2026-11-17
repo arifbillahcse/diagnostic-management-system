@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7 and 9, and step 10a, are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7 and 9, and steps 10a and 10b, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -58,6 +58,10 @@ later; Phases 10 and 11 are not started.
   reporting doctor, amendments kept as versions, and A4 printing on the
   clinic letterhead. Report layout and signatures are now shared by lab and
   imaging reports, under Administration.
+- **Phase 10b, imaging delivery:** a Reports section on the order page with
+  print buttons, lab results and imaging reports in one PDF, the "report
+  ready" SMS waiting for imaging too (its link opens the combined file), and
+  the unpaid-due print rule applied to imaging.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -342,6 +346,7 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan laboratory:sample-data <clinic id>` | Loads a new clinic with sample tests, doctors, three staff accounts, patients, and ten days of orders, for trying the software. Never run it on a clinic with real data |
 | `php artisan inventory:sample-data <clinic id>` | Loads sample stock items, a supplier, one purchase, and stock use rules for the sample tests. Turn on Inventory first; best after `laboratory:sample-data` |
 | `php artisan people:sample-data <clinic id>` | Loads four sample staff, attendance for last month and this month, one advance, and a draft salary run for last month. Turn on Staff and attendance first |
+| `php artisan imaging:sync-studies` | Adds imaging studies missing from recent open orders, for example orders billed before Imaging was switched on. Scheduled hourly |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |
 | `php artisan finance:sync` | Posts any payments and refunds missing from the accounts and updates commission. Scheduled nightly |
 | `php artisan clinic:backup` | Backs up the control database and every clinic database. Add `--verify` to restore each into a scratch database and check it. Scheduled nightly once `BACKUP_PATH` is set |

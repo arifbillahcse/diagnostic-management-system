@@ -26,6 +26,7 @@ use Modules\FrontDesk\Models\Invoice;
 use Modules\FrontDesk\Models\Order;
 use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Permissions;
+use Modules\FrontDesk\Support\OrderReports;
 
 /**
  * One order with its invoice: what was ordered, what was charged, what was
@@ -61,6 +62,12 @@ class ViewOrder extends Page
     public function getInvoiceProperty(): Invoice
     {
         return $this->record->invoice()->with(['lines', 'payments.receiver', 'refunds.requester', 'refunds.decider'])->firstOrFail();
+    }
+
+    /** @return list<array{label: string, status: string, color: string, url: ?string}> */
+    public function getReportsProperty(): array
+    {
+        return app(OrderReports::class)->for($this->record);
     }
 
     private function open(): bool

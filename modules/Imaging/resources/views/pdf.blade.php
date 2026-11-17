@@ -88,29 +88,21 @@
         </tr></table>
     </div>
 
-    @unless ($layout['preprinted'] || $layout['header_image'])
-        <table class="letterhead"><tr>
-            @if ($clinic['logo'])
-                <td class="logo"><img src="{{ $clinic['logo'] }}" alt=""></td>
-            @endif
-            <td>
-                <div class="clinic">{{ $clinic['name'] }}</div>
-                <div class="small">{{ $clinic['address'] }}</div>
-                <div class="small">
-                    {{ $clinic['phone'] }}@if ($clinic['phone'] && $clinic['email']) &middot; @endif{{ $clinic['email'] }}
-                </div>
-                @if ($clinic['header'])<div class="small muted">{!! nl2br(e($clinic['header'])) !!}</div>@endif
-            </td>
-        </tr></table>
-    @endunless
+    @include('imaging::partials.letterhead')
 
+
+    @isset($lab)
+        @include('reports::partials.lab-content', $lab)
+        <div class="next"></div>
+    @endisset
 
     @foreach ($pages as $i => $page)
         @php($study = $page['study'])
         @php($version = $page['version'])
         <div @if ($i > 0) class="next" @endif>
-            @if ($i > 0 && ! ($layout['preprinted'] || $layout['header_image']))
-                <div style="height: 2mm"></div>
+            {{-- Every imaging page starts with the clinic header, also after lab results. --}}
+            @if ($i > 0 || isset($lab))
+                @include('imaging::partials.letterhead')
             @endif
             <table class="patient">
                 <tr>

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Modules\FrontDesk\Events\OrderPlaced;
+use Modules\Imaging\Events\ReportSigned;
 use Modules\Laboratory\Events\ResultsReleased;
 use Modules\Messaging\Console\DueRemindersCommand;
 use Modules\Messaging\Console\RetryCommand;
@@ -61,6 +62,11 @@ final class MessagingModule extends Module
 
         foreach ([OrderPlaced::class, ResultsReleased::class] as $event) {
             Event::listen($event, [NotifyPatients::class, 'handle']);
+        }
+
+        // Imaging is optional: when it is installed, a signed imaging report counts towards "report ready".
+        if (class_exists(ReportSigned::class)) {
+            Event::listen(ReportSigned::class, [NotifyPatients::class, 'handle']);
         }
 
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([DueRemindersCommand::class, RetryCommand::class]));

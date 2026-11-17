@@ -23,15 +23,26 @@ final class ImagingReportController
             $only = [$study->id];
         }
 
+        return $this->respond(fn () => $print->handle($order, $only), $order, 'imaging');
+    }
+
+    /** Lab results and imaging reports of the order in one file. */
+    public function all(Order $order, PrintImagingReport $print): Response
+    {
+        return $this->respond(fn () => $print->handle($order, null, withLab: true), $order, 'reports');
+    }
+
+    private function respond(callable $make, Order $order, string $name): Response
+    {
         try {
-            $bytes = $print->handle($order, $only);
+            $bytes = $make();
         } catch (ImagingException $e) {
             return response($e->getMessage(), 409, ['Content-Type' => 'text/plain; charset=utf-8']);
         }
 
         return response($bytes, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="imaging-'.$order->order_no.'.pdf"',
+            'Content-Disposition' => 'inline; filename="'.$name.'-'.$order->order_no.'.pdf"',
             'Cache-Control' => 'private, no-store',
         ]);
     }

@@ -8,12 +8,14 @@ use App\Core\Modules\ModuleListener;
 use App\Core\Settings\Settings;
 use Modules\FrontDesk\Events\OrderPlaced;
 use Modules\FrontDesk\Models\Order;
+use Modules\Imaging\Events\ReportSigned;
 use Modules\Laboratory\Enums\WorkStatus;
 use Modules\Laboratory\Events\ResultsReleased;
 use Modules\Laboratory\Models\WorkItem;
 use Modules\Messaging\Enums\Channel;
 use Modules\Messaging\Models\Message;
 use Modules\Messaging\Permissions;
+use Modules\Messaging\Support\ImagingReports;
 use Modules\Messaging\Support\Messenger;
 use Modules\Messaging\Support\OrderValues;
 use Modules\Messaging\Support\ReportLinks;
@@ -36,7 +38,8 @@ final class NotifyPatients extends ModuleListener
         try {
             match (true) {
                 $event instanceof OrderPlaced => $this->orderPlaced($event->order),
-                $event instanceof ResultsReleased => $this->resultsReleased($event->workItem),
+                $event instanceof ResultsReleased => $this->reportsReady($event->workItem->order_id),
+                $event instanceof ReportSigned => $this->reportsReady($event->study->order_id),
                 default => null,
             };
         } catch (Throwable $e) {
@@ -59,8 +62,11 @@ final class NotifyPatients extends ModuleListener
         );
     }
 
-    /** One message per order, sent when its last result is released. */
-    private function resultsReleased(WorkItem $item): void
+    /**
+     * One message per order, sent when nothing on it is still waiting: every
+     * lab test released and, with imaging on, every imaging report signed.
+     */
+    private function reportsReady(int $orderId): void
     {
         $settings = app(Settings::class);
 
@@ -68,11 +74,12 @@ final class NotifyPatients extends ModuleListener
             return;
         }
 
-        $waiting = WorkItem::where('order_id', $item->order_id)
+        $waiting = WorkItem::where('order_id', $orderId)
             ->whereNotIn('status', [WorkStatus::Released->value, WorkStatus::Cancelled->value])
-            ->exists();
+            ->exists()
+            || (ImagingReports::on() && ImagingReports::waiting($orderId));
 
-        $order = Order::with('patient')->find($item->order_id);
+        $order = Order::with('patient')->find($orderId);
 
         if ($waiting || $order?->patient === null) {
             return;

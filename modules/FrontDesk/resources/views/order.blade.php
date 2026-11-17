@@ -69,6 +69,26 @@
         </div>
     </x-filament::section>
 
+    @if ($this->reports !== [])
+        <x-filament::section heading="Reports">
+            <table class="dms-table">
+                <tbody>
+                    @foreach ($this->reports as $report)
+                        <tr>
+                            <td>{{ $report['label'] }}</td>
+                            <td><x-filament::badge :color="$report['color']">{{ $report['status'] }}</x-filament::badge></td>
+                            <td class="dms-num">
+                                @if ($report['url'])
+                                    <x-filament::button size="sm" color="gray" tag="a" :href="$report['url']" target="_blank">Print</x-filament::button>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </x-filament::section>
+    @endif
+
     <x-filament::section heading="Invoice lines" description="Lines are never edited. A change after issue appears as its own line.">
         <div class="dms-scroll">
             <table class="dms-table">

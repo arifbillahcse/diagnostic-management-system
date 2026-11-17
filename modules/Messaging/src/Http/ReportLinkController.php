@@ -11,6 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\FrontDesk\Models\Invoice;
 use Modules\Messaging\Models\ReportLink;
+use Modules\Messaging\Support\ImagingReports;
 use Modules\Messaging\Support\ReportLinks;
 use Modules\Reports\Permissions as ReportPermissions;
 use Modules\Reports\Support\ReportBuilder;
@@ -39,13 +40,18 @@ final class ReportLinkController
             return $this->unavailable('Your report is ready. Please contact the clinic to collect it.', 403);
         }
 
-        try {
-            $data = $builder->forOrder($order);
-        } catch (ReportException) {
-            return $this->unavailable('Your report is not ready yet. Please try again later.', 404);
-        }
+        if (ImagingReports::hasSigned($order->id)) {
+            // Imaging reports, with the lab results when there are any, in one file.
+            $bytes = ImagingReports::pdfFor($order);
+        } else {
+            try {
+                $data = $builder->forOrder($order);
+            } catch (ReportException) {
+                return $this->unavailable('Your report is not ready yet. Please try again later.', 404);
+            }
 
-        $bytes = $pdf->render('reports::lab-report', $data);
+            $bytes = $pdf->render('reports::lab-report', $data);
+        }
 
         DB::connection('clinic')->transaction(function () use ($link, $order, $audit): void {
             ReportLink::whereKey($link->id)->update(['opened_count' => DB::raw('opened_count + 1'), 'last_opened_at' => now()]);

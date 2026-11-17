@@ -600,6 +600,26 @@ image, script and style is removed (`Html::clean`).
 the shared signatures (core `signatories`). Only signed studies print, at
 their latest version; an amended report says so with the reason.
 
+**Delivery (10b).**
+- The order page has a Reports section filled by modules through the front
+  desk's `OrderReports` registry: the lab report row (from lab reports) and
+  one row per imaging study (from imaging), each with a print button when
+  ready, plus "All ready reports in one file" when lab results and a signed
+  imaging report both exist.
+- The combined file is one PDF: the lab results (the lab report's shared
+  body, `reports::partials.lab-content`), then one page per signed imaging
+  study, each starting with the clinic header.
+- Signing an imaging report fires `ReportSigned` after the commit. With
+  messaging on, "report ready" is sent once per order when every lab test is
+  released and every imaging study is signed or cancelled; the patient's link
+  then opens the combined file. Amendments do not send again.
+- The clinic's "do not print while a due is unpaid" rule (under Lab report
+  printing) applies to imaging prints too, with the same bypass permission.
+- Imaging uses lab reports and the laboratory only when they are installed
+  and on (listed as `suggests`); messaging uses imaging the same way.
+- `imaging:sync-studies` (hourly) adds studies missing from open orders of
+  the last three days, for example orders billed before imaging was on.
+
 **Starter templates.** Example sets (whole abdomen, lower abdomen male and
 female, KUB, pregnancy, chest X-ray, ECG) can be copied onto an imaging
 service. They are examples for the clinic's doctor to correct.

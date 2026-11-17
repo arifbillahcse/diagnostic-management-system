@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "core": ">=1.0.0",
   "requires": ["frontdesk"],
-  "suggests": [],
+  "suggests": ["reports", "laboratory"],
   "table_prefix": "img_",
   "default_enabled": false,
   "entry": "Modules\\Imaging\\ImagingModule"

@@ -43,7 +43,7 @@ not be built early.
 | Report header and footer banners, watermark | Most | Built | 3, follow-up | Pilot clinic's letterhead |
 | Calculated values (for example ratios) | Not stated | Reserved, not built | Later | |
 | Analyzer integration (ASTM, HL7) | MySoft, Esteem Soft | Yes | 11 | |
-| Imaging reports (ultrasound, X-ray) | E-Medical Software | Templates, writing, signing, versions and printing built (10a); delivery and portal next | 10 | |
+| Imaging reports (ultrasound, X-ray) | E-Medical Software | Templates, writing, signing, versions, printing (10a); order page, combined lab and imaging file, report-ready SMS (10b) built; portal next | 10 | |
 | PACS image viewing | E-Medical Software | No | | |
 
 ## Money and management

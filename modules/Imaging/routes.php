@@ -11,3 +11,4 @@ use Modules\Imaging\Http\ImagingReportController;
 */
 
 Route::get('/print/imaging/{order:public_id}', [ImagingReportController::class, 'pdf'])->name('imaging.print');
+Route::get('/print/reports/{order:public_id}', [ImagingReportController::class, 'all'])->name('imaging.print.all');

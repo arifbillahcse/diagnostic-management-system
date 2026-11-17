@@ -228,12 +228,12 @@ listener needs a new major version of the module that raises the event.
 | `reports` | Lab reports | `rep_` | `laboratory` | | On |
 | `finance` | Finance | `fin_` | `frontdesk` | `inventory` | Off |
 | `owner` | Owner dashboard and analytics | `own_` | `frontdesk` | `laboratory`, `finance` | Off |
-| `communication` | SMS, email, WhatsApp | `com_` | | `frontdesk`, `reports` | Off |
+| `messaging` | SMS and email | `msg_` | `reports` | `imaging` | Off |
 | `inventory` | Inventory | `inv_` | `frontdesk` | `laboratory`, `finance` | Off |
 | `people` | Staff and attendance | `ppl_` | | `finance` | Off |
 | `payments` | Online payments | `pay_` | `frontdesk` | | Off |
 | `portal` | Patient portal | `por_` | `reports` | `payments` | Off |
-| `imaging` | Imaging reports | `img_` | `frontdesk` | | Off |
+| `imaging` | Imaging reports | `img_` | `frontdesk` | `reports`, `laboratory` | Off |
 | `analyzers` | Lab machine integration | `anz_` | `laboratory` | | Off |
 | `multibranch` | Multi-branch | `mb_` | | | Off |
 

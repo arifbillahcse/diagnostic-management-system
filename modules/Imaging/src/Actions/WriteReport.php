@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Modules\Imaging\Enums;
+use Modules\Imaging\Events\ReportSigned;
 use Modules\Imaging\Models\ReportVersion;
 use Modules\Imaging\Models\Study;
 use Modules\Imaging\Models\Template;
@@ -73,7 +74,7 @@ final class WriteReport
     {
         Gate::authorize(Permissions::REPORTS_SIGN, $study->branch_id);
 
-        return DB::connection('clinic')->transaction(function () use ($study, $text, $lockVersion): Study {
+        $signed = DB::connection('clinic')->transaction(function () use ($study, $text, $lockVersion): Study {
             $study = $this->locked($study, $lockVersion);
 
             if (! $study->isEditable()) {
@@ -127,6 +128,11 @@ final class WriteReport
 
             return $study;
         });
+
+        // After the commit, so listeners (the "report ready" message) see the signed report.
+        event(new ReportSigned($signed));
+
+        return $signed;
     }
 
     /** final → amending. The last signed text becomes the draft to correct. */
