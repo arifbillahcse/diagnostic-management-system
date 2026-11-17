@@ -6,13 +6,16 @@ namespace Modules\Portal\Tests;
 
 use App\Core\Audit\AuditLog;
 use App\Core\Modules\ModuleManager;
+use App\Core\Numbering\NumberGenerator;
 use App\Core\Settings\Settings;
+use Illuminate\Support\Str;
 use Modules\FrontDesk\Actions\AdjustOrder;
 use Modules\FrontDesk\Enums\ServiceType;
 use Modules\FrontDesk\Models\Order;
 use Modules\Imaging\Actions\WriteReport;
 use Modules\Imaging\Models\Study;
 use Modules\Laboratory\Tests\LabTestCase;
+use Modules\Messaging\Support\ReportLinks;
 use Modules\Reports\Permissions as ReportPermissions;
 
 class PortalTest extends LabTestCase
@@ -168,5 +171,19 @@ class PortalTest extends LabTestCase
 
         $this->asPatient();
         $this->get(self::BASE.'/reports')->assertNotFound();
+    }
+
+    public function test_the_sms_link_opens_the_patients_portal_page_and_the_form_shows_the_clinics_bill_format(): void
+    {
+        app(ModuleManager::class)->enable('messaging');
+        $order = $this->released();
+        $token = Str::of(app(ReportLinks::class)->create($order))->afterLast('/r/')->toString();
+        $this->asPatient();
+
+        $this->get(self::BASE.'/r/'.$token)->assertRedirect(self::BASE.'/reports/'.$order->public_id);
+        $this->get(self::BASE.'/reports/'.$order->public_id)->assertOk()->assertSee('Download lab report (PDF)');
+
+        $example = app(NumberGenerator::class)->format('invoice')->render(34, now('Asia/Dhaka'), $this->branch->code);
+        $this->get(self::BASE.'/reports')->assertSee('placeholder="'.$example.'"', false);
     }
 }

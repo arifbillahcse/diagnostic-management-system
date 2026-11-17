@@ -13,16 +13,16 @@ use Modules\FrontDesk\Models\Order;
  */
 final class OrderReports
 {
-    /** @var list<callable(Order): list<array{label: string, status: string, color: string, url: ?string, order?: int}>> */
+    /** @var list<callable(Order): list<array{label: string, status: string, color: string, url: ?string, open_url?: ?string, order?: int}>> */
     private array $providers = [];
 
-    /** @param callable(Order): list<array{label: string, status: string, color: string, url: ?string, order?: int}> $provider */
+    /** @param callable(Order): list<array{label: string, status: string, color: string, url: ?string, open_url?: ?string, order?: int}> $provider */
     public function add(callable $provider): void
     {
         $this->providers[] = $provider;
     }
 
-    /** @return list<array{label: string, status: string, color: string, url: ?string, order?: int}> */
+    /** @return list<array{label: string, status: string, color: string, url: ?string, open_url?: ?string, order?: int}> */
     public function for(Order $order): array
     {
         $rows = [];

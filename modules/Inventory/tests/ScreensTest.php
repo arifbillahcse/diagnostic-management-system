@@ -275,4 +275,13 @@ final class ScreensTest extends InventoryTestCase
         $this->actingAs($this->staff('receptionist'));
         $this->assertFalse(StockAlertsWidget::canView());
     }
+
+    public function test_a_purchase_prints_for_the_supplier_file(): void
+    {
+        $purchase = $this->buy([['item_id' => $this->item()->id, 'quantity' => '10', 'unit_cost' => '3.50']]);
+
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/purchase/{$purchase->public_id}")->assertOk()
+            ->assertSee($purchase->purchase_no)->assertSee('EDTA tube')->assertSee('35.00');
+        $this->signIn($this->staff('receptionist'))->get(self::BASE."/print/purchase/{$purchase->public_id}")->assertForbidden();
+    }
 }

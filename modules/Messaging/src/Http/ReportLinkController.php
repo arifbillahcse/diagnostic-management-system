@@ -6,13 +6,16 @@ namespace Modules\Messaging\Http;
 
 use App\Core\Audit\AuditLogger;
 use App\Core\Documents\PdfRenderer;
+use App\Core\Modules\ModuleState;
 use App\Core\Settings\Settings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\FrontDesk\Models\Invoice;
 use Modules\Messaging\Models\ReportLink;
 use Modules\Messaging\Support\ImagingReports;
 use Modules\Messaging\Support\ReportLinks;
+use Modules\Portal\Support\PortalAccess;
 use Modules\Reports\Permissions as ReportPermissions;
 use Modules\Reports\Support\ReportBuilder;
 use Modules\Reports\Support\ReportException;
@@ -24,7 +27,7 @@ use Modules\Reports\Support\ReportException;
  */
 final class ReportLinkController
 {
-    public function show(string $token, ReportLinks $links, ReportBuilder $builder, PdfRenderer $pdf, Settings $settings, AuditLogger $audit): Response
+    public function show(string $token, ReportLinks $links, ReportBuilder $builder, PdfRenderer $pdf, Settings $settings, AuditLogger $audit): Response|RedirectResponse
     {
         $link = $links->find($token);
 
@@ -38,6 +41,18 @@ final class ReportLinkController
         // The clinic's own rule on reports and unpaid bills applies here too.
         if ($settings->get(ReportPermissions::SETTING_BLOCK_WHEN_DUE, false) && $invoice !== null && $invoice->due_amount->isPositive()) {
             return $this->unavailable('Your report is ready. Please contact the clinic to collect it.', 403);
+        }
+
+        // With the patient portal on, the link opens the patient's own page for this
+        // bill: what is ready, what is waiting, and every download.
+        if (class_exists(PortalAccess::class) && app(ModuleState::class)->isEnabled('portal')) {
+            app(PortalAccess::class)->grant($order);
+            DB::connection('clinic')->transaction(function () use ($link, $order, $audit): void {
+                ReportLink::whereKey($link->id)->update(['opened_count' => DB::raw('opened_count + 1'), 'last_opened_at' => now()]);
+                $audit->record('report.link_opened', $order, [], [], ['order_no' => $order->order_no, 'to' => 'portal']);
+            });
+
+            return redirect()->route('portal.show', $order->public_id);
         }
 
         if (ImagingReports::hasSigned($order->id)) {

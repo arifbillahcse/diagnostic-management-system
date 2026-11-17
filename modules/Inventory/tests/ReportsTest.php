@@ -74,7 +74,7 @@ final class ReportsTest extends InventoryTestCase
 
         $this->artisan('inventory:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
 
-        $this->assertSame(6, Item::count());
+        $this->assertSame(7, Item::count());
         $this->assertSame(1, Purchase::count());
         $this->assertSame(3, Usage::count(), 'Only CBC exists');
         $this->assertSame('300', Item::where('code', 'EDTA')->value('quantity')->formatted());

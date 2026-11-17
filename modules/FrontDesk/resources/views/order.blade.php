@@ -78,6 +78,9 @@
                             <td>{{ $report['label'] }}</td>
                             <td><x-filament::badge :color="$report['color']">{{ $report['status'] }}</x-filament::badge></td>
                             <td class="dms-num">
+                                @if (! empty($report['open_url']))
+                                    <x-filament::button size="sm" color="gray" tag="a" :href="$report['open_url']">Open</x-filament::button>
+                                @endif
                                 @if ($report['url'])
                                     <x-filament::button size="sm" color="gray" tag="a" :href="$report['url']" target="_blank">Print</x-filament::button>
                                 @endif

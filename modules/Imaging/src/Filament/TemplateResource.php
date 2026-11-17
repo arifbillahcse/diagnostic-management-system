@@ -6,6 +6,7 @@ namespace Modules\Imaging\Filament;
 
 use App\Core\Modules\GatesModuleResource;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -22,6 +23,7 @@ use Filament\Tables\Table;
 use Illuminate\Validation\Rules\Unique;
 use Modules\FrontDesk\Enums\ServiceType;
 use Modules\FrontDesk\Models\Service;
+use Modules\Imaging\Actions\CopyTemplate;
 use Modules\Imaging\Enums;
 use Modules\Imaging\Models\Template;
 use Modules\Imaging\Permissions;
@@ -98,7 +100,18 @@ class TemplateResource extends Resource
             ])
             ->defaultSort('service_id')
             ->filters([SelectFilter::make('service_id')->label('Imaging test')->options(fn (): array => static::imagingServices())])
-            ->recordActions([EditAction::make()->modalWidth('5xl')]);
+            ->recordActions([
+                EditAction::make()->modalWidth('5xl'),
+                Action::make('copy')->label('Copy to another test')->icon(Heroicon::OutlinedDocumentDuplicate)->color('gray')
+                    ->fillForm(fn (Template $record): array => ['name' => $record->name])
+                    ->schema([
+                        Select::make('service_id')->label('Imaging test')->required()->searchable()->options(fn (): array => static::imagingServices()),
+                        TextInput::make('name')->required()->maxLength(255),
+                    ])
+                    ->action(function (Action $action, Template $record, array $data): void {
+                        Guard::run($action, fn () => app(CopyTemplate::class)->handle($record, (int) $data['service_id'], (string) $data['name']), 'Template copied');
+                    }),
+            ]);
     }
 
     public static function getPages(): array

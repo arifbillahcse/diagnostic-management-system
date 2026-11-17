@@ -11,7 +11,7 @@
         <form method="post" action="{{ route('portal.lookup') }}" autocomplete="off">
             @csrf
             <label for="bill_no">Bill number</label>
-            <input id="bill_no" name="bill_no" value="{{ $old['bill_no'] ?? old('bill_no') }}" placeholder="2611-00034" maxlength="40" required autofocus>
+            <input id="bill_no" name="bill_no" value="{{ $old['bill_no'] ?? old('bill_no') }}" placeholder="{{ $example }}" maxlength="40" required autofocus>
             <label for="mobile">Mobile number</label>
             <input id="mobile" name="mobile" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="20" required>
             <button class="btn" type="submit">See my reports</button>

@@ -68,6 +68,11 @@ final class ImagingModule extends Module
         return class_exists(Filament\Screens::class) ? Filament\Screens::pages() : [];
     }
 
+    public function widgets(): array
+    {
+        return class_exists(Filament\Screens::class) ? Filament\Screens::widgets() : [];
+    }
+
     public function boot(): void
     {
         View::addNamespace('imaging', $this->manifest->path.'/resources/views');
@@ -90,6 +95,8 @@ final class ImagingModule extends Module
                 'status' => Enums::status($study->status),
                 'color' => Enums::color($study->status),
                 'url' => $study->status === 'final' ? route('imaging.print', ['order' => $order->public_id, 'study' => $study->public_id]) : null,
+                'open_url' => Gate::allows(Permissions::REPORTS_WRITE, $order->branch_id) || Gate::allows(Permissions::REPORTS_SIGN, $order->branch_id)
+                    ? Filament\StudyResource::getUrl('report', ['record' => $study]) : null,
                 'order' => 20,
             ])->all();
 
@@ -102,7 +109,7 @@ final class ImagingModule extends Module
             return $rows;
         });
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\SyncStudiesCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\SyncStudiesCommand::class, Console\SampleDataCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('imaging:sync-studies')->hourlyAt(25);

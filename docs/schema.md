@@ -564,7 +564,8 @@ the same transaction, from the chosen account. Gross salary cost = advances +
 salary expenses. With finance off, only the dates are kept.
 
 **Payslips.** A5, one per page, for approved or paid runs; print one or the
-whole run. Need `people.salary.manage`.
+whole run. A salary sheet (A4 landscape, every person with a signature
+column) prints for the same runs. Need `people.salary.manage`.
 
 ## 8f. Module: imaging reports (`img_`, key `imaging`)
 
@@ -650,6 +651,9 @@ of its own.
   the report is ready and to contact the clinic; nothing downloads.
 - **Records:** every successful look-up (`portal.opened`) and download
   (`portal.downloaded`) is audited. Pages carry `noindex` and `no-store`.
+- **From the SMS:** with the portal on, the "report ready" link opens this
+  page for that bill directly (the link counts as the look-up and is
+  audited); with the portal off it opens the PDF as before.
 - **On the bill:** while the portal is on, invoices print "See your reports
   online: <domain>/reports", through the front desk's `InvoiceNotes`
   registry.

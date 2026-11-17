@@ -48,6 +48,8 @@ class ViewPurchase extends Page
         $open = fn (): bool => ! $this->record->isVoid() && ! $this->record->isPaid();
 
         return [
+            Action::make('print')->label('Print')->color('gray')
+                ->url(fn (): string => route('inventory.print.purchase', $this->record->public_id), shouldOpenInNewTab: true),
             Action::make('pay')
                 ->label('Mark paid')
                 ->visible(fn (): bool => $open() && Gate::allows(Permissions::PURCHASES_PAY, $this->record->branch_id))

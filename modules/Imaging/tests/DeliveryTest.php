@@ -6,6 +6,7 @@ namespace Modules\Imaging\Tests;
 
 use App\Core\Modules\ModuleManager;
 use App\Core\Settings\Settings;
+use App\Core\Tenancy\ClinicContext;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Modules\FrontDesk\Enums\ServiceType;
@@ -15,7 +16,9 @@ use Modules\FrontDesk\Models\Service;
 use Modules\FrontDesk\Support\OrderReports;
 use Modules\Imaging\Actions\WriteReport;
 use Modules\Imaging\Events\ReportSigned;
+use Modules\Imaging\Filament\ImagingStatusWidget;
 use Modules\Imaging\Models\Study;
+use Modules\Imaging\Models\Template;
 use Modules\Imaging\Support\LabReports;
 use Modules\Imaging\Support\ReportData;
 use Modules\Laboratory\Tests\LabTestCase;
@@ -147,5 +150,36 @@ class DeliveryTest extends LabTestCase
 
         $this->assertSame('pending', Study::where('order_id', $order->id)->sole()->status);
         $this->artisan('imaging:sync-studies')->expectsOutputToContain('0 missing')->assertSuccessful();
+    }
+
+    public function test_the_dashboard_counts_waiting_reports_and_doctors_get_an_open_button(): void
+    {
+        $order = $this->mixedOrder();
+        $this->actingAs($this->ownerUser);
+        $this->assertSame(['pending' => 1, 'drafts' => 0, 'late' => 0], ImagingStatusWidget::figures());
+
+        $this->travelTo($order->delivery_at->addHour());
+        $this->assertSame(1, ImagingStatusWidget::figures()['late']);
+
+        $this->actingAs($this->verifierUser);
+        $this->assertTrue(ImagingStatusWidget::canView());
+        $this->assertNotNull($this->rows($order)['USG whole abdomen']['open_url']);
+
+        $this->actingAs($this->staff('receptionist'));
+        $this->assertFalse(ImagingStatusWidget::canView());
+        $this->assertNull($this->rows($order)['USG whole abdomen']['open_url'] ?? null);
+    }
+
+    public function test_the_sample_data_adds_templates_and_signs_a_few_reports(): void
+    {
+        $this->service('X-ray chest P/A view', '500', ServiceType::Imaging);
+        $this->mixedOrder();
+        $clinic = app(ClinicContext::class)->require();
+
+        $this->artisan('imaging:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
+
+        $this->assertSame(['Normal', 'Fatty liver (grade I)', 'Cholelithiasis'], Template::where('service_id', $this->usg->id)->orderBy('sort_order')->pluck('name')->all());
+        $this->assertSame(1, Study::where('status', 'final')->count());
+        $this->artisan('imaging:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertFailed();
     }
 }

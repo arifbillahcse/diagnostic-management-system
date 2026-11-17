@@ -130,9 +130,19 @@ class DailyAttendance extends Page
 
     public function markAllPresent(): void
     {
+        $this->markRest('present');
+    }
+
+    /** Fills every unmarked row (present, weekly off, or holiday). Nothing is saved until "Save attendance". */
+    public function markRest(string $status): void
+    {
+        if (! in_array($status, ['present', 'off', 'holiday'], true)) {
+            return;
+        }
+
         foreach ($this->rows as $id => $row) {
             if (blank($row['status'])) {
-                $this->rows[$id]['status'] = 'present';
+                $this->rows[$id]['status'] = $status;
             }
         }
     }

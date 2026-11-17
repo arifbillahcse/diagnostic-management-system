@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Modules\Portal\Http;
 
 use App\Core\Audit\AuditLogger;
+use App\Core\Branches\Branch;
 use App\Core\Documents\Letterhead;
+use App\Core\Numbering\NumberGenerator;
+use App\Core\Tenancy\ClinicContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -30,6 +33,18 @@ final class PortalController
     public function form(): Response
     {
         return $this->page('portal::form', []);
+    }
+
+    /** A bill number in this clinic's own format, as the example in the form. */
+    private function example(): string
+    {
+        try {
+            $format = app(NumberGenerator::class)->format('invoice');
+
+            return $format->render(34, now(app(ClinicContext::class)->timezone()), (string) Branch::orderBy('id')->value('code'));
+        } catch (\Throwable) {
+            return '2611-00034';
+        }
     }
 
     public function lookup(Request $request): Response|RedirectResponse
@@ -106,7 +121,7 @@ final class PortalController
     /** @param array<string, mixed> $data */
     private function page(string $view, array $data, int $status = 200): Response
     {
-        return response()->view($view, $data + ['clinic' => $this->letterhead->data()], $status)
+        return response()->view($view, $data + ['clinic' => $this->letterhead->data(), 'example' => $this->example()], $status)
             ->header('X-Robots-Tag', 'noindex, nofollow')
             ->header('Cache-Control', 'private, no-store');
     }

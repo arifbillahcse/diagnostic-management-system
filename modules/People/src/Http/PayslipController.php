@@ -30,6 +30,19 @@ final class PayslipController
         return $this->render($run, $run->lines()->get());
     }
 
+    /** One sheet for the whole run: every person, their pay, and a column to sign on receipt. */
+    public function sheet(SalaryRun $run): View
+    {
+        Gate::authorize(Permissions::SALARY_MANAGE, $run->branch_id);
+        abort_unless($run->isSettled(), 404);
+
+        return view('people::print.salary-sheet', [
+            'clinic' => $this->letterhead->data($run->branch),
+            'run' => $run->load('branch'),
+            'lines' => $run->lines()->with('staff')->get()->sortBy(fn (SalaryLine $l) => $l->staff->name)->values(),
+        ]);
+    }
+
     /** @param Collection<int, SalaryLine> $lines */
     private function render(SalaryRun $run, $lines): View
     {

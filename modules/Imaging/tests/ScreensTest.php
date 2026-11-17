@@ -6,6 +6,7 @@ namespace Modules\Imaging\Tests;
 
 use App\Core\Settings\Settings;
 use Livewire\Livewire;
+use Modules\FrontDesk\Enums\ServiceType;
 use Modules\Imaging\Actions\AddStarterTemplates;
 use Modules\Imaging\Filament\ListStudies;
 use Modules\Imaging\Filament\ManagePhrases;
@@ -123,5 +124,20 @@ class ScreensTest extends ImagingTestCase
             ->callAction('create', ['title' => 'Gas', 'body' => 'Limited by bowel gas.', 'is_active' => true])
             ->assertHasNoActionErrors();
         $this->assertSame('Limited by bowel gas.', Phrase::where('title', 'Gas')->value('body'));
+    }
+
+    public function test_a_template_is_copied_to_another_test(): void
+    {
+        $template = $this->template('Normal');
+        $upper = $this->service('USG upper abdomen', '1000', ServiceType::Imaging);
+
+        Livewire::test(ManageTemplates::class)
+            ->callTableAction('copy', $template, ['service_id' => $upper->id, 'name' => 'Normal'])
+            ->assertNotified('Template copied');
+        $this->assertSame($template->findings, Template::where('service_id', $upper->id)->value('findings'));
+
+        Livewire::test(ManageTemplates::class)
+            ->callTableAction('copy', $template, ['service_id' => $upper->id, 'name' => 'Normal'])
+            ->assertNotified('Not done');
     }
 }

@@ -9,6 +9,7 @@ use App\Core\Numbering\NumberGenerator;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Modules\FrontDesk\Events\OrderCancelled;
 use Modules\FrontDesk\Events\OrderItemAdded;
@@ -71,6 +72,10 @@ final class InventoryModule extends Module
     public function boot(): void
     {
         View::addNamespace('inventory', $this->manifest->path.'/resources/views');
+
+        if (is_file($routes = $this->manifest->path.'/routes.php')) {
+            Route::middleware(['web', 'auth', 'module:inventory'])->group($routes);
+        }
 
         NumberGenerator::registerDefault('purchase', 'PO-{yymm}-{00001}', 'Purchase number', 'inventory');
 

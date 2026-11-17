@@ -20,4 +20,10 @@ final class Screens
     {
         return [];
     }
+
+    /** @return list<class-string> */
+    public static function widgets(): array
+    {
+        return [ImagingStatusWidget::class];
+    }
 }

@@ -240,4 +240,26 @@ class ScreensTest extends PeopleTestCase
 
         $this->artisan('people:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertFailed();
     }
+
+    public function test_the_salary_sheet_prints_for_a_settled_run_and_the_rest_can_be_marked_off(): void
+    {
+        $karim = $this->person();
+        $rina = $this->person('Rina Akter');
+        $run = app(RunPayroll::class)->start($this->branch, '2026-10');
+
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/salary-sheet/{$run->public_id}")->assertNotFound();
+        app(RunPayroll::class)->approve($run);
+        $this->signIn($this->ownerUser)->get(self::BASE."/print/salary-sheet/{$run->public_id}")->assertOk()
+            ->assertSee('Salary sheet October 2026')->assertSee('Karim Mia')->assertSee('Rina Akter')->assertSee('30,000.00');
+        $this->signIn($this->staff('receptionist'))->get(self::BASE."/print/salary-sheet/{$run->public_id}")->assertForbidden();
+
+        $this->actingAs($this->ownerUser);
+        Livewire::test(DailyAttendance::class)
+            ->set("rows.{$karim->id}.status", 'present')
+            ->call('markRest', 'holiday')
+            ->assertSet("rows.{$karim->id}.status", 'present')
+            ->assertSet("rows.{$rina->id}.status", 'holiday')
+            ->call('markRest', 'sleeping')
+            ->call('save')->assertNotified('Attendance saved');
+    }
 }

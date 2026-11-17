@@ -155,6 +155,10 @@ class ViewSalaryRun extends Page
                 ->visible(fn (): bool => $run()->isSettled())
                 ->url(fn (): string => route('people.print.payslips', $run()->public_id), shouldOpenInNewTab: true),
 
+            Action::make('sheet')->label('Print salary sheet')->color('gray')
+                ->visible(fn (): bool => $run()->isSettled())
+                ->url(fn (): string => route('people.print.salary-sheet', $run()->public_id), shouldOpenInNewTab: true),
+
             Action::make('cancel')->label('Cancel run')->color('danger')
                 ->visible(fn (): bool => ($run()->isDraft() && $can(Permissions::PAYROLL_PREPARE)) || ($run()->status === 'approved' && $can(Permissions::PAYROLL_APPROVE)))
                 ->modalDescription('The month is opened again, and any advance this run took back is owed again.')

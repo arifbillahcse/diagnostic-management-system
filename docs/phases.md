@@ -29,6 +29,14 @@
   days, documents brought in line with the code. Not done: the MySQL test
   run (skipped at the owner's request).
 
+- **Polish of Phases 9 and 10** (after a review): imaging reports waiting
+  on the dashboard; an "Open" button on the order page for doctors; copying
+  an imaging template to another test; `imaging:sample-data`; the "report
+  ready" SMS link opens the patient's portal page when the portal is on; the
+  portal shows an example bill number in the clinic's own format; a salary
+  sheet for a whole run; "mark the rest weekly off / holiday" on the daily
+  attendance sheet; a printable purchase; X-ray film in the sample stock.
+
 ## How every phase ends
 
 1. All tests pass.

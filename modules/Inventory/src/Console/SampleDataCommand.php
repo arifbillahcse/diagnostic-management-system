@@ -41,6 +41,7 @@ final class SampleDataCommand extends Command
         'URCUP' => ['Urine container', 'consumable', 'piece', '30', false, '150', '5.00', null],
         'GLU-R' => ['Glucose reagent', 'reagent', 'ml', '100', true, '500', '1.20', 'GL2611'],
         'LIP-R' => ['Lipid profile reagent kit', 'reagent', 'test', '20', true, '100', '45.00', 'LP2611'],
+        'XFILM' => ['X-ray film 14x17 in', 'consumable', 'sheet', '25', true, '100', '60.00', 'XF2611'],
     ];
 
     /** service code => [item code => quantity per test] */
@@ -50,6 +51,7 @@ final class SampleDataCommand extends Command
         'FBS' => ['GLU-R' => '2', 'NEEDLE' => '1', 'SYR5' => '1'],
         'LIPID' => ['LIP-R' => '1', 'NEEDLE' => '1', 'SYR5' => '1'],
         'URINE' => ['URCUP' => '1'],
+        'XRAY-CHEST' => ['XFILM' => '1'],
     ];
 
     public function handle(ClinicManager $manager): int

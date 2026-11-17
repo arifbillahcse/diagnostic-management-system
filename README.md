@@ -369,6 +369,7 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan messaging:retry` | Tries failed messages again (three tries in all). Scheduled every ten minutes |
 | `php artisan laboratory:sample-data <clinic id>` | Loads a new clinic with sample tests, doctors, three staff accounts, patients, and ten days of orders, for trying the software. Never run it on a clinic with real data |
 | `php artisan inventory:sample-data <clinic id>` | Loads sample stock items, a supplier, one purchase, and stock use rules for the sample tests. Turn on Inventory first; best after `laboratory:sample-data` |
+| `php artisan imaging:sample-data <clinic id>` | Adds the example imaging templates to the sample ultrasound and X-ray tests and signs a few imaging reports. Turn on Imaging first; best after `laboratory:sample-data` |
 | `php artisan people:sample-data <clinic id>` | Loads four sample staff, attendance for last month and this month, one advance, and a draft salary run for last month. Turn on Staff and attendance first |
 | `php artisan imaging:sync-studies` | Adds imaging studies missing from recent open orders, for example orders billed before Imaging was switched on. Scheduled hourly |
 | `php artisan analyzers:replay <clinic id> <machine> <file>` | Feeds recorded machine output to a machine as the bridge would, to test code mappings without the machine. Messages in the file are separated by lines of `---` |

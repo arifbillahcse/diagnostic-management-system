@@ -12,3 +12,4 @@ use Modules\People\Http\PayslipController;
 
 Route::get('/print/payslip/{line:public_id}', [PayslipController::class, 'one'])->name('people.print.payslip');
 Route::get('/print/payslips/{run:public_id}', [PayslipController::class, 'run'])->name('people.print.payslips');
+Route::get('/print/salary-sheet/{run:public_id}', [PayslipController::class, 'sheet'])->name('people.print.salary-sheet');

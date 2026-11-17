@@ -53,6 +53,8 @@
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <x-filament::button wire:click="save">Save attendance</x-filament::button>
                     <x-filament::button color="gray" wire:click="markAllPresent">Mark the rest present</x-filament::button>
+                    <x-filament::button color="gray" wire:click="markRest('off')">Mark the rest weekly off</x-filament::button>
+                    <x-filament::button color="gray" wire:click="markRest('holiday')">Mark the rest holiday</x-filament::button>
                 </div>
                 <p class="dms-small" style="margin-top:8px">Times are optional. A saved mark can be changed later but not removed; every change is recorded.</p>
             @endif
