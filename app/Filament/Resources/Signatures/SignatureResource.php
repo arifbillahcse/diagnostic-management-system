@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Modules\Reports\Filament;
+namespace App\Filament\Resources\Signatures;
 
+use App\Core\Auth\CorePermissions;
 use App\Core\Auth\User;
 use App\Core\Documents\ClinicFiles;
-use App\Core\Modules\GatesModuleResource;
+use App\Core\Documents\Signatory;
+use App\Filament\Concerns\AuthorizesWithPermission;
+use App\Filament\Resources\Signatures\Pages\ManageSignatures;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
@@ -19,35 +22,30 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Modules\Reports\Models\Signatory;
-use Modules\Reports\Permissions;
 use UnitEnum;
 
-/** How each person who verifies results is named on a printed report. */
-class SignatoryResource extends Resource
+/** How each person who signs reports (lab or imaging) is named on paper. */
+class SignatureResource extends Resource
 {
-    use GatesModuleResource;
+    use AuthorizesWithPermission;
 
     protected static ?string $model = Signatory::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPencilSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Lab set-up';
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
 
-    protected static ?int $navigationSort = 40;
+    protected static ?int $navigationSort = 46;
 
-    protected static ?string $navigationLabel = 'Report signatories';
+    protected static ?string $navigationLabel = 'Report signatures';
 
-    protected static ?string $slug = 'lab-setup/signatories';
+    protected static ?string $modelLabel = 'signature';
 
-    public static function moduleKey(): string
+    protected static ?string $slug = 'signatures';
+
+    public static function permission(): string
     {
-        return 'reports';
-    }
-
-    protected static function permissionFor(string $operation): ?string
-    {
-        return in_array($operation, ['viewAny', 'view', 'create', 'update', 'delete'], true) ? Permissions::SETTINGS_MANAGE : null;
+        return CorePermissions::SETTINGS_MANAGE;
     }
 
     public static function form(Schema $schema): Schema
@@ -59,10 +57,10 @@ class SignatoryResource extends Resource
                 ->searchable()
                 ->unique(ignoreRecord: true)
                 ->options(fn (): array => User::where('is_active', true)->orderBy('name')->pluck('name', 'id')->all())
-                ->helperText('The account this person signs in with. Their name below is printed when they verify a result.'),
+                ->helperText('The account this person signs in with. Their name below is printed on lab results they verify and imaging reports they sign.'),
             TextInput::make('display_name')->label('Name as printed')->required()->maxLength(255)->placeholder('Dr. Nasrin Sultana'),
             Textarea::make('qualifications')->label('Lines printed under the name')->rows(3)->maxLength(500)
-                ->placeholder("MBBS, MD (Pathology)\nConsultant Pathologist")->columnSpanFull(),
+                ->placeholder("MBBS, DMU (Ultrasound)\nConsultant Sonologist")->columnSpanFull(),
             FileUpload::make('signature_path')
                 ->label('Signature image')
                 ->disk(ClinicFiles::DISK)
@@ -93,6 +91,6 @@ class SignatoryResource extends Resource
 
     public static function getPages(): array
     {
-        return ['index' => ManageSignatories::route('/')];
+        return ['index' => ManageSignatures::route('/')];
     }
 }

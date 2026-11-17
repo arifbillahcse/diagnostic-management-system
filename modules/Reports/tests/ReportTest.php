@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Modules\Reports\Tests;
 
 use App\Core\Audit\AuditLog;
+use App\Core\Documents\Signatory;
 use App\Core\Settings\Settings;
 use Illuminate\Auth\Access\AuthorizationException;
 use Modules\Laboratory\Actions\VerifyResults;
 use Modules\Laboratory\Tests\LabTestCase;
 use Modules\Reports\Actions\PrintReport;
-use Modules\Reports\Models\Signatory;
 use Modules\Reports\Permissions;
 use Modules\Reports\Support\ReportBuilder;
 use Modules\Reports\Support\ReportException;

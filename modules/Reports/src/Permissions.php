@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Reports;
 
+use App\Core\Documents\PageLayout;
+
 /**
- * Permission and setting keys of the reports module.
+ * Permission and setting keys of the reports module. The page layout keys
+ * now belong to the core (PageLayout) and are kept here as aliases.
  */
 final class Permissions
 {
@@ -19,26 +22,26 @@ final class Permissions
     public const SETTINGS_MANAGE = 'reports.settings.manage';
 
     /** "print" draws the clinic header; "preprinted" leaves space for pre-printed paper. */
-    public const SETTING_LETTERHEAD = 'reports.letterhead';
+    public const SETTING_LETTERHEAD = PageLayout::SETTING_LETTERHEAD;
 
-    public const SETTING_TOP_MARGIN = 'reports.top_margin_mm';
+    public const SETTING_TOP_MARGIN = PageLayout::SETTING_TOP_MARGIN;
 
-    public const SETTING_BOTTOM_MARGIN = 'reports.bottom_margin_mm';
+    public const SETTING_BOTTOM_MARGIN = PageLayout::SETTING_BOTTOM_MARGIN;
 
-    public const SETTING_FOOTER = 'reports.footer_text';
+    public const SETTING_FOOTER = PageLayout::SETTING_FOOTER;
 
     /** Full-width banner images for the top and bottom of every page (plain paper only). */
-    public const SETTING_HEADER_IMAGE = 'reports.header_image_path';
+    public const SETTING_HEADER_IMAGE = PageLayout::SETTING_HEADER_IMAGE;
 
-    public const SETTING_FOOTER_IMAGE = 'reports.footer_image_path';
+    public const SETTING_FOOTER_IMAGE = PageLayout::SETTING_FOOTER_IMAGE;
 
     /** Faint copy of the logo behind the results. */
-    public const SETTING_WATERMARK = 'reports.watermark';
+    public const SETTING_WATERMARK = PageLayout::SETTING_WATERMARK;
 
     /** Banner file size limits, in KB. They keep PDF creation fast. */
-    public const HEADER_IMAGE_MAX_KB = 150;
+    public const HEADER_IMAGE_MAX_KB = PageLayout::HEADER_IMAGE_MAX_KB;
 
-    public const FOOTER_IMAGE_MAX_KB = 60;
+    public const FOOTER_IMAGE_MAX_KB = PageLayout::FOOTER_IMAGE_MAX_KB;
 
     public const SETTING_BLOCK_WHEN_DUE = 'reports.block_print_when_due';
 
@@ -49,7 +52,7 @@ final class Permissions
             self::REPORTS_VIEW => 'View the list of reports ready to print',
             self::REPORTS_PRINT => 'Print lab reports',
             self::REPORTS_PRINT_WITH_DUE => 'Print a report while the invoice has a due',
-            self::SETTINGS_MANAGE => 'Change report layout and signatories',
+            self::SETTINGS_MANAGE => 'Change lab report printing settings',
         ];
     }
 }

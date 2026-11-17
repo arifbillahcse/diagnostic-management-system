@@ -96,6 +96,10 @@ people.advances.manage
 people.payroll.prepare
 people.payroll.approve
 people.payroll.pay
+imaging.templates.manage
+imaging.reports.write
+imaging.reports.sign
+imaging.reports.print
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -158,6 +162,10 @@ or create its own, except where noted.
 | Staff: prepare salary runs | Yes | Yes | | | | Yes |
 | Staff: approve or cancel an approved salary run | Yes | Yes | | | | |
 | Staff: mark a salary run paid | Yes | Yes | | | | Yes |
+| Report layout and report signatures (clinic settings permission) | Yes | Yes | | | | |
+| Imaging: templates, phrases, settings | Yes | Yes | | | | |
+| Imaging: write and sign reports | Yes | Yes | | | Yes | |
+| Imaging: see the list and print signed reports | Yes | Yes | Yes | | Yes | Yes |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

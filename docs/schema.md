@@ -566,6 +566,51 @@ salary expenses. With finance off, only the dates are kept.
 **Payslips.** A5, one per page, for approved or paid runs; print one or the
 whole run. Need `people.salary.manage`.
 
+## 8f. Module: imaging reports (`img_`, key `imaging`)
+
+Off by default. Requires front desk. Written reports for ultrasound, X-ray
+and ECG; no image viewing (PACS is out of scope).
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `img_templates` | `public_id`, `service_id` (an imaging service), `name` (unique per service), `sex` (any, male, female), `findings`, `impression`, `advice`, `sort_order`, `is_active` | Report text to start from. HTML is cleaned on save. Audited |
+| `img_phrases` | `title` (unique), `body`, `is_active` | Sentences added to the findings with one click |
+| `img_studies` | `public_id`, `order_item_id` (unique), `order_id`, `patient_id`, `branch_id`, `service_id`, `study_name`, `status`, `version`, draft fields (`draft_findings`, `draft_impression`, `draft_advice`, `draft_template_id`, `draft_by`), `amend_reason`, `signed_by`, `signed_at`, `lock_version` | One per billed imaging test, including those inside a package |
+| `img_report_versions` | `study_id`, `version` (unique pair), `findings`, `impression`, `advice`, `template_id`, `written_by`, `signed_by`, `signed_at`, `amend_reason` | Every signed report. Append-only |
+
+**Study state machine.** `pending → draft → final → amending → final`, and
+`pending → cancelled`. Only `WriteReport` and the order listeners move it.
+Signing needs findings and an impression and writes a new version; the draft
+fields are then cleared. Amending copies the last signed text into the draft
+with a reason; signing again makes the next version. `lock_version` stops two
+people saving over each other.
+
+**Cancelling.** A test whose study is still `pending` is cancelled with it.
+Once a draft exists the front desk cannot cancel the test.
+
+**Second signer.** Setting `imaging.signer_must_differ` (default off). When
+on, the person who wrote the saved draft cannot sign it.
+
+**Report text.** Only paragraphs, line breaks, bold, italic, underline,
+small headings, lists and plain tables are kept; every attribute, link,
+image, script and style is removed (`Html::clean`).
+
+**Printing.** A4, one study per page, with the shared page layout (core
+`PageLayout`: letterhead or banners, footer, watermark) and the signer from
+the shared signatures (core `signatories`). Only signed studies print, at
+their latest version; an amended report says so with the reason.
+
+**Starter templates.** Example sets (whole abdomen, lower abdomen male and
+female, KUB, pregnancy, chest X-ray, ECG) can be copied onto an imaging
+service. They are examples for the clinic's doctor to correct.
+
+## 8g. Shared report layout and signatures (core)
+
+| Table or setting | Notes |
+|---|---|
+| `signatories` | `user_id` (unique), `display_name`, `qualifications`, `signature_path`. How a person who signs reports is printed. Moved from the lab reports module (`rep_signatories`, copied and dropped by its migration) |
+| `documents.*` settings | `letterhead`, `top_margin_mm`, `bottom_margin_mm`, `footer_text`, `header_image_path`, `footer_image_path`, `watermark`. Moved from the `reports.*` group by a core migration. `reports.block_print_when_due` stays with lab reports |
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

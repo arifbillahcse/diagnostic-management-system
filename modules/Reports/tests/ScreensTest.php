@@ -7,19 +7,20 @@ namespace Modules\Reports\Tests;
 use App\Core\Audit\AuditLog;
 use App\Core\Documents\ClinicFiles;
 use App\Core\Documents\Letterhead;
+use App\Core\Documents\Signatory;
 use App\Core\Settings\Settings;
 use App\Core\Tenancy\ClinicContext;
 use App\Core\Tenancy\ClinicManager;
 use App\Filament\Pages\ManageSettings;
+use App\Filament\Pages\ReportLayout;
+use App\Filament\Resources\Signatures\Pages\ManageSignatures;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Modules\Laboratory\Tests\LabTestCase;
 use Modules\Reports\Filament\ListReports;
-use Modules\Reports\Filament\ManageSignatories;
 use Modules\Reports\Filament\ReportSettings;
-use Modules\Reports\Models\Signatory;
 use Modules\Reports\Permissions;
 use Modules\Reports\Support\ReportBuilder;
 
@@ -106,20 +107,27 @@ final class ScreensTest extends LabTestCase
     {
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ReportSettings::class)
-            ->assertFormSet(['letterhead' => 'print', 'block_print_when_due' => false])
-            ->fillForm(['letterhead' => 'preprinted', 'top_margin_mm' => 55, 'bottom_margin_mm' => 30, 'footer_text' => 'Results relate only to the sample tested.', 'block_print_when_due' => true])
+        Livewire::test(ReportLayout::class)
+            ->assertFormSet(['letterhead' => 'print'])
+            ->fillForm(['letterhead' => 'preprinted', 'top_margin_mm' => 55, 'bottom_margin_mm' => 30, 'footer_text' => 'Results relate only to the sample tested.'])
             ->call('save')
             ->assertHasNoFormErrors()
             ->assertNotified('Report layout saved');
+
+        Livewire::test(ReportSettings::class)
+            ->assertFormSet(['block_print_when_due' => false])
+            ->fillForm(['block_print_when_due' => true])
+            ->call('save')
+            ->assertNotified('Settings saved');
 
         $settings = app(Settings::class);
         $this->assertSame('preprinted', $settings->get(Permissions::SETTING_LETTERHEAD));
         $this->assertSame(55, $settings->get(Permissions::SETTING_TOP_MARGIN));
         $this->assertTrue($settings->get(Permissions::SETTING_BLOCK_WHEN_DUE));
-        $this->assertSame(55, AuditLog::where('action', 'settings.updated')->latest('id')->first()->after[Permissions::SETTING_TOP_MARGIN]);
+        $this->assertTrue(AuditLog::where('action', 'settings.updated')->get()->contains(fn ($e) => ($e->after[Permissions::SETTING_TOP_MARGIN] ?? null) === 55));
 
         $this->actingAs($this->technician);
+        Livewire::test(ReportLayout::class)->assertForbidden();
         Livewire::test(ReportSettings::class)->assertForbidden();
     }
 
@@ -128,7 +136,7 @@ final class ScreensTest extends LabTestCase
         $item = $this->releasedCbc();
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ManageSignatories::class)
+        Livewire::test(ManageSignatures::class)
             ->callAction('create', [
                 'user_id' => $this->verifierUser->id,
                 'display_name' => 'Dr. Nasrin Sultana',
@@ -152,7 +160,7 @@ final class ScreensTest extends LabTestCase
     {
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ManageSignatories::class)
+        Livewire::test(ManageSignatures::class)
             ->callAction('create', [
                 'user_id' => $this->verifierUser->id,
                 'display_name' => 'Dr. X',

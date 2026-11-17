@@ -66,7 +66,7 @@ invoice is fully paid.
 | 21 | SMS, email, and WhatsApp providers | Phase 7 | Compare prices and terms at that time |
 | 22 | Payment gateway | Phase 7 | Compare fees, settlement time, and onboarding requirements |
 | 23 | Analyzer integration timing and first models | After clinic interviews | Move earlier if most clinics rely on automated analyzers |
-| 24 | Imaging reports in the first release or later | After clinic interviews | Later, unless interviews show most centers need it |
+| 24 | Imaging reports in the first release or later | Decided | Built as an optional module (10a) at the owner's request |
 | 25 | Licensed local installs | After the pilot | Only if clinics refuse hosted, and priced for the support cost |
 | 26 | Two-factor login for owners and admins | Phase 5 | Optional per clinic, recommended for owners |
 

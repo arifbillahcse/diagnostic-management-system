@@ -1,0 +1,12 @@
+{
+  "key": "imaging",
+  "name": "Imaging reports",
+  "description": "Ultrasound, X-ray and ECG reports written from templates, signed by the reporting doctor, kept in versions, and printed on the clinic letterhead. No image viewing.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["frontdesk"],
+  "suggests": [],
+  "table_prefix": "img_",
+  "default_enabled": false,
+  "entry": "Modules\\Imaging\\ImagingModule"
+}

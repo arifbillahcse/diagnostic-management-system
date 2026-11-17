@@ -28,6 +28,7 @@ final class DataExporter
         'users' => 'Users (without passwords)',
         'roles' => 'Roles',
         'patients' => 'Patients',
+        'signatories' => 'Report signatures',
         'audit_logs' => 'Audit log',
     ];
 

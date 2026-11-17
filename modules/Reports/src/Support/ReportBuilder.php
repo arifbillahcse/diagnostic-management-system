@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace Modules\Reports\Support;
 
 use App\Core\Documents\Barcode;
-use App\Core\Documents\ClinicFiles;
 use App\Core\Documents\Letterhead;
-use App\Core\Settings\Settings;
+use App\Core\Documents\PageLayout;
+use App\Core\Documents\Signers;
 use App\Core\Tenancy\ClinicContext;
 use Illuminate\Support\Collection;
 use Modules\FrontDesk\Models\Order;
 use Modules\Laboratory\Enums\WorkStatus;
 use Modules\Laboratory\Models\WorkItem;
-use Modules\Reports\Models\Signatory;
-use Modules\Reports\Permissions;
 
 /**
  * Gathers everything a lab report shows. Only released results are ever
@@ -24,8 +22,8 @@ final class ReportBuilder
 {
     public function __construct(
         private readonly Letterhead $letterhead,
-        private readonly Settings $settings,
-        private readonly ClinicFiles $files,
+        private readonly PageLayout $layout,
+        private readonly Signers $signers,
         private readonly ClinicContext $clinics,
     ) {}
 
@@ -54,19 +52,10 @@ final class ReportBuilder
             ->pluck('test_name')
             ->all();
 
-        $signatories = Signatory::whereIn('user_id', $items->pluck('verified_by')->unique())->get()->keyBy('user_id');
-
-        $signers = $items->pluck('verifier')->filter()->unique('id')->map(function ($user) use ($signatories): array {
-            $signatory = $signatories->get($user->id);
-
-            return [
-                'name' => $signatory?->display_name ?? $user->name,
-                'lines' => $signatory?->qualificationLines() ?? [],
-                'signature' => $this->files->dataUri($signatory?->signature_path),
-            ];
-        })->values()->all();
-
-        $preprinted = $this->settings->get(Permissions::SETTING_LETTERHEAD, 'print') === 'preprinted';
+        $signers = array_map(
+            fn (array $s): array => ['name' => $s['name'], 'lines' => $s['lines'], 'signature' => $s['signature']],
+            $this->signers->for($items->pluck('verifier')->filter()->unique('id')->pluck('id')->all()),
+        );
 
         return [
             'clinic' => $this->letterhead->data(),
@@ -79,7 +68,7 @@ final class ReportBuilder
             'waiting' => $onlyWorkItemIds === null ? $waiting : [],
             'signers' => $signers,
             'amended' => $items->contains(fn (WorkItem $w): bool => $w->version > 1),
-            'layout' => $this->layout($preprinted),
+            'layout' => $this->layout->data(),
             'printed_at' => now($this->clinics->require()->timezone),
         ];
     }
@@ -109,50 +98,5 @@ final class ReportBuilder
             'delivery_at' => $order->delivery_at,
             'consultant' => $doctor ? trim(($doctor->code ? $doctor->code.', ' : '').$doctor->name.($doctor->degree ? ', '.$doctor->degree : '')) : null,
         ];
-    }
-
-    /** @return array<string, mixed> */
-    private function layout(bool $preprinted): array
-    {
-        $header = $preprinted ? null : $this->banner(Permissions::SETTING_HEADER_IMAGE, 70);
-        $footer = $preprinted ? null : $this->banner(Permissions::SETTING_FOOTER_IMAGE, 40);
-        $logo = $this->settings->get(Permissions::SETTING_WATERMARK, false) && ! $preprinted
-            ? $this->files->dataUri($this->settings->get('clinic.logo_path'))
-            : null;
-
-        return [
-            'preprinted' => $preprinted,
-            'header_image' => $header,
-            'footer_image' => $footer,
-            'watermark' => $logo,
-            // Margins leave room for the banners, which are printed edge to edge.
-            'top_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_TOP_MARGIN, 40) : ($header ? (int) ceil($header['height_mm']) + 4 : 12),
-            'bottom_mm' => $preprinted ? (int) $this->settings->get(Permissions::SETTING_BOTTOM_MARGIN, 25) : ($footer ? (int) ceil($footer['height_mm']) + 8 : 14),
-            'footer' => $this->settings->get(Permissions::SETTING_FOOTER),
-        ];
-    }
-
-    /**
-     * A banner stretched across an A4 page (210 mm). One taller than the
-     * limit is shown at the limit's height instead, keeping its proportions.
-     *
-     * @return array{uri: string, width_mm: float, height_mm: float}|null
-     */
-    private function banner(string $setting, int $maxHeightMm): ?array
-    {
-        $uri = $this->files->dataUri($this->settings->get($setting));
-        $size = $uri === null ? false : @getimagesizefromstring((string) base64_decode(substr($uri, strpos($uri, ',') + 1), true));
-
-        if ($size === false || $size[0] < 1 || $size[1] < 1) {
-            return null;
-        }
-
-        $height = 210 * $size[1] / $size[0];
-
-        if ($height > $maxHeightMm) {
-            return ['uri' => $uri, 'width_mm' => round($maxHeightMm * $size[0] / $size[1], 1), 'height_mm' => (float) $maxHeightMm];
-        }
-
-        return ['uri' => $uri, 'width_mm' => 210.0, 'height_mm' => round($height, 1)];
     }
 }

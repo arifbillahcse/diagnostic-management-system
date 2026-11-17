@@ -30,9 +30,7 @@ final class ReportsModule extends Module
 
     public function exports(): array
     {
-        return [
-            'rep_signatories' => 'Report signatories',
-        ];
+        return [];
     }
 
     public function resources(): array

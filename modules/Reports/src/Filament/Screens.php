@@ -12,7 +12,7 @@ final class Screens
     /** @return list<class-string> */
     public static function resources(): array
     {
-        return [ReportResource::class, SignatoryResource::class];
+        return [ReportResource::class];
     }
 
     /** @return list<class-string> */

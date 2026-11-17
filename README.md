@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7 and 9 are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7 and 9, and step 10a, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -51,6 +51,13 @@ later; Phases 10 and 11 are not started.
     run per branch (draft, approved, paid) with hand-typed deductions and
     advance recovery, A5 payslips, and Finance expenses for advances and
     salaries.
+
+- **Phase 10a, imaging reports** (module, off until switched on): report
+  templates per imaging test (with example sets to start from), phrases, a
+  work list filled from the bills, writing from a template, signing by the
+  reporting doctor, amendments kept as versions, and A4 printing on the
+  clinic letterhead. Report layout and signatures are now shared by lab and
+  imaging reports, under Administration.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -393,7 +400,7 @@ app/Core/            The fixed core
   Settings/          Clinic settings
   Branches/          Branches
   Patients/          Patients, shared by every module
-  Documents/         PDF rendering, letterhead, and the clinic's private files
+  Documents/         PDF rendering, letterhead, page layout, signatures, and the clinic's private files
   Export/            Full export of a clinic's data as CSV
 app/Filament/        Admin screens for the core
 modules/             One folder per module
@@ -405,6 +412,7 @@ modules/             One folder per module
   Messaging/         SMS and email to patients, message log, retries
   Inventory/         Stock items, suppliers, purchases, stock use per test
   People/            Staff, attendance, advances, salary runs, payslips
+  Imaging/           Imaging report templates, writing, signing, printing
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

@@ -7,6 +7,7 @@ namespace Modules\Reports\Tests;
 use App\Core\Documents\ClinicFiles;
 use App\Core\Settings\Settings;
 use App\Core\Tenancy\ClinicContext;
+use App\Filament\Pages\ReportLayout;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
@@ -17,7 +18,6 @@ use Modules\FrontDesk\Models\ReferralDoctor;
 use Modules\Laboratory\Models\Sample;
 use Modules\Laboratory\Tests\LabTestCase;
 use Modules\Reports\Actions\PrintReport;
-use Modules\Reports\Filament\ReportSettings;
 use Modules\Reports\Permissions;
 use Modules\Reports\Support\ReportBuilder;
 
@@ -34,7 +34,7 @@ final class BannerAndInfoTest extends LabTestCase
     {
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ReportSettings::class)
+        Livewire::test(ReportLayout::class)
             ->fillForm([
                 'letterhead' => 'print',
                 'header_image' => [UploadedFile::fake()->image('header.png', 1240, 250)],
@@ -90,17 +90,17 @@ final class BannerAndInfoTest extends LabTestCase
     {
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ReportSettings::class)
+        Livewire::test(ReportLayout::class)
             ->fillForm(['letterhead' => 'print', 'header_image' => [UploadedFile::fake()->image('header.jpg', 1240, 250)->size(Permissions::HEADER_IMAGE_MAX_KB + 50)]])
             ->call('save')
             ->assertHasFormErrors(['header_image']);
 
-        Livewire::test(ReportSettings::class)
+        Livewire::test(ReportLayout::class)
             ->fillForm(['letterhead' => 'print', 'footer_image' => [UploadedFile::fake()->image('footer.jpg', 1240, 100)->size(Permissions::FOOTER_IMAGE_MAX_KB + 20)]])
             ->call('save')
             ->assertHasFormErrors(['footer_image']);
 
-        Livewire::test(ReportSettings::class)
+        Livewire::test(ReportLayout::class)
             ->fillForm(['letterhead' => 'print', 'header_image' => [UploadedFile::fake()->create('header.pdf', 20, 'application/pdf')]])
             ->call('save')
             ->assertHasFormErrors(['header_image']);
@@ -126,7 +126,7 @@ final class BannerAndInfoTest extends LabTestCase
     {
         $this->actingAs($this->staff('admin'));
 
-        Livewire::test(ReportSettings::class)
+        Livewire::test(ReportLayout::class)
             ->fillForm(['letterhead' => 'print', 'header_image' => [UploadedFile::fake()->image('header.png', 600, 600)]])
             ->call('save')
             ->assertHasNoFormErrors();
