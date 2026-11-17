@@ -1,0 +1,12 @@
+{
+  "key": "portal",
+  "name": "Patient portal",
+  "description": "Patients see and download their own reports on the clinic's website with their bill number and mobile number. No account needed.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["reports"],
+  "suggests": ["imaging"],
+  "table_prefix": "por_",
+  "default_enabled": false,
+  "entry": "Modules\\Portal\\PortalModule"
+}

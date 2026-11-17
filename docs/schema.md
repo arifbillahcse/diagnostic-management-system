@@ -631,6 +631,29 @@ service. They are examples for the clinic's doctor to correct.
 | `signatories` | `user_id` (unique), `display_name`, `qualifications`, `signature_path`. How a person who signs reports is printed. Moved from the lab reports module (`rep_signatories`, copied and dropped by its migration) |
 | `documents.*` settings | `letterhead`, `top_margin_mm`, `bottom_margin_mm`, `footer_text`, `header_image_path`, `footer_image_path`, `watermark`. Moved from the `reports.*` group by a core migration. `reports.block_print_when_due` stays with lab reports |
 
+## 8h. Module: patient portal (key `portal`)
+
+Off by default. Requires lab reports; uses imaging when it is on. No tables
+of its own.
+
+- **Address:** `/reports` on the clinic's own domain. No account and no
+  sign-in: the bill number and the mobile number on the bill together are the
+  key. A wrong pair always gets the same answer, which never says which part
+  was wrong. Cancelled orders are never shown.
+- **Limits:** 10 look-ups per minute per address, and 5 wrong tries per bill
+  number in 15 minutes (then "too many tries"). The order then stays open in
+  that browser for 30 minutes, or until "Close".
+- **What it shows:** each lab test group and imaging study with "ready" or
+  "not ready yet", and downloads of the lab report, the imaging reports, and
+  both in one file, as each becomes ready.
+- **Due rule:** with "do not print while a due is unpaid" on, the page says
+  the report is ready and to contact the clinic; nothing downloads.
+- **Records:** every successful look-up (`portal.opened`) and download
+  (`portal.downloaded`) is audited. Pages carry `noindex` and `no-store`.
+- **On the bill:** while the portal is on, invoices print "See your reports
+  online: <domain>/reports", through the front desk's `InvoiceNotes`
+  registry.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

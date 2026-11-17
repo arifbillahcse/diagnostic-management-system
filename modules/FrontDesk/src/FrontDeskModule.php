@@ -100,6 +100,7 @@ final class FrontDeskModule extends Module
         // Other modules add what can be printed after a bill is saved.
         app()->singleton(Support\PrintLinks::class);
         app()->singleton(Support\OrderReports::class);
+        app()->singleton(Support\InvoiceNotes::class);
 
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([
             SummarizeCommand::class,

@@ -166,6 +166,10 @@
             </div>
         @endif
 
+        @foreach ($notes ?? [] as $note)
+            <div class="rooms">{{ $note }}</div>
+        @endforeach
+
         <footer>
             <span>Printed {{ now($tz)->format('d-M-Y h:i A') }}</span>
             <span>Signature by: <strong>{{ $order->creator?->name }}</strong></span>

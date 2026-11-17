@@ -43,7 +43,7 @@ not be built early.
 | Report header and footer banners, watermark | Most | Built | 3, follow-up | Pilot clinic's letterhead |
 | Calculated values (for example ratios) | Not stated | Reserved, not built | Later | |
 | Analyzer integration (ASTM, HL7) | MySoft, Esteem Soft | Yes | 11 | |
-| Imaging reports (ultrasound, X-ray) | E-Medical Software | Templates, writing, signing, versions, printing (10a); order page, combined lab and imaging file, report-ready SMS (10b) built; portal next | 10 | |
+| Imaging reports (ultrasound, X-ray) | E-Medical Software | Templates, writing, signing, versions, printing (10a); order page, combined lab and imaging file, report-ready SMS (10b), patient portal (10c) built | 10 | |
 | PACS image viewing | E-Medical Software | No | | |
 
 ## Money and management
@@ -69,7 +69,7 @@ not be built early.
 | Email alerts | Mediasoft | Built | 7 | |
 | Report download link by SMS | Not stated | Built | 7 | |
 | WhatsApp report delivery | Not stated | Yes | 7 | |
-| Online report access, patient portal | Esteem Soft, Smart Software, E-Medical Software | Yes | 10 | |
+| Online report access, patient portal | Esteem Soft, Smart Software, E-Medical Software | Built (10c): bill number and mobile number, no account | 10 | |
 | Online payment (bKash, Nagad, card) | Not stated | Yes | 7 | |
 | Patient mobile app | E-Medical Software | No. Mobile-friendly portal instead | | |
 

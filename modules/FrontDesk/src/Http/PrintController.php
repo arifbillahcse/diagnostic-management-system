@@ -14,6 +14,7 @@ use Modules\FrontDesk\Models\Invoice;
 use Modules\FrontDesk\Models\Payment;
 use Modules\FrontDesk\Models\ServiceCategory;
 use Modules\FrontDesk\Permissions;
+use Modules\FrontDesk\Support\InvoiceNotes;
 use Picqer\Barcode\Renderers\SvgRenderer;
 use Picqer\Barcode\Types\TypeCode128;
 
@@ -48,6 +49,7 @@ final class PrintController
             'barcode' => $this->barcode($invoice->invoice_no),
             'words' => AmountInWords::for($invoice->netPaid()),
             'rooms' => $this->rooms($invoice),
+            'notes' => app(InvoiceNotes::class)->for($invoice),
         ]);
     }
 

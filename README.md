@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7 and 9, and steps 10a and 10b, are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7, 9 and 10 are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -62,6 +62,11 @@ later; Phases 10 and 11 are not started.
   print buttons, lab results and imaging reports in one PDF, the "report
   ready" SMS waiting for imaging too (its link opens the combined file), and
   the unpaid-due print rule applied to imaging.
+- **Phase 10c, patient portal** (module, off until switched on): patients
+  open `<clinic domain>/reports`, enter the bill number and mobile number, see
+  what is ready, and download their lab report, imaging reports, or both in
+  one file. No account needed; tries are limited, every download is
+  recorded, and the bill prints the portal address.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -418,6 +423,7 @@ modules/             One folder per module
   Inventory/         Stock items, suppliers, purchases, stock use per test
   People/            Staff, attendance, advances, salary runs, payslips
   Imaging/           Imaging report templates, writing, signing, printing
+  Portal/            Patients' own report page: bill number and mobile number
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

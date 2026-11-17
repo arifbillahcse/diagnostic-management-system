@@ -49,9 +49,9 @@ final class PrintImagingReport
      * the link's own controller checks the clinic's due rule and records the
      * download.
      */
-    public function forPatient(Order $order): string
+    public function forPatient(Order $order, bool $withLab = true): string
     {
-        return $this->render($order, null, true, null);
+        return $this->render($order, null, $withLab, null);
     }
 
     private function render(Order $order, ?array $onlyStudyIds, bool $withLab, ?string $auditAction): string

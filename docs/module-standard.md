@@ -232,7 +232,7 @@ listener needs a new major version of the module that raises the event.
 | `inventory` | Inventory | `inv_` | `frontdesk` | `laboratory`, `finance` | Off |
 | `people` | Staff and attendance | `ppl_` | | `finance` | Off |
 | `payments` | Online payments | `pay_` | `frontdesk` | | Off |
-| `portal` | Patient portal | `por_` | `reports` | `payments` | Off |
+| `portal` | Patient portal | `por_` | `reports` | `imaging` | Off |
 | `imaging` | Imaging reports | `img_` | `frontdesk` | `reports`, `laboratory` | Off |
 | `analyzers` | Lab machine integration | `anz_` | `laboratory` | | Off |
 | `multibranch` | Multi-branch | `mb_` | | | Off |
