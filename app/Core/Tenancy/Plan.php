@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Tenancy;
 
+use App\Core\Money\MoneyCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +18,12 @@ class Plan extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active' => 'boolean',
+            'price_monthly' => MoneyCast::class,
+            'price_yearly' => MoneyCast::class,
+            'max_branches' => 'integer',
+        ];
     }
 
     /** @return list<string> */
@@ -38,5 +44,17 @@ class Plan extends Model
                 DB::connection('control')->table('plan_modules')->insert(['plan_id' => $this->id, 'module_key' => $key]);
             }
         });
+    }
+
+    public function includesModule(string $key): bool
+    {
+        $keys = $this->moduleKeys();
+
+        return in_array(self::ALL_MODULES, $keys, true) || in_array($key, $keys, true);
+    }
+
+    public function branchLimitLabel(): string
+    {
+        return $this->max_branches === null ? 'Any number of branches' : ($this->max_branches === 1 ? '1 branch' : "{$this->max_branches} branches");
     }
 }

@@ -356,6 +356,9 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | Command | What it does |
 |---|---|
 | `php artisan clinic:create <name> <domain>` | Creates a clinic: database, tables, default roles, owner. With `--database=` it uses an existing empty database |
+| `php artisan plans:list` | Lists the plans (editions) with prices, branch limit, modules, and how many clinics use each |
+| `php artisan plans:set <key> --monthly= --branches= --modules=` | Sets a plan's name, prices, branch limit, or modules. Yearly defaults to ten months |
+| `php artisan clinic:plan <clinic id> <plan>` | Moves a clinic to another plan; modules outside it are switched off and their data kept |
 | `php artisan clinic:list` | Lists clinics with their domains and databases |
 | `php artisan clinic:migrate` | Runs core and module migrations for every clinic. Run on every deploy |
 | `php artisan migrate` | Migrates the control database only |

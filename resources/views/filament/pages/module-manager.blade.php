@@ -3,6 +3,13 @@
         Switch off anything this clinic does not use. Switching a module off hides its screens and keeps all of its data.
     </p>
 
+    @php
+        $plan = app(\App\Core\Tenancy\PlanLimits::class)->plan();
+    @endphp
+    @if ($plan)
+        <p class="dms-small">Your plan: <strong>{{ $plan->name }}</strong>@if ($plan->description) · {{ $plan->description }}@endif · {{ $plan->branchLimitLabel() }}. Modules marked "Not in your plan" need a plan change; contact your provider.</p>
+    @endif
+
     @if (count($this->modules) === 0)
         <x-filament::section>No modules are installed in this system yet.</x-filament::section>
     @endif

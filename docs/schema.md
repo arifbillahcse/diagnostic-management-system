@@ -740,6 +740,27 @@ allowed to either branch. A transfer is marked received when its last sample
 is received or rejected. With multi-branch on, the lab lists show samples
 and tests ordered at, or tested at, the user's branches.
 
+## 8l. Plans and limits (control database, Phase 8a)
+
+| Table or column | Notes |
+|---|---|
+| `plans.description`, `price_monthly`, `price_yearly`, `max_branches` (null: no limit), `sort_order` | Prices are exact DECIMAL; yearly defaults to 10 months |
+| `plan_modules` | Modules in each plan; `*` means every module |
+
+- Editions: `full` (every module, used for trials; existing clinics stay on
+  it), `basic` (front desk, laboratory, reports; 1 branch), `standard` (plus
+  finance, owner reports, messaging, imaging, portal, inventory; 1 branch),
+  `premium` (every module; 3 branches). Prices start at 0 and are set with
+  `plans:set`.
+- A clinic cannot switch on a module outside its plan (existing rule).
+- `SaveBranch` refuses a new or re-activated active branch beyond the plan's
+  limit. Branches are never deleted, only switched off.
+- `ChangePlan` (`clinic:plan`) moves a clinic: modules outside the new plan
+  are switched off, dependents first; their data is kept and returns when the
+  plan includes them again. Branches above a lower limit stay; new ones are
+  refused. Logged in `provisioning_log` and the clinic's audit log.
+- The owner sees the plan on the Modules page.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

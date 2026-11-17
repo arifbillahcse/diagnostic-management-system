@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Branches;
 
 use App\Core\Auth\CorePermissions;
+use App\Core\Branches\Actions\SaveBranch;
 use App\Core\Branches\Branch;
 use App\Filament\Concerns\AuthorizesWithPermission;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -43,7 +45,8 @@ class BranchResource extends Resource
 
     protected static function allows(string $action, ?Model $record): bool
     {
-        return in_array($action, ['viewAny', 'view', 'update'], true);
+        // New branches are limited by the plan (SaveBranch); branches are never deleted, only switched off.
+        return in_array($action, ['viewAny', 'view', 'create', 'update'], true);
     }
 
     public static function form(Schema $schema): Schema
@@ -73,7 +76,8 @@ class BranchResource extends Resource
                 IconColumn::make('is_active')->label('Active')->boolean(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->using(fn (Branch $record, array $data, Action $action) => Pages\ManageBranches::guard($action, fn () => app(SaveBranch::class)->update($record, $data))),
             ])
             ->paginated(false);
     }
