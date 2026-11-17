@@ -105,8 +105,7 @@ class Patient extends ClinicModel
             $q->where('patient_code', 'like', $like)->orWhere('name', 'like', $like);
 
             if ($looksLikePhone) {
-                $normalized = PhoneNumber::normalize($term);
-                $q->orWhere('phone_normalized', 'like', $normalized.'%');
+                $q->orWhere('phone_normalized', 'like', PhoneNumber::prefix($term).'%');
             }
         });
     }

@@ -29,4 +29,22 @@ final class PhoneNumber
 
         return substr($digits, 0, 20);
     }
+
+    /**
+     * The start of a stored number for a partly typed one, so "01822" finds
+     * 8801822334455. Numbers are stored as 8801XXXXXXXXX.
+     */
+    public static function prefix(?string $typed): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $typed);
+
+        return match (true) {
+            $digits === '' || $digits === null => null,
+            str_starts_with($digits, '00880') => substr($digits, 2),
+            str_starts_with($digits, '880') => $digits,
+            str_starts_with($digits, '01') => '880'.substr($digits, 1),
+            str_starts_with($digits, '1') => '880'.$digits,
+            default => $digits,
+        };
+    }
 }

@@ -295,26 +295,86 @@ final class NewBillTest extends FrontDeskTestCase
         $this->test()->call('addById', $cbc->id)->assertSet('serviceIds', [$cbc->id])->assertSee('CBC');
     }
 
-    public function test_an_existing_patient_is_found_by_code_or_by_mobile_and_not_registered_again(): void
+    public function test_an_existing_patient_is_found_by_id_and_not_registered_again(): void
     {
         $this->catalog();
         $existing = $this->patient('Rahim Uddin');
 
-        $byCode = $this->test()->set('patientCode', $existing->patient_code)->call('findPatient');
-        $byCode->assertSet('patientId', $existing->id)->assertSet('name', 'Rahim Uddin')->assertSet('mobile', '01711000000')->assertSee('Change patient');
+        $byCode = $this->test()->set('patientSearch', $existing->patient_code)->call('findPatient');
+        $byCode->assertSet('patientId', $existing->id)->assertSet('name', 'Rahim Uddin')->assertSet('mobile', '01711000000')->assertSee('Change patient')
+            ->assertSet('patientSearch', '')->assertSet('searchResults', []);
         $byCode->call('addByCode', 'CBC')->set('payMethod', 'bkash')->call('save')->assertHasNoErrors();
 
         $this->assertSame(1, Patient::count());
         $this->assertSame($existing->id, Order::sole()->patient_id);
+    }
+
+    public function test_the_find_box_lists_patients_by_id_name_or_mobile_as_you_type(): void
+    {
+        $rahim = $this->patient('Rahim Uddin');
+        $salma = $this->patient('Salma Akter');
+        $salma->forceFill(['phone' => '01822-334455', 'phone_normalized' => '8801822334455', 'sex' => 'female'])->save();
+
+        $bill = $this->test();
+
+        // Too short to search.
+        $bill->set('patientSearch', 'R')->assertSet('searchResults', []);
+
+        // By name: the ID, the name, and the details to tell people apart.
+        $bill->set('patientSearch', 'Rah')->assertSet('searchResults', [
+            ['id' => $rahim->id, 'code' => $rahim->patient_code, 'name' => 'Rahim Uddin', 'age' => $rahim->ageLabel(), 'sex' => 'Male', 'phone' => '01711000000'],
+        ])->assertSee($rahim->patient_code)->assertSee('Rahim Uddin');
+
+        // By ID, by the start of an ID shared by both, and by mobile.
+        $bill->set('patientSearch', $salma->patient_code)->assertSet('searchResults.0.name', 'Salma Akter');
+        $bill->set('patientSearch', 'P-T')->assertCount('searchResults', 2);
+        $bill->set('patientSearch', '01822')->assertSet('searchResults.0.name', 'Salma Akter')->assertSet('searchResults.0.sex', 'Female');
+
+        // Picking one fills the patient in and clears the box.
+        $bill->call('usePatient', $salma->id)->assertSet('patientId', $salma->id)->assertSet('patientSearch', '')->assertSet('searchResults', []);
+
+        $bill->call('clearPatient')->assertSet('patientId', null)->assertSet('name', '');
+    }
+
+    public function test_the_find_box_shows_at_most_eight_and_nothing_to_those_who_may_not_look(): void
+    {
+        for ($i = 1; $i <= 12; $i++) {
+            $this->patient("Karim {$i}");
+        }
+
+        $this->test()->set('patientSearch', 'Karim')->assertCount('searchResults', 8);
+
+        $this->actingAs($this->staff('lab_technician'));
+        // A technician has no front desk permissions, so cannot even open the screen.
+        Livewire::test(NewBill::class)->assertForbidden();
+    }
+
+    public function test_nothing_found_starts_a_new_patient_with_what_was_typed(): void
+    {
+        $this->catalog();
+
+        $number = $this->test()->set('patientSearch', '01733-445566')->assertSee('No registered patient matches')->call('findPatient');
+        $number->assertSet('mobile', '01733-445566')->assertSet('name', '')->assertSet('patientSearch', '')->assertSet('patientId', null)->assertDispatched('bill-focus', target: 'name');
+
+        $name = $this->test()->set('patientSearch', 'Nasrin Sultana')->call('findPatient');
+        $name->assertSet('name', 'Nasrin Sultana')->assertSet('mobile', '')->assertDispatched('bill-focus', target: 'mobile');
+
+        $this->fillNewPatient($number, ['mobile' => '01733-445566', 'name' => 'Nasrin Sultana'])->call('addByCode', 'CBC')->set('payMethod', 'bkash')->call('save')->assertHasNoErrors();
+        $this->assertSame('Nasrin Sultana', Patient::sole()->name);
+    }
+
+    public function test_the_mobile_box_offers_the_people_already_registered_with_that_number(): void
+    {
+        $existing = $this->patient('Rahim Uddin');
 
         $byMobile = $this->test()->set('mobile', '01711-000000');
-        $byMobile->assertSee('Already registered')->assertSee('Rahim Uddin')->assertSee('P-T-0001');
+        $byMobile->assertSee('P-T-0001')->assertSee('Rahim Uddin');
+        $this->assertSame('Rahim Uddin', $byMobile->get('suggestions')[0]['name']);
+
         $byMobile->call('usePatient', $existing->id)->assertSet('patientId', $existing->id)->assertSet('suggestions', []);
 
-        $byMobile->call('clearPatient')->assertSet('patientId', null)->assertSet('name', '')->assertSet('mobile', '');
-
-        $this->test()->set('mobile', '01999999999')->assertDontSee('Already registered');
-        $this->test()->set('patientCode', 'P-NOPE')->call('findPatient')->assertNotified('No patient found');
+        $this->test()->set('mobile', '01999999999')->assertSet('suggestions', []);
+        $this->test()->set('mobile', '0171')->assertSet('suggestions', []);
     }
 
     public function test_an_existing_patients_details_are_not_changed_from_this_screen(): void

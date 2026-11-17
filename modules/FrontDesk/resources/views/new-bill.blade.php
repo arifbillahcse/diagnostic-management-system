@@ -52,6 +52,17 @@
         .bill .found .pick { display: inline-flex; gap: 6px; align-items: center; height: auto; width: auto; padding: 3px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--a); color: var(--g); cursor: pointer; font-size: 12px; }
         .bill .found .pick:hover { background: var(--soft); }
 
+        .bill .ddwrap { position: relative; }
+        .bill .dd { position: absolute; z-index: 40; top: calc(100% + 3px); left: 0; right: 0; max-height: 320px; overflow: auto; margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--a); border-radius: 10px; box-shadow: 0 14px 34px rgba(20, 64, 58, .22); }
+        .bill .dd li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 7px 10px; border-radius: 7px; cursor: pointer; }
+        .bill .dd li.on { background: var(--soft); }
+        .bill .dd .pid { font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 1px 7px; border-radius: 5px; background: #fff; border: 1px solid var(--line); color: var(--g); }
+        .bill .dd li.on .pid { border-color: var(--a); }
+        .bill .dd .meta { color: var(--mute); font-size: 12px; }
+        .bill .dd.hint { padding: 9px 12px; color: var(--mute); font-size: 12.5px; }
+        .bill .sbox { position: relative; }
+        .bill .sbox svg { position: absolute; left: 10px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: #7C9A8F; pointer-events: none; }
+        .bill .sbox input { padding-left: 32px; }
         .bill .cols { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 10px; align-items: start; }
         .bill .entry { display: grid; grid-template-columns: 150px minmax(0, 1fr) 76px; gap: 8px; }
         .bill .btn { height: 32px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--g); background: var(--a); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; width: auto; transition: background .12s; }
@@ -137,7 +148,11 @@
          x-data="{
             code: '',
             printed: {},
+            active: { search: 0, mobile: 0 },
+            open: { search: false, mobile: false },
             focus(target) { this.$nextTick(() => this.$refs[target] && this.$refs[target].focus()) },
+            move(list, dir, count) { if (count > 0) { this.active[list] = (this.active[list] + dir + count) % count; } },
+            pick(list) { const row = this.$refs[list + 'List'] && this.$refs[list + 'List'].children[this.active[list]]; if (row) { $wire.usePatient(parseInt(row.dataset.id)); } },
             // Print in a hidden frame, so the counter stays on this screen.
             print(key, url) {
                 const frame = document.createElement('iframe');
@@ -148,7 +163,7 @@
                 this.printed[key] = true;
             },
          }"
-         x-init="focus('mobile')"
+         x-init="focus('search'); $wire.$watch('searchResults', () => active.search = 0); $wire.$watch('suggestions', () => active.mobile = 0)"
          @bill-focus.window="focus($event.detail.target)"
          @bill-print.window="print('auto', $event.detail.url)"
          @keydown.window="
@@ -225,10 +240,7 @@
         <section class="card">
             <header>
                 <h2><x-filament::icon icon="heroicon-o-user-circle" /> Patient</h2>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <label for="pid" style="margin:0">Registered patient?</label>
-                    <input id="pid" wire:model="patientCode" wire:keydown.enter.prevent="findPatient" placeholder="Patient ID + Enter" tabindex="30" style="width:170px" @disabled($locked)>
-                </div>
+                <span class="chip">Type an ID, a name, or a mobile number to find a registered patient</span>
             </header>
             <div class="body">
                 @if ($locked)
@@ -237,57 +249,80 @@
                         <div class="who"><b>{{ $name }}</b><span>{{ $patientCode }} · {{ $age }} · {{ ucfirst($sex) }} · {{ $mobile }}</span></div>
                         <button type="button" class="link" wire:click="clearPatient">Change patient</button>
                     </div>
-                @elseif ($suggestions !== [])
-                    <div class="found">
-                        <span>Already registered with this number:</span>
-                        @foreach ($suggestions as $s)
-                            <button type="button" class="pick" wire:click="usePatient({{ $s['id'] }})"><b>{{ $s['name'] }}</b> {{ $s['code'] }} · {{ $s['age'] }}</button>
-                        @endforeach
-                        <span style="color:var(--mute)">Click one to use it, or carry on to register a new patient.</span>
-                    </div>
                 @endif
 
                 <div class="fields">
-                    <div style="--w:2;--n:3">
+                    <div style="--w:5;--n:6">
+                        <label for="find">Find registered patient</label>
+                        <div class="ddwrap">
+                            <div class="sbox">
+                                <x-filament::icon icon="heroicon-o-magnifying-glass" />
+                                <input id="find" wire:model.live.debounce.250ms="patientSearch" x-ref="search" tabindex="1" autocomplete="off"
+                                       placeholder="{{ $locked ? 'Patient chosen. Press Change patient to look for another.' : 'Patient ID, name, or mobile…' }}" @disabled($locked)
+                                       @focus="open.search = true" @input="open.search = true" @blur="open.search = false"
+                                       @keydown.arrow-down.prevent="open.search = true; move('search', 1, {{ count($searchResults) }})"
+                                       @keydown.arrow-up.prevent="move('search', -1, {{ count($searchResults) }})"
+                                       @keydown.enter.prevent="{{ $searchResults !== [] ? "pick('search')" : '$wire.findPatient()' }}"
+                                       @keydown.escape="open.search = false">
+                            </div>
+                            @if ($searchResults !== [])
+                                @include('frontdesk::partials.patient-rows', ['rows' => $searchResults, 'list' => 'search'])
+                            @elseif (! $locked && mb_strlen(trim($patientSearch)) >= 2)
+                                <div class="dd hint" x-show="open.search" x-cloak>No registered patient matches. Press <kbd>Enter</kbd> to start a new patient with “{{ $patientSearch }}”.</div>
+                            @endif
+                        </div>
+                    </div>
+                    <div style="--w:3;--n:3">
                         <label>Mobile <i>*</i></label>
-                        <input wire:model.live.debounce.500ms="mobile" x-ref="mobile" inputmode="tel" tabindex="1" placeholder="01XXX-XXXXXX" @readonly($locked) class="@error('mobile') bad @enderror">
+                        <div class="ddwrap">
+                            <input wire:model.live.debounce.500ms="mobile" x-ref="mobile" inputmode="tel" tabindex="2" placeholder="01XXX-XXXXXX" autocomplete="off" @readonly($locked) class="@error('mobile') bad @enderror"
+                                   @focus="open.mobile = true" @input="open.mobile = true" @blur="open.mobile = false"
+                                   @keydown.arrow-down="if ($refs.mobileList) { $event.preventDefault(); move('mobile', 1, {{ count($suggestions) }}) }"
+                                   @keydown.arrow-up="if ($refs.mobileList) { $event.preventDefault(); move('mobile', -1, {{ count($suggestions) }}) }"
+                                   @keydown.enter="if ($refs.mobileList && open.mobile) { $event.preventDefault(); pick('mobile') }"
+                                   @keydown.escape="open.mobile = false">
+                            @if ($suggestions !== [] && ! $locked)
+                                @include('frontdesk::partials.patient-rows', ['rows' => $suggestions, 'list' => 'mobile'])
+                            @endif
+                        </div>
                     </div>
-                    <div style="--w:3;--n:4">
+                    <div style="--w:4;--n:3">
                         <label>Patient name <i>*</i></label>
-                        <input wire:model="name" x-ref="name" tabindex="2" placeholder="Full name" @readonly($locked) class="@error('name') bad @enderror">
+                        <input wire:model="name" x-ref="name" tabindex="3" placeholder="Full name" @readonly($locked) class="@error('name') bad @enderror">
                     </div>
-                    <div style="--w:2;--n:2">
+
+                    <div style="--w:2;--n:3">
                         <label>Age <i>*</i></label>
                         <div class="split">
-                            <input wire:model="age" inputmode="numeric" tabindex="3" @readonly($locked) class="num @error('age') bad @enderror">
-                            <select wire:model="ageUnit" tabindex="4" @disabled($locked)><option value="Y">Year</option><option value="M">Month</option><option value="D">Day</option></select>
+                            <input wire:model="age" inputmode="numeric" tabindex="4" @readonly($locked) class="num @error('age') bad @enderror">
+                            <select wire:model="ageUnit" tabindex="5" @disabled($locked)><option value="Y">Year</option><option value="M">Month</option><option value="D">Day</option></select>
                         </div>
                     </div>
                     <div style="--w:2;--n:3">
                         <label>Sex</label>
-                        <select wire:model="sex" tabindex="5" @disabled($locked)>
+                        <select wire:model="sex" tabindex="6" @disabled($locked)>
                             <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
                         </select>
                     </div>
-                    <div style="--w:3;--n:5">
+                    <div style="--w:4;--n:6">
                         <label>Address</label>
-                        <input wire:model="address" tabindex="6" placeholder="Village / area, district" @readonly($locked)>
+                        <input wire:model="address" tabindex="7" placeholder="Village / area, district" @readonly($locked)>
                     </div>
-
-                    <div style="--w:4;--n:4">
+                    <div style="--w:4;--n:3">
                         <label>Referred by</label>
-                        <select wire:model="doctorId" tabindex="7">
+                        <select wire:model="doctorId" tabindex="8">
                             <option value="">Self</option>
                             @foreach ($this->doctors() as $id => $label)<option value="{{ $id }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
+
                     <div style="--w:3;--n:3">
                         <label>Report delivery</label>
-                        <input type="datetime-local" wire:model="deliveryAt" tabindex="8" class="@error('deliveryAt') bad @enderror">
+                        <input type="datetime-local" wire:model="deliveryAt" tabindex="9" class="@error('deliveryAt') bad @enderror">
                     </div>
-                    <div style="--w:5;--n:12">
+                    <div style="--w:9;--n:6">
                         <label>Remarks</label>
-                        <input wire:model="notes" maxlength="1000" tabindex="9" placeholder="Printed on the invoice, for example C/O …">
+                        <input wire:model="notes" maxlength="1000" tabindex="10" placeholder="Printed on the invoice, for example C/O …">
                     </div>
                 </div>
             </div>
@@ -302,16 +337,16 @@
                 <div class="body">
                     <div class="entry">
                         <div wire:ignore>
-                            <input x-ref="code" x-model="code" placeholder="Code + Enter" autocomplete="off" tabindex="10"
+                            <input x-ref="code" x-model="code" placeholder="Code + Enter" autocomplete="off" tabindex="12"
                                    @keydown.enter.prevent="$wire.addByCode(code); code = ''">
                         </div>
                         <div wire:ignore>
-                            <select x-ref="pick" tabindex="11">
+                            <select x-ref="pick" tabindex="13">
                                 <option value="">— or choose a test from the list —</option>
                                 @foreach ($this->catalog() as $id => $label)<option value="{{ $id }}">{{ $label }}</option>@endforeach
                             </select>
                         </div>
-                        <button type="button" class="btn" tabindex="12"
+                        <button type="button" class="btn" tabindex="14"
                                 @click="if ($refs.pick.value) { $wire.addById(parseInt($refs.pick.value)); $refs.pick.value = ''; }">Add</button>
                     </div>
 
@@ -348,25 +383,25 @@
                         <label>Total bill</label><input class="auto" readonly tabindex="-1" value="{{ $f['subtotal']->formatted() }}">
 
                         <label>Discount %</label>
-                        <input wire:model.live.debounce.400ms="discountPercent" inputmode="decimal" tabindex="14" class="num @error('discountPercent') bad @enderror {{ $discountProblem ? 'bad' : '' }}" placeholder="0">
+                        <input wire:model.live.debounce.400ms="discountPercent" inputmode="decimal" tabindex="15" class="num @error('discountPercent') bad @enderror {{ $discountProblem ? 'bad' : '' }}" placeholder="0">
                         <label>Discount Tk</label>
-                        <input wire:model.live.debounce.400ms="discountAmount" inputmode="decimal" tabindex="15" class="num @error('discountAmount') bad @enderror {{ $discountProblem ? 'bad' : '' }}" placeholder="0.00">
+                        <input wire:model.live.debounce.400ms="discountAmount" inputmode="decimal" tabindex="16" class="num @error('discountAmount') bad @enderror {{ $discountProblem ? 'bad' : '' }}" placeholder="0.00">
 
                         @if ($discountProblem)<div class="alert red full">{{ $discountProblem }}</div>@endif
                         @if ($f['discount']->isPositive())
                             <label>Reason <i style="color:#C0392B;font-style:normal">*</i></label>
-                            <input wire:model="discountReason" maxlength="255" tabindex="16" placeholder="Why the discount?">
+                            <input wire:model="discountReason" maxlength="255" tabindex="17" placeholder="Why the discount?">
                         @endif
 
                         <label>Net payable</label><input class="auto net" readonly tabindex="-1" value="{{ $f['net']->formatted() }}">
 
                         <label>Pay mode</label>
-                        <select wire:model="payMethod" tabindex="17">
+                        <select wire:model="payMethod" tabindex="18">
                             @foreach (PaymentMethod::cases() as $method)<option value="{{ $method->value }}">{{ $method->label() }}</option>@endforeach
                         </select>
-                        <label>Trx / Ref No</label><input wire:model="payReference" maxlength="255" tabindex="18">
+                        <label>Trx / Ref No</label><input wire:model="payReference" maxlength="255" tabindex="19">
                         <label>Paid amount<br><button type="button" class="link" wire:click="payExact">exact</button></label>
-                        <input wire:model.live.debounce.400ms="paid" inputmode="decimal" tabindex="19" class="num @error('paid') bad @enderror" style="font-weight:700">
+                        <input wire:model.live.debounce.400ms="paid" inputmode="decimal" tabindex="20" class="num @error('paid') bad @enderror" style="font-weight:700">
                         <label>Due amount</label><input class="auto {{ $f['due']->isPositive() ? 'due' : '' }}" readonly tabindex="-1" value="{{ $f['due']->formatted() }}">
                         <label>Return</label><input class="auto ret {{ $f['change']->isPositive() ? 'on' : '' }}" readonly tabindex="-1" value="{{ $f['change']->formatted() }}">
 
@@ -376,8 +411,8 @@
                     </div>
 
                     <div class="actions">
-                        <button type="button" class="btn save" wire:click="save" wire:loading.attr="disabled" wire:target="save" tabindex="20">Save bill <kbd>Ctrl+S</kbd></button>
-                        <button type="button" class="btn alt" wire:click="newBill" tabindex="21" style="height:38px">New <kbd>F2</kbd></button>
+                        <button type="button" class="btn save" wire:click="save" wire:loading.attr="disabled" wire:target="save" tabindex="21">Save bill <kbd>Ctrl+S</kbd></button>
+                        <button type="button" class="btn alt" wire:click="newBill" tabindex="22" style="height:38px">New <kbd>F2</kbd></button>
                     </div>
                 </div>
             </section>

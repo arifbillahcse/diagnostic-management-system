@@ -69,7 +69,16 @@ class NewBill extends Page
     protected string $view = 'frontdesk::new-bill';
 
     // Patient
+    /** The code of the patient chosen (shown in the banner). */
+    #[Locked]
     public string $patientCode = '';
+
+    /** What is typed in the "find patient" box, and what it found. */
+    public string $patientSearch = '';
+
+    /** @var list<array{id: int, code: string, name: string, age: string, sex: string, phone: string}> */
+    #[Locked]
+    public array $searchResults = [];
 
     public string $name = '';
 
@@ -87,7 +96,8 @@ class NewBill extends Page
     #[Locked]
     public ?int $patientId = null;
 
-    /** @var list<array{id: int, code: string, name: string, age: string}> */
+    /** The people already registered with the mobile number typed. @var list<array{id: int, code: string, name: string, age: string, sex: string, phone: string}> */
+    #[Locked]
     public array $suggestions = [];
 
     // The bill
@@ -171,13 +181,13 @@ class NewBill extends Page
     public function newBill(): void
     {
         $this->blank();
-        $this->dispatch('bill-focus', target: 'mobile');
+        $this->dispatch('bill-focus', target: 'search');
     }
 
     private function blank(): void
     {
         $this->reset([
-            'patientCode', 'name', 'age', 'ageUnit', 'sex', 'mobile', 'address', 'patientId', 'suggestions', 'doctorId',
+            'patientCode', 'patientSearch', 'searchResults', 'name', 'age', 'ageUnit', 'sex', 'mobile', 'address', 'patientId', 'suggestions', 'doctorId',
             'serviceIds', 'discountPercent', 'discountAmount', 'discountSource', 'discountReason', 'notes', 'payMethod', 'payReference', 'paid', 'paidTouched',
             'printPanel',
         ]);
@@ -196,29 +206,77 @@ class NewBill extends Page
         return Gate::allows(CorePermissions::PATIENTS_VIEW);
     }
 
-    /** Enter in the patient ID box: load that patient, or list the close matches. */
+    /** The "find patient" box: as you type, the patients whose ID, name, or mobile starts with it. */
+    public function updatedPatientSearch(): void
+    {
+        $this->searchResults = $this->lookUp($this->patientSearch);
+    }
+
+    /** @return list<array{id: int, code: string, name: string, age: string, sex: string, phone: string}> */
+    private function lookUp(string $term, int $limit = 8): array
+    {
+        $term = trim($term);
+
+        if (mb_strlen($term) < 2 || ! $this->mayLookUp()) {
+            return [];
+        }
+
+        return $this->suggest(Patient::search($term)->orderBy('patient_code')->limit($limit)->get());
+    }
+
+    /**
+     * Enter in the find box with nothing to pick: an exact patient ID opens
+     * that patient; anything else starts a new patient with what was typed.
+     */
     public function findPatient(): void
     {
-        $term = trim($this->patientCode);
+        $term = trim($this->patientSearch);
 
-        if ($term === '' || ! $this->mayLookUp()) {
+        if ($term === '') {
             return;
         }
 
-        $matches = Patient::search($term)->orderBy('patient_code')->limit(6)->get();
-        $exact = $matches->first(fn (Patient $p): bool => strcasecmp($p->patient_code, $term) === 0);
+        if ($this->mayLookUp()) {
+            $matches = Patient::search($term)->orderBy('patient_code')->limit(2)->get();
+            $exact = $matches->first(fn (Patient $p): bool => strcasecmp($p->patient_code, $term) === 0);
 
-        if ($exact !== null || $matches->count() === 1) {
-            $this->usePatient(($exact ?? $matches->first())->id);
+            if ($exact !== null || $matches->count() === 1) {
+                $this->usePatient(($exact ?? $matches->first())->id);
 
-            return;
+                return;
+            }
+
+            if ($matches->count() > 1) {
+                $this->searchResults = $this->lookUp($term);
+
+                return;
+            }
         }
 
-        $this->suggestions = $this->suggest($matches);
+        $this->startNew();
+    }
 
-        if ($matches->isEmpty()) {
-            Notification::make()->warning()->title('No patient found')->body("Nothing matches \"{$term}\". Fill in the details to register a new patient.")->send();
+    /** Nobody matched: what was typed becomes the new patient's mobile number or name. */
+    public function startNew(): void
+    {
+        $term = trim($this->patientSearch);
+        $isNumber = $term !== '' && preg_match('/^[\d\s+()\-]+$/', $term) === 1;
+
+        if ($term !== '' && $this->patientId === null) {
+            $isNumber ? $this->mobile = $term : $this->name = $term;
         }
+
+        $this->patientSearch = '';
+        $this->searchResults = [];
+        $this->updatedMobile();
+        $this->dispatch('bill-focus', target: $isNumber ? 'name' : 'mobile');
+    }
+
+    /** Hide the list and forget what was typed. */
+    public function closeSearch(): void
+    {
+        $this->patientSearch = '';
+        $this->searchResults = [];
     }
 
     /** The mobile number was typed: show the people already registered with it. */
@@ -252,6 +310,8 @@ class NewBill extends Page
         $this->address = (string) $patient->address;
         $this->age = $patient->ageLabel();
         $this->suggestions = [];
+        $this->patientSearch = '';
+        $this->searchResults = [];
         $this->resetErrorBag();
         $this->dispatch('bill-focus', target: 'code');
     }
@@ -259,8 +319,8 @@ class NewBill extends Page
     /** Forget the chosen patient and type a new one. */
     public function clearPatient(): void
     {
-        $this->reset(['patientCode', 'name', 'age', 'ageUnit', 'sex', 'mobile', 'address', 'patientId', 'suggestions']);
-        $this->dispatch('bill-focus', target: 'mobile');
+        $this->reset(['patientCode', 'patientSearch', 'searchResults', 'name', 'age', 'ageUnit', 'sex', 'mobile', 'address', 'patientId', 'suggestions']);
+        $this->dispatch('bill-focus', target: 'search');
     }
 
     // Tests
@@ -565,7 +625,7 @@ class NewBill extends Page
                 $this->dispatch('bill-print', url: $links[0]['url']);
             }
 
-            $this->dispatch('bill-focus', target: 'mobile');
+            $this->dispatch('bill-focus', target: 'search');
         }
     }
 
@@ -573,7 +633,7 @@ class NewBill extends Page
     public function closePrint(): void
     {
         $this->printPanel = false;
-        $this->dispatch('bill-focus', target: 'mobile');
+        $this->dispatch('bill-focus', target: 'search');
     }
 
     /**
@@ -693,14 +753,21 @@ class NewBill extends Page
 
     /**
      * @param  iterable<Patient>  $patients
-     * @return list<array{id: int, code: string, name: string, age: string}>
+     * @return list<array{id: int, code: string, name: string, age: string, sex: string, phone: string}>
      */
     private function suggest(iterable $patients): array
     {
         $list = [];
 
         foreach ($patients as $patient) {
-            $list[] = ['id' => $patient->id, 'code' => $patient->patient_code, 'name' => $patient->name, 'age' => $patient->ageLabel()];
+            $list[] = [
+                'id' => $patient->id,
+                'code' => $patient->patient_code,
+                'name' => $patient->name,
+                'age' => $patient->ageLabel(),
+                'sex' => ucfirst($patient->sex->value),
+                'phone' => (string) $patient->phone,
+            ];
         }
 
         return $list;

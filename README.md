@@ -179,9 +179,14 @@ section on top; below it sit the tests and the bill summary side by side.
 Cards in the clinic's green, tight spacing, and everything visible at once on a
 wide monitor (on a 1366 x 768 monitor the page scrolls a little).
 
-- Type the mobile number first. Patients already registered with it appear
-  to click. A patient who is not registered yet is **registered when the bill
-  is saved**; there is no separate step.
+- The cursor starts in **Find registered patient**. Type part of an ID, a
+  name, or a mobile number: a list shows each match with its ID, name, age,
+  sex, and mobile. Arrow keys and Enter (or a click) pick one; the details
+  fill in and lock, and **Change patient** undoes it. If nobody matches,
+  press Enter and what was typed becomes the new patient's mobile number (if
+  it is a number) or name. A new patient is **registered when the bill is
+  saved**; there is no separate step. The Mobile box shows the same list when
+  the number is already registered.
 - **Code + Enter** adds a test; the list and **Add** do the same. Supplies set
   up as add-ons (tubes, needle) appear in italics and are billed once.
 - **Discount %** and **Discount Tk** follow each other; the box typed in last
