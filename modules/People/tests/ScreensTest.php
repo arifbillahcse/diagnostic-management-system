@@ -7,7 +7,7 @@ namespace Modules\People\Tests;
 use App\Core\Auth\Permission;
 use App\Core\Auth\Role;
 use App\Core\Branches\Branch;
-use App\Core\Tenancy\Clinic;
+use App\Core\Tenancy\ClinicContext;
 use Livewire\Livewire;
 use Modules\People\Actions\ManageAdvances;
 use Modules\People\Actions\RunPayroll;
@@ -227,7 +227,7 @@ class ScreensTest extends PeopleTestCase
 
     public function test_the_sample_data_command_loads_a_usable_month(): void
     {
-        $clinic = app(\App\Core\Tenancy\ClinicContext::class)->require();
+        $clinic = app(ClinicContext::class)->require();
 
         $this->artisan('people:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
 

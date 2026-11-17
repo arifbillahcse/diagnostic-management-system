@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Inventory\Tests;
 
-use App\Core\Tenancy\Clinic;
+use App\Core\Tenancy\ClinicContext;
 use Carbon\CarbonImmutable;
 use Modules\FrontDesk\Actions\AdjustOrder;
 use Modules\FrontDesk\Actions\PlaceOrder;
@@ -70,7 +70,7 @@ final class ReportsTest extends InventoryTestCase
     public function test_the_sample_data_command_loads_stock_and_use_rules(): void
     {
         $this->service('CBC', '400')->forceFill(['code' => 'CBC'])->save();
-        $clinic = app(\App\Core\Tenancy\ClinicContext::class)->require();
+        $clinic = app(ClinicContext::class)->require();
 
         $this->artisan('inventory:sample-data', ['clinic' => $clinic->id, '--force' => true])->assertSuccessful();
 

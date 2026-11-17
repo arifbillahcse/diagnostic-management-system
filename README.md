@@ -1,13 +1,14 @@
 # Diagnostic Management System
 
 A paid, module-based management system for diagnostic centers in Bangladesh:
-front desk and billing, laboratory workflow, reports, finance, and owner
-tools. The product name is not decided yet, so the documents use the working
+front desk and billing, laboratory workflow, reports, finance, owner tools,
+messaging, inventory, and staff with payroll. The product name is not decided yet, so the documents use the working
 title **DMS**.
 
 ## Status
 
-**Phases 1 to 5 are built.**
+**Phases 1 to 5, 7 and 9 are built.** Phases 6 (pilot) and 8 are set aside for
+later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
   permissions, the audit log, clinic settings, branches, number counters,
@@ -34,7 +35,28 @@ title **DMS**.
   two-step sign-in; database-level protection of the audit trail; and a
   security review.
 
-Next is Phase 6: a pilot at one real clinic.
+- **Phase 7, messaging:** SMS and email to patients (report ready, bill
+  receipt, due reminders) through any HTTP bulk SMS provider, with a test
+  mode, editable wording, a message log, retries, and a stop list.
+
+- **Phase 9, inventory and people** (two modules, both off until switched on):
+  - **Inventory:** stock items, suppliers, purchases with batches and expiry,
+    stock on hand at average cost. Stock is taken out automatically when a
+    test is billed (stock use per test) and put back when it is cancelled;
+    missing stock is listed and never blocks billing. Manual issue, waste,
+    expired and stock counts; dashboard alerts, an expiry page, and the cost
+    of stock per test.
+  - **Staff and attendance:** staff records with salary history, a daily
+    attendance sheet and a monthly grid, salary advances, a monthly salary
+    run per branch (draft, approved, paid) with hand-typed deductions and
+    advance recovery, A5 payslips, and Finance expenses for advances and
+    salaries.
+
+Also built at the owner's request: the billing screen with live patient
+search and a print step after save, A5 invoices, report banners, number
+formats, cPanel support, sample data, and a temporary database updates page.
+
+Next: the MySQL test before the first real clinic (see Tests), then the pilot.
 
 ![Owner dashboard](docs/screenshots/owner-dashboard.png)
 
@@ -336,8 +358,27 @@ DB_DRIVER=mysql DB_DATABASE=dmstest_control DB_USERNAME=dms DB_PASSWORD=your-pas
 ```
 
 Create the `dmstest_control` database first. Test clinic databases are named
-`dmstest_clinic_<n>` and are dropped after each test. `.github/workflows/tests.yml`
-runs both on every push.
+`dmstest_clinic_<n>` and are dropped after each test.
+
+`.github/workflows/tests.yml` checks code style and runs both test runs on
+every push; see the **Actions** tab on GitHub. The MySQL run only starts when
+the SQLite run passes.
+
+**MySQL status.** Day-to-day work is tested on SQLite. MySQL matters for what
+SQLite cannot show: database-level protection of rows that must never change,
+row locking (no duplicate numbers when two cashiers save at once), stricter
+column and date rules, and migrations on existing data. Before the first
+real clinic:
+
+1. The MySQL run passes (on GitHub Actions or a server with MySQL 8).
+2. All migrations apply to a copy of an existing clinic database.
+3. Changing a stock movement, purchase line, salary history row, or audit
+   entry directly in the database is refused.
+4. Two cashiers saving at the same moment get different bill numbers.
+5. `clinic:backup --verify` restores cleanly.
+
+Until then, back up the database before applying updates to any clinic on
+MySQL (cPanel included), and keep only test data there.
 
 ## How it is organised
 
@@ -361,6 +402,9 @@ modules/             One folder per module
   Reports/           PDF lab reports, layout, and signatories
   Finance/           Accounts, expenses, referral commission, profit report
   Owner/             Owner dashboard and sales reports
+  Messaging/         SMS and email to patients, message log, retries
+  Inventory/         Stock items, suppliers, purchases, stock use per test
+  People/            Staff, attendance, advances, salary runs, payslips
   Demo/              A tiny working example to copy
 database/migrations/
   control/           Tables of the control database

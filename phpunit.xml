@@ -12,13 +12,13 @@
             <directory>tests/Feature</directory>
         </testsuite>
         <testsuite name="Modules">
-            <directory>modules</directory>
+            <directory>modules/*/tests</directory>
         </testsuite>
     </testsuites>
     <source>
         <include>
             <directory>app</directory>
-            <directory>modules</directory>
+            <directory>modules/*/tests</directory>
         </include>
     </source>
     <php>
