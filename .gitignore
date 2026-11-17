@@ -33,3 +33,8 @@ Thumbs.db
 /public/fonts/filament
 /database/*.sqlite
 /database/clinics
+
+# Lab bridge
+bridge/**/__pycache__/
+bridge/data/
+bridge/bridge.ini

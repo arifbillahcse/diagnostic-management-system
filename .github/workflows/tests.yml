@@ -45,6 +45,9 @@ jobs:
       - name: Validate modules
         run: php artisan modules:validate
 
+      - name: Lab bridge tests
+        run: cd bridge && python3 -m unittest discover -s tests -t .
+
       - name: Tests on SQLite (fast)
         run: php artisan test
 

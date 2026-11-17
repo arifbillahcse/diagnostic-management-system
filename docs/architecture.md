@@ -234,6 +234,13 @@ which meets that. This is my reading, not legal advice; include it in the
 lawyer's review. mPDF was ruled out because it is GPL-2.0-only, and a
 Chromium-based engine because it needs a browser installed on every server.
 
+**The lab bridge** (`bridge/`, a separate Python program for the lab PC) uses
+only the Python standard library, plus one package for serial cables:
+
+| Package | Purpose | License | Added in |
+|---|---|---|---|
+| `pyserial` | Serial (RS-232) connection to an analyzer; only for machines on a cable | BSD-3-Clause | Phase 11d |
+
 Roles and permissions, tenancy, the audit log, and the module system are
 written in-house, so they add no packages. The roles design needs
 branch-scoped assignments and module gating, which did not fit the common

@@ -1,0 +1,2 @@
+# Only for machines on a serial (RS-232) cable. Network machines need nothing.
+pyserial==3.5

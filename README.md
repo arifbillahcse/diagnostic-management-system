@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7, 9 and 10, and steps 11a and 11c, are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7, 9 and 10, and steps 11a, 11c and 11d's bridge program, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -75,7 +75,12 @@ later; Phases 10 and 11 are not started.
   switched on): machines with their own keys, test code mapping, an API for
   the bridge program, ASTM and HL7 reading, matching by sample barcode,
   results saved as drafts for a person to submit and verify, a machine inbox,
-  and a simulator. The bridge program for the lab PC comes in 11d.
+  and a simulator.
+- **Phase 11d, the lab bridge** (`bridge/`): a small Python program for the
+  lab PC that talks to the analyzer over a serial cable or the network
+  (ASTM or HL7), keeps every message in a local queue, and sends it to DMS
+  with the machine's key. See [bridge/README.md](bridge/README.md). Still to
+  do: a live test with the first real machine at a clinic.
 
 Also built at the owner's request: the billing screen with live patient
 search and a print step after save, A5 invoices, report banners, number
@@ -437,6 +442,7 @@ modules/             One folder per module
   MultiBranch/       Branch switcher (core does the limits once it is on)
   Analyzers/         Lab machine results: API, ASTM and HL7 reading, matching, inbox
   Demo/              A tiny working example to copy
+bridge/              The lab bridge program for the lab PC (Python, separate from the app)
 database/migrations/
   control/           Tables of the control database
   clinic/            Core tables of every clinic database

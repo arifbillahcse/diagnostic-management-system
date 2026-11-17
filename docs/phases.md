@@ -13,7 +13,7 @@
 | **8. Subscription layer** | Plans, module entitlements, license and trial dates, platform billing | Set editions and pricing |
 | **9. Inventory and people** (built: 9a to 9d; polish and review next) | 9a items, suppliers, purchases, stock on hand (built). 9b stock use per test, manual issue and wastage, stock count, alerts, reports (built). 9c staff and attendance (built). 9d advances, salary run, payslip (built) | Confirm with pilot clinics |
 | **10. Patient portal and imaging reports** (built: 10a to 10c) | 10a imaging report templates, writing, signing, versions and printing (built). 10b imaging delivery: report-ready SMS, order page, combined printing (built). 10c patient portal: online report access (built) | Review the starter templates with a reporting doctor |
-| **11. Machine integration and multi-branch** (11a and 11c built) | 11a multi-branch: switcher, lists by branch, branch details on papers, branch reports (built). 11b collection centres sending samples to the main lab. 11c analyzer server module with a simulator (built). 11d bridge program and the first machine driver, tested at a clinic | Confirm collection centres; name the analyzer models |
+| **11. Machine integration and multi-branch** (11a, 11c and the 11d bridge built) | 11a multi-branch: switcher, lists by branch, branch details on papers, branch reports (built). 11b collection centres sending samples to the main lab. 11c analyzer server module with a simulator (built). 11d bridge program (built) and the first real machine, tested at a clinic | Confirm collection centres; name the analyzer models |
 | **12. Signup and provisioning** | Automatic clinic setup on the hosting platform | After there are paying customers |
 
 ## Changes to a finished phase
