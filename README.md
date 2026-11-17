@@ -307,6 +307,7 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan queue:work` | Runs queued jobs. Each job reconnects to the clinic it was created for |
 | `php artisan schedule:run` | Runs scheduled tasks. Call it every minute from cron in production |
 | `php artisan frontdesk:summarize` | Rebuilds the daily front desk summaries. Scheduled nightly |
+| `php artisan inventory:check` | Checks every stock item's stored quantity and value against its movements and corrects any difference. Scheduled nightly |
 | `php artisan messaging:due-reminders` | Reminds patients about unpaid bills, for clinics that switched reminders on. Scheduled daily at 10:30 |
 | `php artisan messaging:retry` | Tries failed messages again (three tries in all). Scheduled every ten minutes |
 | `php artisan laboratory:sample-data <clinic id>` | Loads a new clinic with sample tests, doctors, three staff accounts, patients, and ten days of orders, for trying the software. Never run it on a clinic with real data |

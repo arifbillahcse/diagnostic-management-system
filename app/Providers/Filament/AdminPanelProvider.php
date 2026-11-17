@@ -61,7 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             // Lists and forms use the whole screen, like the billing screen.
             ->maxContentWidth(Width::Full)
-            ->navigationGroups(['Front desk', 'Laboratory', 'Finance', 'Sales reports', 'Messaging', 'Catalog', 'Lab set-up', 'Administration'])
+            ->navigationGroups(['Front desk', 'Laboratory', 'Finance', 'Inventory', 'Sales reports', 'Messaging', 'Catalog', 'Lab set-up', 'Administration'])
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

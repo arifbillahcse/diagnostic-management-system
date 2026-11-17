@@ -460,6 +460,33 @@ channels and messages on or off.
 Message status: `queued -> sent`, or `queued -> failed -> queued` (a retry,
 at most three tries by the system; staff can send a failed one again).
 
+## 8d. Module: inventory (`inv_`)
+
+Off by default. Requires front desk (stock use per test comes in the next
+step); uses finance when it is on. Quantities are exact decimals with three
+places, never floats (a `Quantity` value object, held in thousandths).
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `inv_items` | `public_id`, `code` (unique), `name`, `category` (reagent, consumable, other), `unit`, `reorder_level`, `tracks_expiry`, `is_active`, `quantity`, `stock_value` | `quantity` and `stock_value` are kept in step with the movements under a row lock, and checked nightly (`inventory:check`). Never edited by hand |
+| `inv_suppliers` | `public_id`, `name` (unique), `phone`, `address`, `notes`, `is_active` | |
+| `inv_purchases` | `public_id`, `purchase_no` (unique), `supplier_id`, `branch_id`, `purchase_date`, `supplier_bill_no`, `total`, `paid_at`, `paid_by`, `expense_id` (finance, no key), `voided_at`, `void_reason` | Never edited. A wrong one is voided while unpaid and its stock is still on hand |
+| `inv_purchase_lines` | `purchase_id`, `item_id`, `quantity`, `unit_cost`, `line_total`, `batch_no`, `expires_on` | Append-only |
+| `inv_movements` | `item_id`, `branch_id`, `quantity` (+ in, − out), `value`, `reason`, `source_type`, `source_id` (unique pair), `batch_no`, `expires_on`, `occurred_at` | Every change to stock. Append-only. Stock on hand is the sum |
+
+**Valuation.** Average cost. Stock coming in brings its purchase value;
+stock going out takes its share of the value on hand, and the last unit takes
+all that is left, so no rounding is left behind. Stock can never go below
+zero, overall or in a batch.
+
+**Expiry.** An item marked "tracks expiry" needs an expiry date on every
+purchase line and is kept by batch; without a batch number the batch is named
+after the expiry date. An expired date is refused.
+
+**Payment.** A purchase is unpaid until marked paid. With finance on, marking
+it paid records an expense in the category "Purchases" from the chosen
+account, in the same transaction. A paid purchase cannot be voided.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

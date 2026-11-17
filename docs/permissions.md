@@ -81,6 +81,12 @@ messaging.log.view
 messaging.messages.manage
 messaging.templates.manage
 messaging.settings.manage
+
+inventory.stock.view
+inventory.items.manage
+inventory.purchases.record
+inventory.purchases.void
+inventory.purchases.pay
 ```
 
 Each module declares its keys and its default role grants in its entry
@@ -130,6 +136,10 @@ or create its own, except where noted.
 | Messaging: see the message log | Yes | Yes | Yes | | | |
 | Messaging: send again, stop a number, wording, settings | Yes | Yes | | | | |
 | Number formats (part of clinic settings) | Yes | Yes | | | | |
+| Inventory: see stock, purchases, movements | Yes | Yes | | Yes | Yes | Yes |
+| Inventory: items and suppliers | Yes | Yes | | | | |
+| Inventory: record and pay purchases | Yes | Yes | | | | Yes |
+| Inventory: void a purchase | Yes | Yes | | | | |
 | Database updates page (temporary, trial only) | Yes | | | | | |
 
 Two grants need the owner's attention:

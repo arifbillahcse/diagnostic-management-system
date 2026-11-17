@@ -1,0 +1,12 @@
+{
+  "key": "inventory",
+  "name": "Inventory",
+  "description": "Reagents and consumables: stock items, suppliers, purchases with batches and expiry dates, stock on hand and its value.",
+  "version": "1.0.0",
+  "core": ">=1.0.0",
+  "requires": ["frontdesk"],
+  "suggests": ["finance", "laboratory"],
+  "table_prefix": "inv_",
+  "default_enabled": false,
+  "entry": "Modules\\Inventory\\InventoryModule"
+}
