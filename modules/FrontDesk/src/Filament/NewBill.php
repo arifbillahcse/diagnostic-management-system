@@ -323,6 +323,13 @@ class NewBill extends Page
         $this->forgetCaches();
     }
 
+    /** The "Exact amount" link: pay what is owed, and follow the net payable again. */
+    public function payExact(): void
+    {
+        $this->paidTouched = false;
+        $this->changed();
+    }
+
     /** Until the cashier types an amount, "paid" follows the net payable, as on the paper counter. */
     private function changed(): void
     {

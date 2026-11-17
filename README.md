@@ -175,7 +175,7 @@ A "not found" page on every address means no clinic has that domain: run
 ## The billing screen
 
 **Front desk, New bill** is the counter screen: patient, tests, discount, and
-payment on one page, small enough for a 1366 x 768 monitor.
+payment on one page, with a summary column that stays in view. It is laid out for wide monitors and still works on 1366 x 768 (the page scrolls a little).
 
 - Type the mobile number first. Patients already registered with it appear
   to click. A patient who is not registered yet is **registered when the bill
@@ -185,8 +185,9 @@ payment on one page, small enough for a 1366 x 768 monitor.
 - **Discount % and Discount Tk** follow each other; the box typed in last is
   the one the bill is made from. A reason is required, and the role's
   discount limit applies, as everywhere else.
-- **Paid amount** starts equal to the net payable. Less leaves a due; more
-  shows the **Return** (the change), and only the amount owed is recorded.
+- **Pay mode** is a row of buttons. **Paid amount** starts equal to the net
+  payable (**Exact amount** goes back to it). Less leaves a due; more shows
+  the **Return** (the change), and only the amount owed is recorded.
 - **Ctrl+S** saves, **F2** starts a new bill. After saving, the strip at the
   top has the print links for the patient copy and the office copy.
 - Cash needs an open cash session (Cash sessions); the screen warns when

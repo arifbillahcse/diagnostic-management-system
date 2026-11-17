@@ -187,7 +187,7 @@ final class NewBillTest extends FrontDeskTestCase
         $bill->call('save')->assertNotified('Bill not saved');
         $this->assertSame(1, Patient::count(), 'the patient was registered before the bill was refused');
         $this->assertSame(0, Order::count());
-        $bill->assertSee('change'); // the patient is now chosen, not typed
+        $bill->assertSee('Change patient'); // the patient is now chosen, not typed
 
         $bill->set('deliveryAt', '')->call('save')->assertHasNoErrors();
         $this->assertSame(1, Patient::count(), 'the second try reused the registered patient');
@@ -212,6 +212,20 @@ final class NewBillTest extends FrontDeskTestCase
         $second = Invoice::orderByDesc('id')->first();
         $this->assertSame('150.00', $second->paid_total->toDecimal(), 'only what was owed is recorded; the rest is change');
         $this->assertSame('0.00', $second->due_amount->toDecimal());
+    }
+
+    public function test_the_exact_amount_link_goes_back_to_the_net_payable(): void
+    {
+        $this->catalog();
+
+        $bill = $this->test()->call('addByCode', 'LIPID')->set('paid', '300');
+        $this->assertSame('900.00', $bill->instance()->figures()['due']->toDecimal());
+
+        $bill->call('payExact')->assertSet('paid', '1200.00')->assertSet('paidTouched', false);
+        $this->assertSame('0.00', $bill->instance()->figures()['due']->toDecimal());
+
+        // And it follows the bill again afterwards.
+        $bill->call('addByCode', 'CBC')->assertSet('paid', '1600.00');
     }
 
     public function test_an_unpaid_bill_can_be_saved_with_nothing_paid(): void
@@ -287,7 +301,7 @@ final class NewBillTest extends FrontDeskTestCase
         $existing = $this->patient('Rahim Uddin');
 
         $byCode = $this->test()->set('patientCode', $existing->patient_code)->call('findPatient');
-        $byCode->assertSet('patientId', $existing->id)->assertSet('name', 'Rahim Uddin')->assertSet('mobile', '01711000000')->assertSee('change');
+        $byCode->assertSet('patientId', $existing->id)->assertSet('name', 'Rahim Uddin')->assertSet('mobile', '01711000000')->assertSee('Change patient');
         $byCode->call('addByCode', 'CBC')->set('payMethod', 'bkash')->call('save')->assertHasNoErrors();
 
         $this->assertSame(1, Patient::count());
@@ -392,7 +406,7 @@ final class NewBillTest extends FrontDeskTestCase
 
     public function test_the_page_opens_for_front_desk_staff_only(): void
     {
-        $this->signIn($this->ownerUser)->get(self::BASE.'/new-bill')->assertOk()->assertSee('Test entry')->assertSee('Bill summary')->assertSee('Ctrl+S');
+        $this->signIn($this->ownerUser)->get(self::BASE.'/new-bill')->assertOk()->assertSee('Tests and services')->assertSee('Bill summary')->assertSee('Save bill');
         $this->signIn($this->staff('receptionist'))->get(self::BASE.'/new-bill')->assertOk();
         $this->signIn($this->staff('lab_technician'))->get(self::BASE.'/new-bill')->assertForbidden();
 
