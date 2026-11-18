@@ -79,6 +79,16 @@ return [
     // this address, for example admin.softorio.com; empty switches it off.
     'platform' => [
         'domain' => env('PLATFORM_DOMAIN'),
+
+        // Printed on subscription invoices, and shown to clinic owners.
+        'billing' => [
+            'name' => env('PLATFORM_BILL_NAME', 'Softorio'),
+            'address' => env('PLATFORM_BILL_ADDRESS'),
+            'phone' => env('PLATFORM_BILL_PHONE'),
+            'email' => env('PLATFORM_BILL_EMAIL'),
+            // How to pay, for example "bKash merchant 01XXXXXXXXX, reference: the invoice number".
+            'how_to_pay' => env('PLATFORM_BILL_HOW_TO_PAY'),
+        ],
     ],
 
 ];

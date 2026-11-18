@@ -8,7 +8,9 @@ use App\Core\Tenancy\Clinic;
 use App\Core\Tenancy\ClinicStatus;
 use App\Core\Tenancy\Plan;
 use App\Platform\Actions\ManageClinic;
+use App\Platform\Billing\Billing;
 use App\Platform\ClinicUsage;
+use App\Platform\Filament\Resources\Invoices\InvoiceResource;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -97,6 +99,19 @@ class ViewClinic extends Page
                         }
                     }, 'Plan changed');
                 }),
+
+            Action::make('invoice')->label('Issue invoice')
+                ->fillForm(fn (): array => ['billing_period' => 'monthly'])
+                ->modalDescription(fn (): string => 'For the next period, starting '.app(Billing::class)->nextPeriod($this->record, 'monthly')[0]->format('d M Y').'. Leave the amount empty to use the plan\'s price.')
+                ->schema([
+                    Select::make('billing_period')->label('Period')->options(['monthly' => 'One month', 'yearly' => 'One year'])->required()->native(false),
+                    TextInput::make('amount')->label('Amount (empty: the plan\'s price)')->prefix('৳')->rule('nullable')->rule('regex:/^\d{1,10}(\.\d{1,2})?$/'),
+                    TextInput::make('note')->label('Note on the invoice')->maxLength(255)->placeholder('Launch discount'),
+                ])
+                ->action(fn (Action $action, array $data) => $this->run($action, fn () => app(Billing::class)->issue($this->record, (string) $data['billing_period'], $data['amount'] ?? null, $data['note'] ?? null), 'Invoice issued')),
+
+            Action::make('invoices')->label('Invoices')->color('gray')
+                ->url(fn (): string => InvoiceResource::getUrl('index', ['filters' => ['clinic_id' => ['value' => $this->record->id]]])),
 
             Action::make('extend')->label('Extend trial')->color('gray')
                 ->visible(fn (): bool => $this->record->paid_until === null)

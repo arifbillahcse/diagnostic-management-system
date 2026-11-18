@@ -7,7 +7,7 @@ title **DMS**.
 
 ## Status
 
-**Phases 1 to 5, 7, 9 and 10, and steps 11a to 11c and 11d's bridge program, are built.** Phases 6 (pilot) and 8 are set aside for
+**Phases 1 to 5, 7 to 10, and steps 11a to 11c and 11d's bridge program, are built.** Phases 6 (pilot) and 8 are set aside for
 later; Phases 10 and 11 are not started.
 
 - **Phase 1, skeleton:** one database per clinic, sign-in, users, roles and
@@ -71,6 +71,11 @@ later; Phases 10 and 11 are not started.
   switcher for staff in more than one branch, every list limited to the
   user's branches, each branch's own address and phone on printed papers,
   and branch figures in the owner's sales reports.
+- **Phase 8, subscriptions:** plans with prices, modules and branch limits;
+  a 30-day trial, then 7 days' grace and read-only mode for unpaid clinics,
+  with reminders; a platform console for Softorio on its own address
+  (`PLATFORM_DOMAIN`, two-step sign-in required) to manage clinics, plans,
+  invoices and payments; and a Subscription page for each clinic's owner.
 - **Phase 11b, collection centres:** a branch can send its samples to
   another branch's laboratory (Lab set-up, Collection centres). Samples are
   collected at the centre, sent in numbered transfers with a printed courier
