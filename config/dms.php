@@ -75,4 +75,10 @@ return [
         'remind_days' => (int) env('CLINIC_REMIND_DAYS', 7),
     ],
 
+    // The platform console (Softorio's own admin area). It answers only on
+    // this address, for example admin.softorio.com; empty switches it off.
+    'platform' => [
+        'domain' => env('PLATFORM_DOMAIN'),
+    ],
+
 ];

@@ -23,6 +23,14 @@ final class ResolveClinic
     {
         $host = ClinicDomain::normalize($request->getHost());
 
+        // The platform console has no clinic: it works only with the control database.
+        $platform = config('dms.platform.domain');
+        if (filled($platform) && $host === ClinicDomain::normalize((string) $platform)) {
+            $this->manager->deactivate();
+
+            return $next($request);
+        }
+
         $clinic = Clinic::query()
             ->whereIn('id', ClinicDomain::query()->select('clinic_id')->where('domain', $host))
             ->first();

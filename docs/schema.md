@@ -780,6 +780,24 @@ read-only, each once (logged in `provisioning_log`). `clinic:licence` shows or
 sets the dates (`--trial-ends`, `--extend-trial`, `--paid-until`). Settings:
 `CLINIC_TRIAL_DAYS`, `CLINIC_GRACE_DAYS`, `CLINIC_REMIND_DAYS`.
 
+**Platform console (Phase 8c).** A separate Filament panel answering only on
+`PLATFORM_DOMAIN` (for example `admin.softorio.com`; empty switches it off),
+registered before the clinic panel. Clinic resolution leaves that domain
+without a clinic, so the console uses the control database only.
+
+| Table | Notes |
+|---|---|
+| `platform_users` | `name`, `email` (unique), `password`, `is_active`, `app_authentication_secret`, `app_authentication_recovery_codes`, `last_login_at`. Own sign-in guard (`platform`); clinic users can never sign in here. Two-step sign-in is required. Added with `platform:user` |
+| `platform_audit` | `platform_user_id`, `clinic_id`, `action`, `details` (JSON), `ip`, `created_at`. Append-only log of everything done in the console |
+
+Screens: Clinics (plan, status, covered until, paid until; a clinic page with
+subscription, usage read from the clinic's database (bills this month, active
+users and branches, last sign-in, modules on), history from
+`provisioning_log` and `platform_audit`, and actions: change plan, extend
+trial, set dates, suspend, reactivate), Plans (prices, branch limit, modules,
+on sale), and Activity. Actions live in `App\Platform\Actions` and refuse to
+run without a signed-in platform user.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

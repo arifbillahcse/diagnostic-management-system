@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\Auth\User;
+use App\Platform\PlatformUser;
 
 return [
 
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Platform console users (control database), never clinic users.
+        'platform' => [
+            'driver' => 'session',
+            'provider' => 'platform_users',
+        ],
     ],
 
     /*
@@ -62,6 +69,11 @@ return [
     */
 
     'providers' => [
+        'platform_users' => [
+            'driver' => 'eloquent',
+            'model' => PlatformUser::class,
+        ],
+
         'users' => [
             'driver' => 'eloquent',
             'model' => User::class,
