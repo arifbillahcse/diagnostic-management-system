@@ -1,0 +1,6 @@
+code,name,type,category,price,room,active
+CBC,Complete Blood Count,lab_test,Haematology,400,,yes
+FBS,Fasting Blood Sugar,lab_test,Biochemistry,150,,yes
+XRCHEST,X-ray Chest PA,imaging,X-ray,500,Room 2,yes
+USGWA,Ultrasound Whole Abdomen,imaging,Ultrasound,1500,Room 3,yes
+ECG,ECG,other,Cardiology,300,,yes

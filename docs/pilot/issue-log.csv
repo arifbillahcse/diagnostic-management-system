@@ -1,0 +1,2 @@
+id,date,reported_by,area,order_or_sample_no,what_happened,expected,priority,status,fixed_in,notes
+1,2026-01-15,Reception,Billing,ORD-00012,"Example: discount not shown on receipt","Discount line on receipt",Wrong,Open,,

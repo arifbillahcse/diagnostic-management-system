@@ -105,6 +105,7 @@ final class FrontDeskModule extends Module
         Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([
             SummarizeCommand::class,
             CheckInvoicesCommand::class,
+            Console\ImportCommand::class,
         ]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {

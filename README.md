@@ -389,6 +389,7 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan clinic:backup` | Backs up the control database and every clinic database. Add `--verify` to restore each into a scratch database and check it. Scheduled nightly once `BACKUP_PATH` is set |
 | `php artisan clinic:verify-backup <file>` | Checks one backup file by restoring it |
 | `php artisan platform:doctor` | Checks the installation's settings are safe for real patient data |
+| `php artisan frontdesk:import {clinic} {services or doctors} {file} [--dry-run]` | Imports a price list or referral doctors from CSV, all rows or none. Templates in `docs/pilot/` |
 | `php artisan frontdesk:check-invoices` | Recalculates every invoice and reports any stored total that differs. Scheduled nightly, changes nothing |
 
 ## Tests
