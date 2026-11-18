@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en-BD">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LabNest | Diagnostic Center Software for Bangladesh</title>
+  <meta name="description" content="Diagnostic center software for Bangladesh: billing, lab results, imaging reports, analyzer connection, dues and branches in one secure online system.">
+  <link rel="canonical" href="https://www.example.com.bd/">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#0b2545">
+  <meta name="author" content="Softorio">
+  <meta name="geo.region" content="BD">
+  <meta name="geo.placename" content="Dhaka">
+
+  <!-- Open Graph / social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LabNest">
+  <meta property="og:locale" content="en_BD">
+  <meta property="og:title" content="LabNest | Diagnostic Center Software for Bangladesh">
+  <meta property="og:description" content="Billing, lab results, imaging reports and analyzer connection for diagnostic centers in one secure online system.">
+  <meta property="og:url" content="https://www.example.com.bd/">
+  <meta property="og:image" content="https://www.example.com.bd/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LabNest diagnostic center software">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LabNest | Diagnostic Center Software for Bangladesh">
+  <meta name="twitter:description" content="Billing, lab results, imaging reports and analyzer connection for diagnostic centers.">
+  <meta name="twitter:image" content="https://www.example.com.bd/img/og-image.png">
+
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Structured data: what the product is, who makes it, and the answers on this page -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.example.com.bd/#org",
+        "name": "Softorio",
+        "url": "https://softorio.com/",
+        "logo": "https://www.example.com.bd/img/apple-touch-icon.png",
+        "email": "hello@example.com.bd",
+        "telephone": "+8801XXXXXXXXX",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Your street address",
+          "addressLocality": "Dhaka",
+          "addressCountry": "BD"
+        },
+        "areaServed": { "@type": "Country", "name": "Bangladesh" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.example.com.bd/#website",
+        "url": "https://www.example.com.bd/",
+        "name": "LabNest",
+        "inLanguage": "en-BD",
+        "publisher": { "@id": "https://www.example.com.bd/#org" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://www.example.com.bd/#software",
+        "name": "LabNest",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "Diagnostic center and laboratory management software",
+        "operatingSystem": "Web browser (Windows, macOS, Android, iOS)",
+        "description": "Online software for diagnostic centers and pathology labs in Bangladesh: patient registration, billing, dues, lab results with verification, imaging reports, report printing on the clinic's letterhead, referral doctors, lab analyzer connection by ASTM and HL7, patient report portal and multi-branch management.",
+        "featureList": [
+          "Patient registration and billing with bKash, Nagad, card and cash",
+          "Dues tracking and daily cash closing",
+          "Lab work list with result entry, verification and corrections that keep history",
+          "Lab analyzer connection by ASTM and HL7",
+          "Imaging report templates for X-ray, ultrasound, CT and MRI",
+          "Report printing on the clinic's own letterhead with signatures",
+          "Referral doctor management and reports",
+          "Patient report portal",
+          "Multi-branch and collection centre management",
+          "Separate database for every clinic, encrypted nightly backups, two-step sign-in and audit log"
+        ],
+        "inLanguage": "en",
+        "countriesSupported": "BD",
+        "provider": { "@id": "https://www.example.com.bd/#org" },
+        "publisher": { "@id": "https://www.example.com.bd/#org" },
+        "url": "https://www.example.com.bd/"
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://www.example.com.bd/#faq",
+        "mainEntity": [
+          { "@type": "Question", "name": "What is LabNest?", "acceptedAnswer": { "@type": "Answer", "text": "LabNest is online software for diagnostic centers and pathology labs in Bangladesh. It handles patient registration, billing, dues, lab results, imaging reports, report printing, referral doctors and lab analyzer connection in one system." } },
+          { "@type": "Question", "name": "How much does diagnostic center software cost in Bangladesh?", "acceptedAnswer": { "@type": "Answer", "text": "LabNest is sold as a monthly or yearly subscription in three plans: Basic, Standard and Premium. The price depends on the modules and the number of branches. Contact us for the current price list; a yearly plan costs less than twelve monthly payments." } },
+          { "@type": "Question", "name": "Do I need to install anything?", "acceptedAnswer": { "@type": "Answer", "text": "No. LabNest runs in a web browser on any computer, tablet or phone. You need an internet connection and a printer. Lab analyzer connection uses a small program on one computer in the lab." } },
+          { "@type": "Question", "name": "Can LabNest connect to my lab analyzers?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. LabNest receives results from lab analyzers that use the ASTM or HL7 standard, over a serial cable or the network, so staff do not type results by hand. We confirm your analyzer models before setup." } },
+          { "@type": "Question", "name": "Who owns the clinic's data?", "acceptedAnswer": { "@type": "Answer", "text": "The clinic owns its data. Every clinic has its own separate database, and you can export your data at any time." } },
+          { "@type": "Question", "name": "Is patient data safe?", "acceptedAnswer": { "@type": "Answer", "text": "Each clinic has its own database. Connections use HTTPS, backups are encrypted and tested nightly, staff sign in with their own accounts and two-step sign-in, and every change to money, results and permissions is recorded in an audit log." } },
+          { "@type": "Question", "name": "Can a result or a bill be changed after it is saved?", "acceptedAnswer": { "@type": "Answer", "text": "A saved result or payment is never overwritten or deleted. A correction is saved as a new version, a refund or an adjustment, so the full history stays and the owner can see who changed what." } },
+          { "@type": "Question", "name": "Can I print reports on my own letterhead?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Reports and receipts use your clinic's logo, address, letterhead margins and doctors' signatures. We match the layout to your current papers during setup." } },
+          { "@type": "Question", "name": "Does it support more than one branch?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The Premium plan supports several branches and collection centres, with samples sent from a collection centre to the main laboratory and reports by branch." } },
+          { "@type": "Question", "name": "How long does it take to start?", "acceptedAnswer": { "@type": "Answer", "text": "Most clinics go live within one week: we import your test list, prices and referral doctors, match your report layout, train your staff and run alongside your old system until the numbers match." } },
+          { "@type": "Question", "name": "How do I pay for the subscription?", "acceptedAnswer": { "@type": "Answer", "text": "You can pay by bKash, Nagad or bank transfer. You receive an invoice for every payment from the software itself." } }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "@id": "https://www.example.com.bd/#howto",
+        "name": "How to start using LabNest at a diagnostic center",
+        "totalTime": "P7D",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Set up", "text": "We create your clinic account, branches, staff accounts and permissions." },
+          { "@type": "HowToStep", "position": 2, "name": "Import your data", "text": "We import your test list, prices and referral doctors from Excel and match your report layout." },
+          { "@type": "HowToStep", "position": 3, "name": "Train your staff", "text": "Reception, lab and owner get short hands-on training and a printed quick guide." },
+          { "@type": "HowToStep", "position": 4, "name": "Go live", "text": "Run alongside your old system for a few days, check the daily totals match, then switch fully." }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="LabNest home">
+        <img src="img/favicon.svg" alt="" width="32" height="32">
+        <span>LabNest</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="sr-only">Menu</span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#security">Security</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn btn-small" href="#demo">Book a demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 1. Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <p class="eyebrow">Diagnostic center software for Bangladesh</p>
+          <h1>Run your diagnostic center from one screen: billing, lab, imaging and reports.</h1>
+          <p class="lead">LabNest replaces paper registers and Excel. Bills are exact, results are verified before they print, dues are never forgotten, and the owner sees the day's cash from anywhere.</p>
+          <div class="hero-actions">
+            <a class="btn" href="#demo">Book a free demo</a>
+            <a class="btn btn-ghost" href="#features">See features</a>
+          </div>
+          <ul class="hero-points">
+            <li>Works in any browser</li>
+            <li>Prints on your letterhead</li>
+            <li>Connects to lab analyzers</li>
+          </ul>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="mock">
+            <div class="mock-bar"><span></span><span></span><span></span></div>
+            <div class="mock-body">
+              <div class="mock-stats">
+                <div><small>Today's billing</small><strong>৳ 48,250</strong></div>
+                <div><small>Collected</small><strong>৳ 41,900</strong></div>
+                <div><small>Reports ready</small><strong>63</strong></div>
+              </div>
+              <div class="mock-table">
+                <div class="row head"><span>Test</span><span>Result</span><span>Range</span><span>Status</span></div>
+                <div class="row"><span>Haemoglobin</span><span>13.8 g/dL</span><span>12–16</span><span class="tag ok">Verified</span></div>
+                <div class="row"><span>Fasting glucose</span><span class="high">7.9 mmol/L</span><span>3.9–6.1</span><span class="tag warn">High</span></div>
+                <div class="row"><span>Creatinine</span><span>0.9 mg/dL</span><span>0.6–1.2</span><span class="tag ok">Verified</span></div>
+                <div class="row"><span>TSH</span><span>—</span><span>0.4–4.0</span><span class="tag wait">From analyzer</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="mock-note">Sample figures for illustration.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Problems -->
+    <section class="section" id="problems" aria-labelledby="problems-title">
+      <div class="container">
+        <h2 id="problems-title">Problems LabNest solves</h2>
+        <p class="section-lead">Most diagnostic centers lose money and time in the same four places.</p>
+        <div class="grid grid-4">
+          <article class="card">
+            <h3>Cash that does not match</h3>
+            <p>Every payment, discount and refund is recorded with who did it. The day's closing shows exactly what should be in the drawer.</p>
+          </article>
+          <article class="card">
+            <h3>Forgotten dues</h3>
+            <p>Unpaid balances are listed by patient and date, and a report is held until the due is paid, if you choose.</p>
+          </article>
+          <article class="card">
+            <h3>Late or wrong reports</h3>
+            <p>Results outside the normal range are flagged, a second person can verify them, and the work list shows what is still pending.</p>
+          </article>
+          <article class="card">
+            <h3>Paper and Excel</h3>
+            <p>Find any patient by mobile number in seconds, with every past test and report, instead of searching registers.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Features -->
+    <section class="section section-alt" id="features" aria-labelledby="features-title">
+      <div class="container">
+        <h2 id="features-title">Features of LabNest diagnostic software</h2>
+        <p class="section-lead">Everything a diagnostic center does in a day, in one system.</p>
+        <div class="grid grid-3">
+          <article class="feature">
+            <h3>Front desk and billing</h3>
+            <p>Register patients, add tests and packages, give allowed discounts, and take payment by cash, card, bKash or Nagad. Receipts print in one click.</p>
+          </article>
+          <article class="feature">
+            <h3>Lab results and verification</h3>
+            <p>Sample barcodes, a work list for each section, reference ranges by age and sex, and verification before release. Corrections keep the old version.</p>
+          </article>
+          <article class="feature">
+            <h3>Imaging reports</h3>
+            <p>Ready templates for X-ray, ultrasound, CT and MRI that the doctor edits and signs, delivered with the patient's other reports.</p>
+          </article>
+          <article class="feature">
+            <h3>Reports on your letterhead</h3>
+            <p>Your logo, address, margins and doctors' signatures on every report and receipt, matched to the papers you use today.</p>
+          </article>
+          <article class="feature">
+            <h3>Referral doctors</h3>
+            <p>Record the referring doctor on every order and see referrals by doctor and by month.</p>
+          </article>
+          <article class="feature">
+            <h3>Owner reports</h3>
+            <p>Daily cash closing, income by test and by branch, discounts and refunds by staff member, and dues, from your phone.</p>
+          </article>
+          <article class="feature">
+            <h3>Patient report portal</h3>
+            <p>Patients open their own finished reports online with a secure code, so fewer people wait at the counter.</p>
+          </article>
+          <article class="feature">
+            <h3>Branches and collection centres</h3>
+            <p>Several branches under one account, with samples sent from a collection centre to the main lab and tracked box by box.</p>
+          </article>
+          <article class="feature">
+            <h3>Staff and permissions</h3>
+            <p>Every person has their own account. Roles decide who may give discounts, verify results or change prices.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Analyzer connection -->
+    <section class="section" id="analyzers" aria-labelledby="analyzers-title">
+      <div class="container split">
+        <div>
+          <h2 id="analyzers-title">Lab analyzer connection (ASTM and HL7)</h2>
+          <p>Results from your biochemistry, haematology and immunoassay analyzers arrive in LabNest automatically. No typing, no copying errors.</p>
+          <ul class="checks">
+            <li>Works with analyzers that speak ASTM or HL7, by serial cable or network</li>
+            <li>A small program on one lab computer sends results securely over HTTPS</li>
+            <li>Results wait safely if the internet drops, and send when it returns</li>
+            <li>Staff check results before verifying them</li>
+          </ul>
+          <p class="note">Tell us your analyzer models and we confirm support before you subscribe.</p>
+        </div>
+        <div class="flow" aria-hidden="true">
+          <div class="flow-box">Analyzer</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box">Lab computer</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box accent">LabNest</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. How it works -->
+    <section class="section section-alt" id="how-it-works" aria-labelledby="how-title">
+      <div class="container">
+        <h2 id="how-title">How to start using LabNest</h2>
+        <p class="section-lead">Most centers go live within one week.</p>
+        <ol class="steps">
+          <li><h3>Set up</h3><p>We create your clinic account, branches, staff accounts and permissions.</p></li>
+          <li><h3>Import your data</h3><p>Send your test list, prices and referral doctors in Excel. We import them and match your report layout.</p></li>
+          <li><h3>Train your staff</h3><p>Short hands-on training for reception, lab and owner, with a printed quick guide for each.</p></li>
+          <li><h3>Go live</h3><p>Run alongside your old system for a few days. Once the daily totals match, switch fully.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 6. Security -->
+    <section class="section" id="security" aria-labelledby="security-title">
+      <div class="container">
+        <h2 id="security-title">Patient data security</h2>
+        <p class="section-lead">Medical and financial records need more care than an ordinary website.</p>
+        <div class="grid grid-3">
+          <article class="card"><h3>Separate database</h3><p>Every clinic has its own database. One clinic's data never mixes with another's.</p></article>
+          <article class="card"><h3>Encrypted, tested backups</h3><p>Backups are taken every night, encrypted, kept off the main server and test-restored.</p></article>
+          <article class="card"><h3>Two-step sign-in</h3><p>Owners and staff can protect their accounts with a code from an authenticator app.</p></article>
+          <article class="card"><h3>Nothing is erased</h3><p>Saved bills and results are never edited or deleted. Corrections are new entries, so history stays complete.</p></article>
+          <article class="card"><h3>Audit log</h3><p>Every change to money, results and permissions records who did it and when.</p></article>
+          <article class="card"><h3>Your data, your export</h3><p>The clinic owns its data and can export it at any time.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Who it is for -->
+    <section class="section section-alt" id="who" aria-labelledby="who-title">
+      <div class="container">
+        <h2 id="who-title">Who LabNest is for</h2>
+        <div class="grid grid-3">
+          <article class="card"><h3>Pathology labs</h3><p>Single labs that want exact billing, faster reports and analyzer connection.</p></article>
+          <article class="card"><h3>Diagnostic centers</h3><p>Lab and imaging under one roof, with referral doctors and owner reports.</p></article>
+          <article class="card"><h3>Multi-branch groups</h3><p>Several branches and collection centres with one main laboratory.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Pricing -->
+    <section class="section" id="pricing" aria-labelledby="pricing-title">
+      <div class="container">
+        <h2 id="pricing-title">LabNest pricing plans</h2>
+        <p class="section-lead">Monthly or yearly subscription. A yearly plan costs less than twelve monthly payments. Pay by bKash, Nagad or bank transfer.</p>
+        <div class="grid grid-3 pricing">
+          <article class="plan">
+            <h3>Basic</h3>
+            <p class="price">Contact us</p>
+            <p class="plan-for">For a single lab</p>
+            <ul class="checks">
+              <li>Front desk and billing</li>
+              <li>Lab results and verification</li>
+              <li>Lab reports on your letterhead</li>
+              <li>1 branch</li>
+            </ul>
+            <a class="btn btn-ghost" href="#demo" data-plan="Basic">Ask for price</a>
+          </article>
+          <article class="plan featured">
+            <p class="badge">Most diagnostic centers</p>
+            <h3>Standard</h3>
+            <p class="price">Contact us</p>
+            <p class="plan-for">For lab and imaging</p>
+            <ul class="checks">
+              <li>Everything in Basic</li>
+              <li>Imaging reports</li>
+              <li>Finance and owner reports</li>
+              <li>Patient report portal</li>
+              <li>SMS and inventory</li>
+              <li>1 branch</li>
+            </ul>
+            <a class="btn" href="#demo" data-plan="Standard">Ask for price</a>
+          </article>
+          <article class="plan">
+            <h3>Premium</h3>
+            <p class="price">Contact us</p>
+            <p class="plan-for">For groups and busy labs</p>
+            <ul class="checks">
+              <li>Everything in Standard</li>
+              <li>Lab analyzer connection</li>
+              <li>Branches and collection centres</li>
+              <li>Staff and payroll</li>
+              <li>Up to 3 branches</li>
+            </ul>
+            <a class="btn btn-ghost" href="#demo" data-plan="Premium">Ask for price</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Comparison -->
+    <section class="section section-alt" id="compare" aria-labelledby="compare-title">
+      <div class="container">
+        <h2 id="compare-title">Paper and Excel compared with LabNest</h2>
+        <div class="table-wrap">
+          <table class="compare">
+            <caption class="sr-only">Comparison of paper or Excel with LabNest</caption>
+            <thead><tr><th scope="col">Task</th><th scope="col">Paper or Excel</th><th scope="col">LabNest</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Find a past patient</th><td>Search registers</td><td>Type the mobile number</td></tr>
+              <tr><th scope="row">Daily cash closing</th><td>Add up by hand</td><td>Ready at closing time</td></tr>
+              <tr><th scope="row">Dues</th><td>Easy to forget</td><td>Listed by patient and date</td></tr>
+              <tr><th scope="row">Analyzer results</th><td>Typed by hand</td><td>Arrive automatically</td></tr>
+              <tr><th scope="row">Result corrections</th><td>Overwritten</td><td>New version, history kept</td></tr>
+              <tr><th scope="row">Who changed what</th><td>Unknown</td><td>Recorded in the audit log</td></tr>
+              <tr><th scope="row">Owner away from clinic</th><td>Phone the counter</td><td>Open the reports on a phone</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Testimonial slot (fill in after the pilot) -->
+    <!--
+    <section class="section" id="clients" aria-labelledby="clients-title">
+      <div class="container">
+        <h2 id="clients-title">What clinics say</h2>
+        <blockquote class="quote">
+          <p>"Real quote from a real clinic owner, with their permission."</p>
+          <footer>Name, Clinic, City</footer>
+        </blockquote>
+      </div>
+    </section>
+    -->
+
+    <!-- 11. FAQ (same answers as the FAQPage data in the head) -->
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="container narrow">
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <details>
+          <summary>What is LabNest?</summary>
+          <p>LabNest is online software for diagnostic centers and pathology labs in Bangladesh. It handles patient registration, billing, dues, lab results, imaging reports, report printing, referral doctors and lab analyzer connection in one system.</p>
+        </details>
+        <details>
+          <summary>How much does diagnostic center software cost in Bangladesh?</summary>
+          <p>LabNest is sold as a monthly or yearly subscription in three plans: Basic, Standard and Premium. The price depends on the modules and the number of branches. Contact us for the current price list; a yearly plan costs less than twelve monthly payments.</p>
+        </details>
+        <details>
+          <summary>Do I need to install anything?</summary>
+          <p>No. LabNest runs in a web browser on any computer, tablet or phone. You need an internet connection and a printer. Lab analyzer connection uses a small program on one computer in the lab.</p>
+        </details>
+        <details>
+          <summary>Can LabNest connect to my lab analyzers?</summary>
+          <p>Yes. LabNest receives results from lab analyzers that use the ASTM or HL7 standard, over a serial cable or the network, so staff do not type results by hand. We confirm your analyzer models before setup.</p>
+        </details>
+        <details>
+          <summary>Who owns the clinic's data?</summary>
+          <p>The clinic owns its data. Every clinic has its own separate database, and you can export your data at any time.</p>
+        </details>
+        <details>
+          <summary>Is patient data safe?</summary>
+          <p>Each clinic has its own database. Connections use HTTPS, backups are encrypted and tested nightly, staff sign in with their own accounts and two-step sign-in, and every change to money, results and permissions is recorded in an audit log.</p>
+        </details>
+        <details>
+          <summary>Can a result or a bill be changed after it is saved?</summary>
+          <p>A saved result or payment is never overwritten or deleted. A correction is saved as a new version, a refund or an adjustment, so the full history stays and the owner can see who changed what.</p>
+        </details>
+        <details>
+          <summary>Can I print reports on my own letterhead?</summary>
+          <p>Yes. Reports and receipts use your clinic's logo, address, letterhead margins and doctors' signatures. We match the layout to your current papers during setup.</p>
+        </details>
+        <details>
+          <summary>Does it support more than one branch?</summary>
+          <p>Yes. The Premium plan supports several branches and collection centres, with samples sent from a collection centre to the main laboratory and reports by branch.</p>
+        </details>
+        <details>
+          <summary>How long does it take to start?</summary>
+          <p>Most clinics go live within one week: we import your test list, prices and referral doctors, match your report layout, train your staff and run alongside your old system until the numbers match.</p>
+        </details>
+        <details>
+          <summary>How do I pay for the subscription?</summary>
+          <p>You can pay by bKash, Nagad or bank transfer. You receive an invoice for every payment from the software itself.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- 12. Demo request -->
+    <section class="section section-dark" id="demo" aria-labelledby="demo-title">
+      <div class="container split">
+        <div>
+          <h2 id="demo-title">Book a free demo</h2>
+          <p>See LabNest with your own tests and prices. We reply within one working day.</p>
+          <ul class="contact-list">
+            <li>WhatsApp: <a href="https://wa.me/8801XXXXXXXXX">+880 1XXX-XXXXXX</a></li>
+            <li>Email: <a href="mailto:hello@example.com.bd">hello@example.com.bd</a></li>
+            <li>Office: Your street address, Dhaka, Bangladesh</li>
+          </ul>
+        </div>
+        <form class="demo-form" id="demo-form" novalidate>
+          <div class="field">
+            <label for="f-name">Your name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="f-clinic">Clinic or lab name</label>
+            <input id="f-clinic" name="clinic" type="text" autocomplete="organization" required>
+          </div>
+          <div class="field">
+            <label for="f-phone">Mobile number</label>
+            <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" required pattern="(\+?880)?0?1[3-9][0-9]{8}">
+          </div>
+          <div class="field">
+            <label for="f-district">District</label>
+            <input id="f-district" name="district" type="text" autocomplete="address-level2">
+          </div>
+          <div class="field">
+            <label for="f-plan">Interested in</label>
+            <select id="f-plan" name="plan">
+              <option value="Not sure">Not sure yet</option>
+              <option value="Basic">Basic</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+          <div class="form-actions">
+            <button class="btn" type="submit" data-via="whatsapp">Send on WhatsApp</button>
+            <button class="btn btn-ghost-light" type="submit" data-via="email">Send by email</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- 13. Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <a class="brand brand-light" href="#top"><img src="img/favicon.svg" alt="" width="28" height="28"><span>LabNest</span></a>
+        <p>Diagnostic center and laboratory software for Bangladesh.</p>
+        <p>A product by <a href="https://softorio.com/">Softorio</a>.</p>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
+      <address>
+        Your street address, Dhaka, Bangladesh<br>
+        <a href="tel:+8801XXXXXXXXX">+880 1XXX-XXXXXX</a><br>
+        <a href="mailto:hello@example.com.bd">hello@example.com.bd</a>
+      </address>
+    </div>
+    <p class="container copyright">© <span id="year">2026</span> Softorio. All rights reserved.</p>
+  </footer>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
