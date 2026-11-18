@@ -22,6 +22,7 @@ use App\Core\Tenancy\ClinicDatabase;
 use App\Core\Tenancy\ClinicManager;
 use App\Core\Tenancy\ClinicSwitched;
 use App\Core\Tenancy\Http\EnsureSessionBelongsToClinic;
+use App\Core\Tenancy\ReadOnlyMode;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Queue\Events\JobFailed;
@@ -94,6 +95,12 @@ final class CoreServiceProvider extends ServiceProvider
         Gate::before(function ($user, string $ability, array $arguments = []): ?bool {
             if (! $user instanceof User || ! $this->app->make(PermissionRegistry::class)->has($ability)) {
                 return null;
+            }
+
+            // An unpaid clinic past its grace days can look and print, nothing else.
+            $readOnly = $this->app->make(ReadOnlyMode::class);
+            if ($readOnly->on() && ! $readOnly->allows($ability)) {
+                return false;
             }
 
             $branch = $arguments[0] ?? null;

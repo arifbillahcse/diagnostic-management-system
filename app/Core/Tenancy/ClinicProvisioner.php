@@ -57,6 +57,8 @@ final class ClinicProvisioner
         $clinic = Clinic::create([
             'name' => $name,
             'status' => ClinicStatus::Trial,
+            // The last trial day ends at midnight in the clinic's own time zone.
+            'trial_ends_at' => now((string) config('dms.clinics.default_timezone', 'Asia/Dhaka'))->addDays((int) config('dms.clinics.trial_days', 30))->endOfDay()->utc(),
             'db_name' => 'pending_'.strtolower((string) Str::ulid()),
             'timezone' => config('dms.clinics.default_timezone'),
             'plan_id' => $plan->id,

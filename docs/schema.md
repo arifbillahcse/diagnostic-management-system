@@ -761,6 +761,25 @@ and tests ordered at, or tested at, the user's branches.
   refused. Logged in `provisioning_log` and the clinic's audit log.
 - The owner sees the plan on the Modules page.
 
+**Licence dates and status (Phase 8b).** `clinics.trial_ends_at` (a new
+clinic gets 30 days, ending at midnight in its own time zone) and
+`clinics.paid_until`. The clinic is covered until `paid_until`, or before its
+first payment until the trial end. Clinics with neither date are never
+limited (existing clinics).
+
+| Status | When | Effect |
+|---|---|---|
+| `trial` / `active` | Covered | Normal |
+| `overdue` | Up to 7 days after the end | Normal, with a red banner for everyone |
+| `read_only` | After that | Only permissions ending in `.view`, `.print`, `.print_with_due`, and `core.export.run` are granted, to everyone including the owner (one check in the central permission gate). The site, sign-in, and the patient portal keep working |
+| `suspended` / `closed` | Set by the platform | Not served (unchanged) |
+
+`clinic:licence-check` (daily, 00:10) moves clinics between these from their
+dates and emails the owner 7 days before the end, when overdue, and when
+read-only, each once (logged in `provisioning_log`). `clinic:licence` shows or
+sets the dates (`--trial-ends`, `--extend-trial`, `--paid-until`). Settings:
+`CLINIC_TRIAL_DAYS`, `CLINIC_GRACE_DAYS`, `CLINIC_REMIND_DAYS`.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as

@@ -50,7 +50,7 @@ final class ClinicManager
     public function eachClinic(Closure $callback, ?int $onlyClinicId = null): void
     {
         $clinics = Clinic::query()
-            ->whereIn('status', [ClinicStatus::Trial->value, ClinicStatus::Active->value])
+            ->whereIn('status', ClinicStatus::usableValues())
             ->when($onlyClinicId, fn ($query, $id) => $query->whereKey($id))
             ->orderBy('id')
             ->get();

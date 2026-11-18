@@ -38,6 +38,8 @@ class Clinic extends Model
     {
         return [
             'status' => ClinicStatus::class,
+            'trial_ends_at' => 'datetime',
+            'paid_until' => 'date',
             'db_password' => 'encrypted',
         ];
     }

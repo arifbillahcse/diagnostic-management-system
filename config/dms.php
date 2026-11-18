@@ -67,6 +67,12 @@ return [
         'default_plan' => env('CLINIC_DEFAULT_PLAN', 'full'),
 
         'default_timezone' => 'Asia/Dhaka',
+
+        // Subscriptions (Phase 8b): a new clinic's free trial, the days after
+        // the end date when everything still works, and when to start reminding.
+        'trial_days' => (int) env('CLINIC_TRIAL_DAYS', 30),
+        'grace_days' => (int) env('CLINIC_GRACE_DAYS', 7),
+        'remind_days' => (int) env('CLINIC_REMIND_DAYS', 7),
     ],
 
 ];

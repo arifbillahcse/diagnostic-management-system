@@ -359,6 +359,8 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan plans:list` | Lists the plans (editions) with prices, branch limit, modules, and how many clinics use each |
 | `php artisan plans:set <key> --monthly= --branches= --modules=` | Sets a plan's name, prices, branch limit, or modules. Yearly defaults to ten months |
 | `php artisan clinic:plan <clinic id> <plan>` | Moves a clinic to another plan; modules outside it are switched off and their data kept |
+| `php artisan clinic:licence <clinic id> [--extend-trial=14] [--paid-until=YYYY-MM-DD]` | Shows or sets a clinic's trial end and paid-until dates; its status follows at once |
+| `php artisan clinic:licence-check` | Moves clinics to trial, active, overdue or read-only from their dates, and emails owners reminders. Scheduled daily |
 | `php artisan clinic:list` | Lists clinics with their domains and databases |
 | `php artisan clinic:migrate` | Runs core and module migrations for every clinic. Run on every deploy |
 | `php artisan migrate` | Migrates the control database only |

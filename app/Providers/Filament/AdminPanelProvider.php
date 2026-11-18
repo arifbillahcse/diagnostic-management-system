@@ -63,6 +63,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(Width::Full)
             ->navigationGroups(['Front desk', 'Laboratory', 'Finance', 'Inventory', 'Sales reports', 'Messaging', 'Catalog', 'Lab set-up', 'Administration'])
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.theme'))
+            ->renderHook(PanelsRenderHook::CONTENT_START, fn () => view('filament.licence-banner'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
