@@ -2,7 +2,7 @@
 
 Static marketing site for the diagnostic software. Plain HTML, CSS and
 JavaScript: no build step and no framework. The only outside request is
-Google Fonts (Bricolage Grotesque and Hanken Grotesk, both under the SIL Open
+Google Fonts (Inter, the same typeface as the software, under the SIL Open
 Font License); the page falls back to system fonts if they do not load. It is
 separate from the Laravel application and shares no code with it.
 
