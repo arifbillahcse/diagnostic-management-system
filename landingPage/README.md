@@ -19,7 +19,7 @@ Search the whole folder and replace:
 | `Your street address` | Office address | `index.html`, `privacy.html` |
 | `Contact us` (pricing cards) | Prices, once decided | `index.html` |
 
-The screenshots in `img/screen-*.webp` are real DiagnoCare screens with
+The screenshots in `img/screen-*.webp`, `img/slides/` and `img/features/` are real DiagnoCare screens with
 sample data (clinic "Alpha Diagnostics"). Retake them from your own demo
 clinic when its name and letterhead are final.
 
@@ -72,8 +72,12 @@ every section is readable with JavaScript switched off.
   fill and drain.
 - A sliding strip of key facts (pauses on hover).
 - Sections fade up as they scroll into view.
-- Product tour: four real screens that move on every 7 seconds with a
-  progress bar, and stop as soon as someone clicks or uses the arrow keys.
+- Software views slider: six real screens (dashboard, new bill, samples,
+  result verification, imaging report, profit report). Swipe on phones,
+  arrows and dots on desktop, plays every 5 seconds while on screen and
+  stops when someone touches it.
+- "Everything DiagnoCare does": every feature, module by module, with a
+  filter by area and screenshots that open larger when clicked.
 - The reference range marker slides to the flagged value, the patient-flow
   line draws itself, data packets run along the analyzer wire, and the owner's
   phone rises into its panel.

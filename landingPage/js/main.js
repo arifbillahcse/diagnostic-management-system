@@ -1,5 +1,5 @@
 // DiagnoCare landing page. Everything on the page is readable without this
-// file; it adds the menu, the scroll animations, the product tour, the module
+// file; it adds the menu, the scroll animations, the screen slider, the feature filter, the module
 // demo and the demo form.
 (function () {
   'use strict';
@@ -42,56 +42,81 @@
     revealables.forEach(function (el) { io.observe(el); });
   }
 
-  // Product tour: tabs that move on by themselves until someone touches them
-  var tour = document.querySelector('[data-tour]');
-  if (tour) {
-    var tabs = Array.prototype.slice.call(tour.querySelectorAll('[role="tab"]'));
-    var STEP_MS = 7000;
-    var timer = null;
-    tour.style.setProperty('--tour-ms', STEP_MS + 'ms');
-    tour.querySelectorAll('[role="tabpanel"]').forEach(function (p, i) { p.hidden = i !== 0; });
+  // Software views slider: scroll-snap does the swiping; this adds arrows, dots and autoplay
+  var slider = document.querySelector('[data-slider]');
+  if (slider) {
+    var track = slider.querySelector('.slides');
+    var slides = Array.prototype.slice.call(track.children);
+    var dotsBox = slider.querySelector('.dots');
+    var at = 0, auto = null;
+    var dots = slides.map(function (s, i) {
+      var d = document.createElement('button');
+      d.type = 'button'; d.setAttribute('role', 'tab');
+      d.setAttribute('aria-label', 'Screen ' + (i + 1) + ': ' + s.querySelector('b').textContent);
+      d.addEventListener('click', function () { stopAuto(); go(i); });
+      dotsBox.appendChild(d); return d;
+    });
+    var mark = function (i) {
+      at = i;
+      dots.forEach(function (d, j) { d.setAttribute('aria-selected', String(j === i)); });
+    };
+    var go = function (i) {
+      i = (i + slides.length) % slides.length;
+      track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft, behavior: reduceMotion ? 'auto' : 'smooth' });
+      mark(i);
+    };
+    var stopAuto = function () { clearInterval(auto); auto = null; };
+    slider.querySelector('.prev').addEventListener('click', function () { stopAuto(); go(at - 1); });
+    slider.querySelector('.next').addEventListener('click', function () { stopAuto(); go(at + 1); });
+    slider.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { stopAuto(); go(at + 1); }
+      if (e.key === 'ArrowLeft') { stopAuto(); go(at - 1); }
+    });
+    // Keep the dots right when someone swipes
+    var t = null;
+    track.addEventListener('scroll', function () {
+      clearTimeout(t);
+      t = setTimeout(function () { mark(Math.round(track.scrollLeft / track.clientWidth)); }, 80);
+    }, { passive: true });
+    track.addEventListener('pointerdown', stopAuto);
+    track.addEventListener('touchstart', stopAuto, { passive: true });
+    slider.addEventListener('mouseenter', function () { if (auto) { stopAuto(); slider.dataset.paused = '1'; } });
+    slider.addEventListener('mouseleave', function () { if (slider.dataset.paused) { delete slider.dataset.paused; startAuto(); } });
+    var startAuto = function () { if (!reduceMotion && !auto) auto = setInterval(function () { go(at + 1); }, 5000); };
+    mark(0);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries[0].isIntersecting ? startAuto() : stopAuto();
+      }, { threshold: 0.4 }).observe(slider);
+    }
+  }
 
-    var select = function (index, focus) {
-      tabs.forEach(function (tab, i) {
-        var on = i === index;
-        tab.setAttribute('aria-selected', String(on));
-        tab.tabIndex = on ? 0 : -1;
-        document.getElementById(tab.getAttribute('aria-controls')).hidden = !on;
-      });
-      if (focus) tabs[index].focus();
-      if (timer) restart();
-    };
-    var current = function () { return tabs.findIndex(function (t) { return t.getAttribute('aria-selected') === 'true'; }); };
-    var restart = function () {
-      // Re-trigger the progress bar animation on the new tab
-      tour.classList.remove('playing'); void tour.offsetWidth; tour.classList.add('playing');
-    };
-    var play = function () {
-      if (reduceMotion || timer) return;
-      tour.classList.add('playing');
-      timer = setInterval(function () { select((current() + 1) % tabs.length); }, STEP_MS);
-      restart();
-    };
-    var stop = function () { clearInterval(timer); timer = null; tour.classList.remove('playing'); };
-
-    tabs.forEach(function (tab, i) {
-      tab.addEventListener('click', function () { stop(); select(i); });
-      tab.addEventListener('keydown', function (e) {
-        var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (e.key === 'Home') { e.preventDefault(); stop(); select(0, true); }
-        if (e.key === 'End') { e.preventDefault(); stop(); select(tabs.length - 1, true); }
-        if (dir) { e.preventDefault(); stop(); select((i + dir + tabs.length) % tabs.length, true); }
+  // Feature filter
+  var chips = document.querySelectorAll('.filters .chip');
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var want = chip.dataset.filter;
+      chips.forEach(function (c) { c.classList.toggle('on', c === chip); c.setAttribute('aria-pressed', String(c === chip)); });
+      document.querySelectorAll('.fg').forEach(function (g) {
+        g.hidden = want !== 'all' && g.dataset.group !== want;
+        if (!g.hidden) g.classList.add('seen');
       });
     });
-    tour.addEventListener('mouseenter', function () { if (timer) { clearInterval(timer); timer = null; tour.classList.remove('playing'); tour.dataset.paused = '1'; } });
-    tour.addEventListener('mouseleave', function () { if (tour.dataset.paused) { delete tour.dataset.paused; play(); } });
+  });
 
-    // Start only when the tour is on screen
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries, obs) {
-        if (entries[0].isIntersecting) { play(); obs.disconnect(); }
-      }, { threshold: 0.35 }).observe(tour);
-    }
+  // Lightbox for feature screenshots
+  var lb = document.getElementById('lightbox');
+  if (lb && typeof lb.showModal === 'function') {
+    var lbImg = lb.querySelector('img'), lbText = lb.querySelector('p');
+    document.querySelectorAll('.shot').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var img = b.querySelector('img');
+        lbImg.src = img.src; lbImg.alt = img.alt; lbText.textContent = img.alt;
+        lb.showModal();
+      });
+    });
+    lb.querySelector('.lb-close').addEventListener('click', function () { lb.close(); });
+    lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
   }
 
   // Module demo: switching one off switches off what depends on it
