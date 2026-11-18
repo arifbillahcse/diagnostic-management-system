@@ -1,6 +1,6 @@
-# LabNest
+# DiagnoCare
 
-> LabNest is online software for diagnostic centers and pathology labs in Bangladesh, made by Softorio. It handles patient registration, billing, dues, lab results with verification, imaging reports, report printing on the clinic's letterhead, referral doctors, lab analyzer connection (ASTM and HL7), a patient report portal and multi-branch management.
+> DiagnoCare is online software for diagnostic centers and pathology labs in Bangladesh, made by Softorio. It handles patient registration, billing, dues, lab results with verification, imaging reports, report printing on the clinic's letterhead, referral doctors, lab analyzer connection (ASTM and HL7), a patient report portal and multi-branch management.
 
 ## Key facts
 
@@ -8,7 +8,8 @@
 - Country: Bangladesh. Currency: Bangladeshi taka (BDT). Language: English.
 - Maker: Softorio (https://softorio.com/).
 - Plans: Basic (front desk, lab, lab reports; 1 branch), Standard (adds imaging, finance and owner reports, patient portal, SMS, inventory; 1 branch), Premium (adds analyzer connection, branches and collection centres, staff and payroll; up to 3 branches). Monthly or yearly subscription; prices on request.
-- Payments accepted from patients: cash, card, bKash, Nagad. Subscription paid by bKash, Nagad or bank transfer.
+- Payments accepted from patients: cash, card, bKash, Nagad (transaction ID kept). Tubes and needles needed for the tests are added to the bill automatically. Subscription paid by bKash, Nagad or bank transfer.
+- Results: entered by hand or received from analyzers, flagged against ranges by age and sex, and verified by a second person before release.
 - Data security: a separate database for every clinic, HTTPS, encrypted nightly backups that are test-restored, two-step sign-in, and an audit log of every change to money, results and permissions. Saved bills and results are never edited or deleted; corrections are new entries.
 - Data ownership: the clinic owns its data and can export it at any time.
 - Setup time: usually within one week, including importing tests, prices and referral doctors from Excel, matching report layouts and staff training.

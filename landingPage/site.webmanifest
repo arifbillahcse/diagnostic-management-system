@@ -1,11 +1,11 @@
 {
-  "name": "LabNest",
-  "short_name": "LabNest",
+  "name": "DiagnoCare",
+  "short_name": "DiagnoCare",
   "description": "Diagnostic center software for Bangladesh",
   "start_url": "/",
   "display": "browser",
   "background_color": "#ffffff",
-  "theme_color": "#0b2545",
+  "theme_color": "#0a1633",
   "icons": [
     { "src": "img/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "img/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
