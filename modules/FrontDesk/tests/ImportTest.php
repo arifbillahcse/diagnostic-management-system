@@ -77,6 +77,19 @@ class ImportTest extends FrontDeskTestCase
             ->expectsOutputToContain('Missing: code, type, category')->assertFailed();
     }
 
+    public function test_the_command_says_why_an_account_may_not_import(): void
+    {
+        $file = $this->csv("code,name\nD01,Dr. Kamrul Islam\n");
+        $clinic = app(ClinicContext::class)->require();
+        $receptionist = $this->staff('receptionist');
+
+        $this->artisan('frontdesk:import', ['clinic' => $clinic->id, 'what' => 'doctors', 'file' => $file, '--user' => $receptionist->email])
+            ->expectsOutputToContain('may not manage services')->assertFailed();
+        $this->artisan('frontdesk:import', ['clinic' => $clinic->id, 'what' => 'doctors', 'file' => $file, '--user' => 'nobody@example.com'])
+            ->expectsOutputToContain('no staff account with that email')->assertFailed();
+        $this->assertSame(0, ReferralDoctor::count());
+    }
+
     public function test_importing_needs_the_catalog_permission(): void
     {
         $this->actingAs($this->staff('receptionist'));
