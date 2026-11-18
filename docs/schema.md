@@ -798,6 +798,27 @@ trial, set dates, suspend, reactivate), Plans (prices, branch limit, modules,
 on sale), and Activity. Actions live in `App\Platform\Actions` and refuse to
 run without a signed-in platform user.
 
+**Subscription billing (Phase 8d).**
+
+| Table | Notes |
+|---|---|
+| `platform_counters` | `counter_key`, `period`, `next_value`: the platform's own numbers, issued under a row lock inside the creating transaction |
+| `subscription_invoices` | `public_id`, `invoice_no` (`SUB-{yy}-{00001}`), `clinic_id`, `plan_id`, `plan_name` (copied), `billing_period` (monthly, yearly), `period_start`, `period_end`, `amount`, `note`, `status` (issued, paid, void), `due_on`, `paid_at`, `voided_at`, `void_reason`, `issued_by`. What an invoice charges is never changed; a wrong one is voided and issued again |
+| `subscription_payments` | `invoice_id`, `clinic_id`, `amount`, `method` (bkash, nagad, rocket, bank, cash, other), `reference`, `received_on`, `recorded_by`. Append-only (model guard, and MySQL triggers) |
+
+- The next invoice covers the period starting the day after the later of: the
+  last invoiced period (void ones ignored), the date the clinic is covered
+  until, and today. Its amount is the plan's monthly or yearly price unless a
+  different amount is typed (with a note, for example a discount).
+- A payment is recorded in full for one invoice; the clinic's `paid_until`
+  then moves to the end of that period (never backwards), and its status
+  follows at once (a read-only clinic becomes active).
+- Every step is in the platform audit log. Seller details for the printed
+  invoice: `PLATFORM_BILL_NAME`, `_ADDRESS`, `_PHONE`, `_EMAIL`, `_HOW_TO_PAY`.
+- The clinic owner (clinic settings permission) has a Subscription page with
+  the plan, dates, and their own invoices, which they can print; other
+  clinics' invoices are never reachable.
+
 ## 8b. Data export (core)
 
 A user with the export permission can download every table of the clinic as
