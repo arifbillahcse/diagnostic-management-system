@@ -1,6 +1,6 @@
 {
-  "name": "DiagnoCare",
-  "short_name": "DiagnoCare",
+  "name": "DiagnoSolution",
+  "short_name": "DiagnoSolution",
   "description": "Diagnostic center software for Bangladesh",
   "start_url": "/",
   "display": "browser",

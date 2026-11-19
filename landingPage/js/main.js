@@ -1,4 +1,4 @@
-// DiagnoCare landing page. Everything on the page is readable without this
+// DiagnoSolution landing page. Everything on the page is readable without this
 // file; it adds the menu, the scroll animations, the screen slider, the feature filter, the module
 // demo and the demo form.
 (function () {
@@ -186,7 +186,7 @@
       }
       err.hidden = true;
       var d = new FormData(form);
-      var text = 'Demo request for DiagnoCare\nName: ' + d.get('name') + '\nClinic: ' + d.get('clinic') +
+      var text = 'Demo request for DiagnoSolution\nName: ' + d.get('name') + '\nClinic: ' + d.get('clinic') +
         '\nMobile: ' + d.get('phone') + '\nPlan: ' + d.get('plan');
       if (via === 'email') {
         window.location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Demo request: ' + d.get('clinic')) + '&body=' + encodeURIComponent(text);

@@ -1,6 +1,6 @@
-# DiagnoCare
+# DiagnoSolution
 
-> DiagnoCare is online software for diagnostic centers and pathology labs in Bangladesh, made by Softorio. It handles patient registration, billing, dues, lab results with verification, imaging reports, report printing on the clinic's letterhead, referral doctors, lab analyzer connection (ASTM and HL7), a patient report portal and multi-branch management.
+> DiagnoSolution is online software for diagnostic centers and pathology labs in Bangladesh, made by Softorio. It handles patient registration, billing, dues, lab results with verification, imaging reports, report printing on the clinic's letterhead, referral doctors, lab analyzer connection (ASTM and HL7), a patient report portal and multi-branch management.
 
 ## Key facts
 
