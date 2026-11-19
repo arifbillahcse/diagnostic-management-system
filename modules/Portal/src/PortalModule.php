@@ -7,6 +7,7 @@ namespace Modules\Portal;
 use App\Core\Modules\Module;
 use App\Core\Modules\ModuleState;
 use App\Core\Tenancy\ClinicContext;
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Modules\FrontDesk\Models\Invoice;
@@ -16,6 +17,8 @@ final class PortalModule extends Module
 {
     public function boot(): void
     {
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\SampleDataCommand::class]));
+
         View::addNamespace('portal', $this->manifest->path.'/resources/views');
 
         // Tell the patient on the bill where to see their reports.

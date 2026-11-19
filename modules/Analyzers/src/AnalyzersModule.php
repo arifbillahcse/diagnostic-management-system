@@ -44,7 +44,7 @@ final class AnalyzersModule extends Module
     {
         View::addNamespace('analyzers', $this->manifest->path.'/resources/views');
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\ReplayCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([Console\ReplayCommand::class, Console\SampleDataCommand::class]));
 
         if (is_file($routes = $this->manifest->path.'/routes.php')) {
             Route::group([], $routes);

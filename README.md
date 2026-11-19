@@ -382,6 +382,13 @@ disappears at once), or delete these and run `php artisan optimize:clear`:
 | `php artisan inventory:sample-data <clinic id>` | Loads sample stock items, a supplier, one purchase, and stock use rules for the sample tests. Turn on Inventory first; best after `laboratory:sample-data` |
 | `php artisan imaging:sample-data <clinic id>` | Adds the example imaging templates to the sample ultrasound and X-ray tests and signs a few imaging reports. Turn on Imaging first; best after `laboratory:sample-data` |
 | `php artisan people:sample-data <clinic id>` | Loads four sample staff, attendance for last month and this month, one advance, and a draft salary run for last month. Turn on Staff and attendance first |
+| `php artisan clinic:demo-data <clinic id>` | **Fills a new, empty clinic with sample data for every module in one go** and prints where to look on each screen. Add `--password=` (at least 10 characters) for the sample staff accounts and `--days=` for the history. See `docs/sample-data.md` |
+| `php artisan laboratory:sample-branches <clinic id>` | Adds a North branch that sends samples to the main laboratory, with one transfer received and one on the way. Turn on Multi-branch first |
+| `php artisan frontdesk:sample-data <clinic id>` | Adds a cash session closed Tk 50 short and refunds that are approved, waiting and rejected. Run after `laboratory:sample-data` |
+| `php artisan finance:sample-data <clinic id>` | Adds expenses (one cancelled), commission rates, a part payout and an account transfer. Run after `laboratory:sample-data` |
+| `php artisan analyzers:sample-data <clinic id>` | Adds two lab machines with mapped codes and received messages in each state, and leaves one blood sample waiting for a result you can send yourself |
+| `php artisan messaging:sample-data <clinic id>` | Switches SMS on and adds bill, report-ready and due-reminder messages, one failed message and one opted-out number |
+| `php artisan portal:sample-data <clinic id>` | Writes nothing: prints a bill number and mobile number that open a released report on the patient portal |
 | `php artisan imaging:sync-studies` | Adds imaging studies missing from recent open orders, for example orders billed before Imaging was switched on. Scheduled hourly |
 | `php artisan analyzers:replay <clinic id> <machine> <file>` | Feeds recorded machine output to a machine as the bridge would, to test code mappings without the machine. Messages in the file are separated by lines of `---` |
 | `php artisan laboratory:sync-work` | Creates laboratory work missing for recent orders. Scheduled hourly |

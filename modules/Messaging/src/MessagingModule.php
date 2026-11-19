@@ -69,7 +69,7 @@ final class MessagingModule extends Module
             Event::listen(ReportSigned::class, [NotifyPatients::class, 'handle']);
         }
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([DueRemindersCommand::class, RetryCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([DueRemindersCommand::class, RetryCommand::class, Console\SampleDataCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('messaging:due-reminders')->dailyAt('10:30')->timezone(config('dms.clinics.default_timezone'));

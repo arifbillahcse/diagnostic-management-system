@@ -87,7 +87,7 @@ final class FinanceModule extends Module
             }
         });
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncCommand::class, Console\SampleDataCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             // A safety net: anything an interrupted request failed to post.

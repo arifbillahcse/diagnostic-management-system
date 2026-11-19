@@ -119,7 +119,7 @@ final class LaboratoryModule extends Module
         Event::listen(OrderItemCancelled::class, [CancelWork::class, 'handle']);
         Event::listen(OrderCancelled::class, [CancelWork::class, 'handle']);
 
-        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncWorkCommand::class, SampleDataCommand::class]));
+        Artisan::starting(fn (Artisan $artisan) => $artisan->resolveCommands([SyncWorkCommand::class, SampleDataCommand::class, Console\SampleBranchesCommand::class]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->command('laboratory:sync-work')->hourly();

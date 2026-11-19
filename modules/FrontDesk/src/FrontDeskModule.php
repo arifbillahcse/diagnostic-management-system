@@ -106,6 +106,7 @@ final class FrontDeskModule extends Module
             SummarizeCommand::class,
             CheckInvoicesCommand::class,
             Console\ImportCommand::class,
+            Console\SampleDataCommand::class,
         ]));
 
         app()->afterResolving(Schedule::class, function (Schedule $schedule): void {
