@@ -24,6 +24,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Modules\Inventory\Actions\AdjustStock;
 use Modules\Inventory\Enums;
@@ -147,7 +148,9 @@ class ItemResource extends Resource
                     }),
                 Action::make('movements')->label('Movements')->color('gray')
                     ->url(fn (Item $record): string => MovementResource::getUrl('index', ['filters' => ['item_id' => ['value' => $record->id]]])),
-                EditAction::make(),
+                // Fill the form with the fields it shows only. The record also holds the stock level and its value,
+                // which are objects that Livewire cannot keep between requests.
+                EditAction::make()->mutateRecordDataUsing(fn (array $data): array => Arr::only($data, ['code', 'name', 'category', 'unit', 'reorder_level', 'tracks_expiry', 'is_active'])),
             ]);
     }
 
