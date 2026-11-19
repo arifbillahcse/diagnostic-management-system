@@ -24,12 +24,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 PRODUCT = "DiagnoSolution"
 COMPANY = "Softorio"
-SITE = "www.example.com.bd"  # change to the real address
+SITE = "softorio.com"
 OWNER_LINE = f"© {date.today().year} {COMPANY}. All rights reserved."
 STRIP = (20, 64, 58)  # the software's dark green, #14403A
 FONT_BOLD = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
 FONT_REGULAR = "/usr/share/fonts/opentype/inter/Inter-Regular.otf"
-PREFIX = "diagnosolution-"
+PREFIX = ""  # keep the original file names
 
 
 def font(path: str, size: int) -> ImageFont.FreeTypeFont:

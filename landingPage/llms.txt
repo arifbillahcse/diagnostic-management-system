@@ -31,11 +31,11 @@
 
 ## Pages
 
-- [Home](https://www.example.com.bd/): features, analyzer connection, security, pricing plans, FAQ and demo request.
-- [Privacy policy](https://www.example.com.bd/privacy.html)
-- [Terms](https://www.example.com.bd/terms.html)
+- [Home](https://softorio.com/): features, analyzer connection, security, pricing plans, FAQ and demo request.
+- [Privacy policy](https://softorio.com/privacy.html)
+- [Terms](https://softorio.com/terms.html)
 
 ## Contact
 
 - WhatsApp / phone: +8801XXXXXXXXX
-- Email: hello@example.com.bd
+- Email: hello@softorio.com

@@ -13,9 +13,9 @@ Search the whole folder and replace:
 | Placeholder | Replace with | Files |
 |---|---|---|
 | `DiagnoSolution` | Your product name, if you choose another (check the trademark first) | all files |
-| `https://www.example.com.bd` | Your real domain | `index.html`, `privacy.html`, `terms.html`, `robots.txt`, `sitemap.xml`, `llms.txt`, `.htaccess` |
+| `https://softorio.com` | Your real domain | `index.html`, `privacy.html`, `terms.html`, `robots.txt`, `sitemap.xml`, `llms.txt`, `.htaccess` |
 | `8801XXXXXXXXX` / `+880 1XXX-XXXXXX` | Your WhatsApp number | `index.html`, `js/main.js`, `llms.txt` |
-| `hello@example.com.bd` | Your email | `index.html`, `js/main.js`, `privacy.html`, `llms.txt` |
+| `hello@softorio.com` | Your email | `index.html`, `js/main.js`, `privacy.html`, `llms.txt` |
 | `Your street address` | Office address | `index.html`, `privacy.html` |
 | `Contact us` (pricing cards) | Prices, once decided | `index.html` |
 

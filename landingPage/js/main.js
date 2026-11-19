@@ -6,7 +6,7 @@
 
   // Change these two lines to your real contact details.
   var WHATSAPP_NUMBER = '8801XXXXXXXXX'; // country code and number, digits only
-  var EMAIL = 'hello@example.com.bd';
+  var EMAIL = 'hello@softorio.com';
 
   var root = document.documentElement;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
